@@ -1,4 +1,4 @@
-import { none, shallowEqual } from './util'
+import { none, shallowEqual, keys } from './util'
 
 const toOnEventName = event =>
   `on${event[0].toUpperCase()}${event.substr(1)}`
@@ -224,13 +224,12 @@ class View {
   /** @private */
   bindActions(actions) {
     const bound = {}
-    const keys = [
-      ...Object.getOwnPropertyNames(actions),
-      ...Object.getOwnPropertySymbols(actions)
-    ]
-
-    for (const key of keys)
-      bound[key] = (...args) => this.callAction(actions[key], ...args)
+    for (const key of keys(actions)) {
+      const action = actions[key]
+      if (action instanceof Function)
+        bound[key] = (...args) => this.callAction(actions[key], ...args)
+      else bound[key] = this.bindActions(action)
+    }
 
     return bound
   }
@@ -662,7 +661,7 @@ class View {
     if (child instanceof ElementNode) {
       if (mount) this.mountNodeElement(element, null, child, path)
       else {
-        const childElement = this.createNodeElement(child, path)
+        const childElement = this.createNodeElement(element.ownerDocument, child, path)
         element.appendChild(childElement)
       }
     } else if (child instanceof ViewNode) {

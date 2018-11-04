@@ -13,6 +13,11 @@ export const compose = (...fns) => {
 }
 
 
+export const keys = obj =>
+  Object.getOwnPropertyNames(obj)
+    .concat(Object.getOwnPropertySymbols(obj))
+
+
 export const shallowEqual = (a, b) => {
   if (a === b)
     return true
@@ -23,14 +28,33 @@ export const shallowEqual = (a, b) => {
   if (a == null)
     return true
 
-  const keys = Object.keys(a)
-  const len = keys.length
-  if (Object.keys(b).length !== len)
+  const props = keys(a)
+  const len = props.length
+  if (keys(b).length !== len)
     return false
 
-  for (const key of keys)
+  for (const key of props)
     if (a[key] !== b[key])
       return false
 
   return true
+}
+
+
+export const omit = (names, obj) => {
+  const result = {}
+  const index = {}
+  const len = names.length
+  let i = 0
+
+  while (i < len) {
+    index[names[i]] = true
+    i += 1
+  }
+
+  for (const key of keys(obj))
+    if (!(key in index))
+      result[key] = obj[key]
+
+  return result
 }

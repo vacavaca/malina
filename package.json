@@ -1,8 +1,12 @@
 {
   "name": "malina",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Templating and state management tool",
   "main": "dist/index.min.js",
+  "files": [
+    "dist/index.min.js",
+    "src/**/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -f dist/index.*.js",

@@ -1,4 +1,5 @@
 .vscode
+.cache
 .npm
 .env
 node_modules
