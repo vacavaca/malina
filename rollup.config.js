@@ -1,5 +1,4 @@
-const commonJs = require('rollup-plugin-commonjs')
-const nodeResolve = require('rollup-plugin-node-resolve')
+const babel = require('rollup-plugin-babel')
 
 module.exports = {
   input: 'src/index.js',
@@ -8,11 +7,5 @@ module.exports = {
     format: 'umd',
     name: 'malina'
   },
-  plugins: [
-    // commonJs({
-    //   ignoreGlobal: true,
-    //   sourceMap: false,
-    // }),
-    // nodeResolve(),
-  ]
+  plugins: [babel()]
 };
