@@ -1,11 +1,21 @@
-import { h, view, mount, decorator } from './ui'
-import classNames from './class-names'
-
-export default {
+export {
   h,
   view,
   mount,
-  decorator,
-  classNames,
-  cn: classNames
-}
+  decorator
+} from './ui'
+
+export {
+  withContext,
+  getContext
+} from './context'
+
+export {
+  default as classNames,
+  default as cn
+} from './class-names'
+
+export {
+  shallowEqual,
+  compose
+} from './util'

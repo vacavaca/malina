@@ -1,28 +1,4 @@
-const none = {}
-
-
-const shallowEqual = (a, b) => {
-  if (a === b)
-    return true
-
-  if ((a == null) !== (b == null))
-    return false
-
-  if (a == null)
-    return true
-
-  const keys = Object.keys(a)
-  const len = keys.length
-  if (Object.keys(b).length !== len)
-    return false
-
-  for (const key of keys)
-    if (a[key] !== b[key])
-      return false
-
-  return true
-}
-
+import { none, shallowEqual } from './util'
 
 const toOnEventName = event =>
   `on${event[0].toUpperCase()}${event.substr(1)}`
@@ -43,7 +19,7 @@ const isSameParametrizedAction = (a, b) =>
   a[0] === b[0] && a[1] === b[1]
 
 
-class Context {
+class RenderingContext {
   constructor({
     isSvg = false
   }) {
@@ -52,7 +28,7 @@ class Context {
 }
 
 
-class ViewDeclaration {
+export class ViewDeclaration {
   constructor(template, state, actions, hooks) {
     this.template = template
     this.state = state
@@ -62,7 +38,7 @@ class ViewDeclaration {
 }
 
 
-class ElementNode {
+export class ElementNode {
   constructor(tag, attrs, children) {
     this.tag = tag
     this.attrs = attrs
@@ -82,16 +58,15 @@ class ElementNode {
 }
 
 
-class ViewNode {
-  constructor(declaration, state = {}, actions = {}, children = {}) {
+export class ViewNode {
+  constructor(declaration, state = {}, children = {}) {
     this.declaration = declaration
     this.state = state
-    this.actions = actions
     this.children = children
   }
 
-  instantiate(context = null) {
-    return new View(this.declaration, this, context)
+  instantiate(renderingContext = null) {
+    return new View(this.declaration, this, renderingContext)
   }
 
   isSame(other) {
@@ -104,30 +79,35 @@ class ViewNode {
 
   toString() {
     const v = this.instantiate()
-    return `${v.template(v.state, v.actions, v.children)}`
+    return `View(${JSON.stringify(v.state)}): ${v.template(v.state, v.children)}`
   }
 }
 
 
 let mountLock = false
 let mountHookQueue = []
-const defaultContext = new Context({})
-const svgContext = new Context({ isSvg: true })
+const defaultRenderingContext = new RenderingContext({})
+const svgRenderingContext = new RenderingContext({ isSvg: true })
 
 
 class View {
-  constructor(declaration, node, context) {
-    const declaredState = declaration.state instanceof Function ? declaration.state() : declaration.state
-    const declaredActions = declaration.actions instanceof Function ? declaration.actions() : declaration.actions
-    const declaredHooks = declaration.hooks instanceof Function ? declaration.hooks() : declaration.hooks
+  constructor(declaration, node, renderingContext) {
+    const declaredState = declaration.state instanceof Function
+      ? declaration.state(node.state)
+      : declaration.state
+    const declaredActions = declaration.actions instanceof Function
+      ? declaration.actions(node.state)
+      : declaration.actions
+    const declaredHooks = declaration.hooks instanceof Function
+      ? declaration.hooks(node.state)
+      : declaration.hooks
 
     this.template = declaration.template
     this.state = { ...declaredState, ...node.state }
-    this.selfActions = this.bindActions(declaredActions)
-    this.actions = { ...this.selfActions, ...node.actions }
+    this.actions = this.bindActions(declaredActions)
     this.children = node.children
     this.hooks = declaredHooks
-    this.context = context || defaultContext
+    this.renderingContext = renderingContext || defaultRenderingContext
 
     this.updateLock = false
     this.element = null
@@ -156,7 +136,7 @@ class View {
     const next = this.template(this.state, this.actions, this.children)
     if (next instanceof ElementNode) {
       if (next.tag === 'svg')
-        this.context = svgContext
+        this.renderingContext = svgRenderingContext
       const element = this.mountNodeElement(container, index, next, [])
       this.element = element
     } else if (next instanceof ViewNode) {
@@ -185,7 +165,7 @@ class View {
     }
   }
 
-  update(state = none, actions = none, children = none) {
+  update(state = none, children = none) {
     if (this.destroyed)
       throw new Error("View has been destroyed");
 
@@ -193,13 +173,11 @@ class View {
       throw new Error("View has been unmounted");
 
     const nextState = this.updateState(state)
-    const nextActions = this.updateActions(actions)
     const nextChildren = this.updateChildrenState(children)
 
-    const update = this.state !== nextState || this.actions !== nextActions || this.children !== nextChildren
+    const update = this.state !== nextState || this.children !== nextChildren
 
     this.state = nextState
-    this.actions = nextActions
     this.children = nextChildren
 
     if (update) {
@@ -246,7 +224,12 @@ class View {
   /** @private */
   bindActions(actions) {
     const bound = {}
-    for (const key in actions)
+    const keys = [
+      ...Object.getOwnPropertyNames(actions),
+      ...Object.getOwnPropertySymbols(actions)
+    ]
+
+    for (const key of keys)
       bound[key] = (...args) => this.callAction(actions[key], ...args)
 
     return bound
@@ -302,15 +285,6 @@ class View {
 
     const nextState = update !== none ? { ...this.state, ...update } : this.state
     return !shallowEqual(this.state, nextState) ? nextState : this.state
-  }
-
-  /** @private */
-  updateActions(update = none) {
-    if (update == null || update === this.actions)
-      return this.actions
-
-    let nextActions = update !== none ? { ...this.actions, ...update } : this.actions
-    return !shallowEqual(this.actions, nextActions) ? nextActions : this.actions
   }
 
   /** @private */
@@ -445,7 +419,7 @@ class View {
 
     if (prev.isSame(next)) {
       const view = this.getInstantiatedView(path)
-      view.update(next.state, next.actions, next.children)
+      view.update(next.state, next.children)
     } else {
       this.destroyInnerView(path)
       const view = this.instantiateInnerView(next, path)
@@ -479,7 +453,7 @@ class View {
   /** @private */
   createNodeElement(document, node, path) {
     let element
-    if (this.context.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
+    if (this.renderingContext.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
     else element = document.createElement(node.tag)
 
     this.refreshAttributes(element, node, path)
@@ -491,7 +465,7 @@ class View {
   mountNodeElement(container, index, node, path) {
     const document = container.ownerDocument
     let element
-    if (this.context.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
+    if (this.renderingContext.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
     else element = document.createElement(node.tag)
 
     this.refreshAttributes(element, node, path)
@@ -542,7 +516,7 @@ class View {
     } else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
-    } else if (name in element && !this.context.isSvg && value != null) element[name] = value
+    } else if (name in element && !this.renderingContext.isSvg && value != null) element[name] = value
     else if (typeof value === 'boolean') element.setAttribute(name, name)
     else if (value != null) element.setAttribute(name, value)
   }
@@ -587,7 +561,7 @@ class View {
         for (const key in next)
           element.dataset[key] = next[key]
       }
-    } else if (name in element && !this.context.isSvg) {
+    } else if (name in element && !this.renderingContext.isSvg) {
       element[name] = next
     } else if (typeof prev === 'boolean') {
       if (next) element.setAttribute(name, name)
@@ -611,7 +585,7 @@ class View {
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
-    } else if (name in element && !this.context.isSvg) {
+    } else if (name in element && !this.renderingContext.isSvg) {
       element[name] = undefined
     } else if (typeof prev === 'boolean') element.removeAttribute(name)
     else if (prev != null) element.removeAttribute(name)
@@ -728,7 +702,7 @@ class View {
   /** @private */
   instantiateInnerView(node, path) {
     const key = View.getPathKey(path)
-    const view = node.instantiate(this.context)
+    const view = node.instantiate(this.renderingContext)
     this.innerViews.set(key, { view, path: path.slice() })
     return view
   }
@@ -790,7 +764,7 @@ class View {
 
 export const h = (tag, attrs, ...children) => {
   const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children
-  if (tag instanceof ViewDeclaration) return new ViewNode(tag, attrs, {}, childrenArray)
+  if (tag instanceof ViewDeclaration) return new ViewNode(tag, attrs, childrenArray)
   else return new ElementNode(tag, attrs, childrenArray)
 }
 
@@ -804,7 +778,9 @@ export const mount = (container, node, index = 0) => {
   if (node instanceof ElementNode)
     viewNode = h(view(node))
 
-  const instance = viewNode.instantiate()
+  const global = container.ownerDocument.defaultView
+  const renderingContext = container instanceof global.SVGElement ? svgRenderingContext : defaultRenderingContext
+  const instance = viewNode.instantiate(renderingContext)
   instance.mount(container, index)
   return instance
 }
@@ -817,5 +793,5 @@ export const decorator = fn => Inner => {
   else innerView = view(Inner)
   const result = fn(innerView)
   if (result instanceof ViewDeclaration) return result
-  else return view(result)
+  else return view(result, Inner.state, Inner.actions, Inner.hooks)
 }
