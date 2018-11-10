@@ -50,16 +50,14 @@ const provideContext = memoizeDecorated(withTemplate(original =>
     else return node
   }))
 
-
 const decorateTemplate = context => node => {
   if (isViewNode(node)) {
     const attrs = { ...(node.attrs != null ? node.attrs : {}), [contextKey]: context }
     return h(provideContext(node.tag), attrs, node.children.map(decorateTemplate(context)))
-  } else if (isElementNode(node)) {
+  } else if (isElementNode(node))
     return h(node.tag, node.attrs, node.children.map(decorateTemplate(context)))
-  } else return node
+  else return node
 }
-
 
 const defaultContextProvider = state => state
 
@@ -91,7 +89,6 @@ export const withContext = (provider = defaultContextProvider) => {
     provideContext
   )
 }
-
 
 const updateKey = Symbol('update')
 const subscriptionKey = Symbol('subscription')

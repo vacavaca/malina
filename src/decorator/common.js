@@ -1,11 +1,8 @@
 import { h, view } from '../ui/index'
 import { ViewDeclaration } from '../ui/declaration'
-import { Node } from '../ui/node'
-
-import { View } from '../ui/view'
 
 export const decorator = fn => Inner => {
-  let innerView;
+  let innerView
   if (Inner instanceof ViewDeclaration) innerView = Inner
   else if (typeof Inner === 'string') innerView = view((state, _, children) => h(Inner, state, children))
   else innerView = view(Inner)
@@ -14,7 +11,6 @@ export const decorator = fn => Inner => {
   if (decorated instanceof ViewDeclaration) return decorated
   else return view(decorated)
 }
-
 
 export const withState = state => decorator(Inner => {
   const originalState = passed => {
@@ -39,7 +35,6 @@ export const withState = state => decorator(Inner => {
   return view(Inner.template, next, Inner.actions, Inner.hooks)
 })
 
-
 export const withActions = actions => decorator(Inner => {
   const originalActions = state => {
     if (Inner.actions instanceof Function) return Inner.actions(state)
@@ -54,7 +49,6 @@ export const withActions = actions => decorator(Inner => {
   return view(Inner.template, Inner.state, next, Inner.hooks)
 })
 
-
 export const withHooks = hooks => decorator(Inner => {
   const originalHooks = state => {
     if (Inner.hooks instanceof Function) return Inner.hooks(state)
@@ -65,7 +59,7 @@ export const withHooks = hooks => decorator(Inner => {
     const original = originalHooks(state) || {}
 
     const result = { ...original }
-    for (const key in hooks)
+    for (const key in hooks) {
       result[key] = (mount, state, actions) => {
         const originalHook = () => {
           if (original[key] != null)
@@ -73,6 +67,7 @@ export const withHooks = hooks => decorator(Inner => {
         }
         hooks[key](originalHook)(mount, state, actions)
       }
+    }
 
     return result
   }
@@ -80,10 +75,8 @@ export const withHooks = hooks => decorator(Inner => {
   return view(Inner.template, Inner.state, Inner.actions, next)
 })
 
-
 export const withTemplate = getTemplate => decorator(Inner =>
   view(getTemplate(Inner.template), Inner.state, Inner.actions, Inner.hooks))
-
 
 export const mapState = mapper => decorator(Inner =>
   (state, actions, children) => h(Inner, mapper(state), children))

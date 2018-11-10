@@ -7,6 +7,5 @@ export class ViewDeclaration {
   }
 }
 
-
 export const view = (template, state = null, actions = null, hooks = null) =>
   new ViewDeclaration(template instanceof Function ? template : () => template, state, actions, hooks)

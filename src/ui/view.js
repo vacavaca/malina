@@ -4,15 +4,12 @@ import { view } from './declaration'
 import { toOnEventName, normalizeEventName } from './event'
 import RenderingContext from './context'
 
-
 const isParametrizedAction = value =>
   Array.isArray(value) && value.length === 2 && value[0] instanceof Function
-
 
 const isSameParametrizedAction = (a, b) =>
   isParametrizedAction(a) && isParametrizedAction(b) &&
   a[0] === b[0] && a[1] === b[1]
-
 
 let mountLock = false
 let mountHookQueue = []
@@ -25,7 +22,7 @@ const isSameViewNode = (a, b) => a.tag === b.tag
 
 const isValidChildren = children =>
   children.every((node, i) =>
-    i == 0 ||
+    i === 0 ||
     !isViewNode(node) ||
     !isViewNode(children[i - 1]) ||
     node.attrs.key ||
@@ -69,14 +66,14 @@ export class View {
 
   static instantiate(node, renderingContext = null) {
     if (!isViewNode(node))
-      throw new Error("View can only be instantiated from view-nodes")
+      throw new Error('View can only be instantiated from view-nodes')
     return new View(node, renderingContext)
   }
 
   mount(container, index) {
     const document = container.ownerDocument
     if (this.destroyed)
-      return;
+      return
 
     let top = false
     if (!mountLock) {
@@ -86,7 +83,7 @@ export class View {
 
     const next = this.renderTemplate()
     if (Array.isArray(next))
-      throw new Error("View can only have one root element")
+      throw new Error('View can only have one root element')
 
     if (isElementNode(next)) {
       if (next.tag === 'svg')
@@ -115,14 +112,13 @@ export class View {
 
       this.callHook('mount')
       mountLock = false
-    } else {
+    } else
       mountHookQueue.push(() => this.callHook('mount'))
-    }
   }
 
   update(state = null, children = null) {
     if (this.destroyed)
-      throw new Error("View has been destroyed");
+      throw new Error('View has been destroyed')
 
     const nextState = this.updateState(state)
     const nextChildren = this.updateChildrenState(children)
@@ -149,11 +145,10 @@ export class View {
 
   unmount(removeElement) {
     this.mounted = false
-    if (isElementNode(this.node)) {
+    if (isElementNode(this.node))
       this.destroyInnerViews(this.node, [])
-    } else if (isViewNode(this.node)) {
+    else if (isViewNode(this.node))
       this.destroyInnerView([])
-    }
 
     if (removeElement)
       this.element.remove()
@@ -183,7 +178,7 @@ export class View {
     this.templateLock = true
     let next = this.template(this.state, this.actions, this.children)
     if (Array.isArray(next))
-      throw new Error("Only one root element must be rendered for a view")
+      throw new Error('Only one root element must be rendered for a view')
 
     next = next != null ? next : ''
 
@@ -220,11 +215,11 @@ export class View {
         this.trackedActionUpdate = false
         return (async () => {
           const state = await result
-          if (!this.destroyed && this.mounted) {
+          if (!this.destroyed && this.mounted)
             this.update(state)
-          } else if (!this.destroyed) {
+          else if (!this.destroyed)
             this.state = this.updateState(state)
-          }
+
           return this.state
         })()
       } else {
@@ -234,9 +229,8 @@ export class View {
             if (!updated && this.trackedActionUpdate)
               this.refresh()
             this.trackedActionUpdate = false
-          } else if (!this.destroyed) {
+          } else if (!this.destroyed)
             this.state = this.updateState(result)
-          }
         } else {
           const nextState = this.updateState(result)
           this.trackedActionUpdate = this.trackedActionUpdate || this.state !== nextState
@@ -245,9 +239,8 @@ export class View {
         this.updateLock = false
         return this.state
       }
-    } else {
+    } else
       this.scheduledActions.push([action, args])
-    }
   }
 
   /** @private */
@@ -267,9 +260,9 @@ export class View {
     const selfEmpty = this.children == null || this.children.length === 0
     const nextEmpty = children.length === 0
 
-    if (selfEmpty !== nextEmpty) {
+    if (selfEmpty !== nextEmpty)
       return children
-    } else return !shallowEqual(this.children, children) ? children : this.children
+    else return !shallowEqual(this.children, children) ? children : this.children
   }
 
   /** @private */
@@ -304,7 +297,7 @@ export class View {
   /** @private */
   patchFromTextToNone(element, path) {
     if (isRoot(path))
-      throw new Error("Root element deleted during patch")
+      throw new Error('Root element deleted during patch')
 
     element.parentNode.removeChild(element)
   }
@@ -343,7 +336,7 @@ export class View {
   /** @private */
   patchFromNodeToNone(element, prev, path) {
     if (isRoot(path))
-      throw new Error("Root element deleted during patch")
+      throw new Error('Root element deleted during patch')
 
     this.removeParametrizedListeners(prev, path)
     this.destroyInnerViews(prev, path)
@@ -395,7 +388,7 @@ export class View {
   /** @private */
   patchFromViewToNone(element, prev, path) {
     if (isRoot(path))
-      throw new Error("Root element deleted during patch")
+      throw new Error('Root element deleted during patch')
     this.destroyInnerView(path)
     element.remove()
   }
@@ -453,11 +446,10 @@ export class View {
     for (const ndx in node.children) {
       const nextPath = path.concat([ndx])
       const child = node.children[ndx]
-      if (isViewNode(child)) {
+      if (isViewNode(child))
         this.destroyInnerView(nextPath)
-      } else if (isElementNode(child)) {
+      else if (isElementNode(child))
         this.destroyInnerViews(child, nextPath)
-      }
     }
   }
 
@@ -471,7 +463,7 @@ export class View {
   /** @private */
   createNodeElement(document, node, path) {
     let element
-    if (this.renderingContext.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
+    if (this.renderingContext.isSvg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
 
     this.refreshAttributes(element, node, path)
@@ -483,7 +475,7 @@ export class View {
   mountNodeElement(container, index, node, path) {
     const document = container.ownerDocument
     let element
-    if (this.renderingContext.isSvg) element = document.createElementNS("http://www.w3.org/2000/svg", node.tag)
+    if (this.renderingContext.isSvg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
 
     this.refreshAttributes(element, node, path)
@@ -514,20 +506,20 @@ export class View {
       } else this.addAttribute(element, name, nextValue, path)
     }
 
-    for (const name in prev.attrs)
+    for (const name in prev.attrs) {
       if (!(name in next.attrs))
         this.removeAttribute(element, name, prev.attrs[name], path)
+    }
   }
 
   /** @private */
   addAttribute(element, name, value, path) {
     if (name === 'style') {
-      for (const prop in value) {
-        this.setStyleProp(element, prop, value[prop] || "")
-      }
-    } else if (value instanceof Function) {
+      for (const prop in value)
+        this.setStyleProp(element, prop, value[prop] || '')
+    } else if (value instanceof Function)
       this.addEventListener(element, normalizeEventName(name), value)
-    } else if (isParametrizedAction(value)) {
+    else if (isParametrizedAction(value)) {
       const listener = this.createParametrizedListener(value[0], value[1], path, name)
       const event = normalizeEventName(name)
       this.addEventListener(element, event, listener)
@@ -553,12 +545,13 @@ export class View {
       return
 
     if (name === 'style') {
-      for (const prop in prev)
+      for (const prop in prev) {
         if (!(prop in next))
           this.removeStyleProp(element, prop)
+      }
 
       for (const prop in next) {
-        const style = next[prop] || ""
+        const style = next[prop] || ''
         this.setStyleProp(element, prop, style)
       }
     } else if (next instanceof Function) {
@@ -571,9 +564,10 @@ export class View {
       const prevObject = prev != null && typeof prev === 'object'
       const nextObject = next != null && typeof next === 'object'
       if (prevObject && nextObject) {
-        for (const key in prev)
+        for (const key in prev) {
           if (!(key in next))
             delete element.dataset[key]
+        }
 
         for (const key in next)
           element.dataset[key] = next[key]
@@ -584,9 +578,9 @@ export class View {
         for (const key in next)
           element.dataset[key] = next[key]
       }
-    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg) {
+    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg)
       element[name] = next
-    } else if (typeof prev === 'boolean') {
+    else if (typeof prev === 'boolean') {
       if (name === 'focus') {
         if (element.focus && element.blur) {
           if (next) element.focus()
@@ -604,7 +598,7 @@ export class View {
 
   /** @private */
   removeAttribute(element, name, prev, path) {
-    if (name === 'style') element.style.cssText = ""
+    if (name === 'style') element.style.cssText = ''
     else if (prev instanceof Function) {
       const event = normalizeEventName(name)
       this.removeEventListener(element, event, prev)
@@ -615,25 +609,22 @@ export class View {
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
-    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg) {
+    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg)
       element[name] = undefined
-    } else if (typeof prev === 'boolean') {
-      if (name === 'focus' && element.blur) {
+    else if (typeof prev === 'boolean') {
+      if (name === 'focus' && element.blur)
         element.blur()
-      } else element.removeAttribute(name)
+      else element.removeAttribute(name)
     } else if (prev != null) element.removeAttribute(name)
   }
 
   /** @private */
   setStyleProp(element, prop, style) {
-    if (prop[0] === "-") {
+    if (prop[0] === '-') {
       const importantNdx = style.indexOf('!important')
-      let priority = "'"
       let clearedStyle = style
-      if (importantNdx !== -1) {
-        priority = "important"
+      if (importantNdx !== -1)
         clearedStyle = importantNdx !== style.slice(0, importantNdx) + style.slice(importantNdx + 10)
-      }
 
       clearedStyle = clearedStyle.trim().replace(/;$/, '')
       element.style.setProperty(prop, clearedStyle)
@@ -642,24 +633,23 @@ export class View {
 
   /** @private */
   removeStyleProp(element, prop) {
-    if (prop[0] === "-") element.style.removeProperty(prop)
-    else {
+    if (prop[0] === '-') element.style.removeProperty(prop)
+    else
       delete element.style[prop]
-    }
   }
 
   /** @private */
   addEventListener(element, event, listener) {
-    if (element.addEventListener) {
+    if (element.addEventListener)
       element.addEventListener(event, listener)
-    } else if (element.attachEvent) {
+    else if (element.attachEvent)
       element.attachEvent(toOnEventName(event), listener)
-    } else {
-      const listeners = path([event, "listeners"], element) || []
+    else {
+      const listeners = (element[event] && element[event].listeners) || []
 
-      if (element[event] != null) {
+      if (element[event] != null)
         element[event].listeners = listeners.concat(listener)
-      } else {
+      else {
         const handler = (...args) =>
           element[event].listeners.map(f => f(...args))
         handler.listeners = listeners.concat(listener)
@@ -670,14 +660,13 @@ export class View {
 
   /** @private */
   removeEventListener(element, event, listener) {
-    if (element.removeEventListener) {
+    if (element.removeEventListener)
       element.removeEventListener(event, listener)
-    } else if (element.detachEvent) {
+    else if (element.detachEvent)
       element.detachEvent(toOnEventName(event), listener)
-    } else {
-      if (element[event] != null && element[event].listeners != null) {
+    else {
+      if (element[event] != null && element[event].listeners != null)
         element[event].listeners = element[event].listener.filter(l => l !== listener)
-      }
     }
   }
 
@@ -779,9 +768,10 @@ export class View {
 
   /** @private */
   removeParametrizedListeners(node, path) {
-    for (const name in node.attrs)
+    for (const name in node.attrs) {
       if (this.hasParametrizedListener(path, name))
         this.removeParametrizedListener(path, name)
+    }
 
     for (const ndx in node.children) {
       const nextPath = path.concat([ndx])
@@ -797,7 +787,6 @@ export class View {
     this.parametrizedEventListeners.delete(key)
   }
 }
-
 
 export const mount = (container, node, index = 0) => {
   let viewNode = node

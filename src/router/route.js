@@ -1,7 +1,7 @@
-import pathToRegexp from "path-to-regexp";
+import pathToRegexp from 'path-to-regexp'
 import { connectRouter } from './router'
 import { compose, flatten } from '../util'
-import { withTemplate, decorator, withState } from '../decorator/index'
+import { withState } from '../decorator/index'
 import { h, view, isViewNode, isTextNode } from '../ui/index'
 
 const pathCache = new Map()
@@ -53,24 +53,21 @@ export const match = (location, path, options = {}) => {
   return matchUrl(part, path, options)
 }
 
+const routeKey = Symbol('route')
 
 const RouteView = connectRouter(view((state, _, children = []) => {
   const render = children[0]
   if (children.length > 1)
-    throw new Error("You must provide ony one child to Route it can be a render function or a jsx node")
+    throw new Error('You must provide ony one child to Route it can be a render function or a jsx node')
 
   const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
-  const location = { ...state.location, params: params, match: params != null }
   return render instanceof Function ? render(params) : render
 }, { [routeKey]: true }))
-
-const routeKey = Symbol('route')
 
 export const Route = compose(
   withState({ [routeKey]: true }),
   connectRouter
 )(RouteView)
-
 
 const filterSwitchRoutes = (location, isRoot = false) => node => {
   const viewNode = isViewNode(node)
@@ -91,21 +88,21 @@ const filterSwitchRoutes = (location, isRoot = false) => node => {
 
     if (children.length > 1) {
       if (isRoot)
-        throw new Error("You must provide ony one child to Route it can be a render function or a jsx node")
+        throw new Error('You must provide ony one child to Route it can be a render function or a jsx node')
 
-      if (Array.isArray(children)) return flatten(children
-        .map(filterSwitchRoutes(location)))
-        .filter(node => node != null)
-
-      else return filterSwitchRoutes(location)(children)
+      if (Array.isArray(children)) {
+        return flatten(children
+          .map(filterSwitchRoutes(location)))
+          .filter(node => node != null)
+      } else return filterSwitchRoutes(location)(children)
     } else if (children.length === 1) {
       const render = children[0]
       const next = render instanceof Function ? render(params) : render
-      if (Array.isArray(next)) return flatten(next
-        .map(filterSwitchRoutes(location)))
-        .filter(node => node != null)
-
-      else return filterSwitchRoutes(location)(next)
+      if (Array.isArray(next)) {
+        return flatten(next
+          .map(filterSwitchRoutes(location)))
+          .filter(node => node != null)
+      } else return filterSwitchRoutes(location)(next)
     } else return null
   } else if (!isTextNode(node)) {
     const children = flatten(node.children
@@ -127,7 +124,7 @@ export const Switch = connectRouter(view((state, _, children) => {
     return null
 
   if (filtered.length > 1)
-    throw new Error("Root element must be defined inside Switch node")
+    throw new Error('Root element must be defined inside Switch node')
 
   return filtered[0]
 }))

@@ -1,6 +1,6 @@
 {
   "name": "malina",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Templating and state management tool",
   "main": "dist/index.min.js",
   "files": [
@@ -10,10 +10,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -f dist/index.*.js",
+    "lint": "eslint src",
     "build:bundle": "rollup -c rollup.config.js",
     "build:uglify": "uglifyjs -m toplevel dist/index.src.js > dist/index.min.js",
     "build:clean": "rm -f dist/index.src.js",
-    "build": "npm rum clean && npm run build:bundle && npm run build:uglify && npm run build:clean"
+    "build": "npm rum clean && npm run build:bundle && npm run build:uglify && npm run build:clean",
+    "release": "npm rum lint && npm run build"
   },
   "keywords": [
     "ui",
@@ -40,6 +42,12 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",
     "uglify-js": "^3.4.9"

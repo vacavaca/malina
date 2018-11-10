@@ -1,20 +1,16 @@
 export const compose = (...fns) => {
-  if (fns.length === 0) {
+  if (fns.length === 0)
     return arg => arg
-  }
 
-  if (fns.length === 1) {
+  if (fns.length === 1)
     return fns[0]
-  }
 
   return fns.reduce((a, b) => (...args) => a(b(...args)))
 }
 
-
 export const keys = obj =>
   Object.getOwnPropertyNames(obj)
     .concat(Object.getOwnPropertySymbols(obj))
-
 
 export const shallowEqual = (a, b) => {
   if (a === b)
@@ -31,13 +27,13 @@ export const shallowEqual = (a, b) => {
   if (keys(b).length !== len)
     return false
 
-  for (const key of props)
+  for (const key of props) {
     if (a[key] !== b[key])
       return false
+  }
 
   return true
 }
-
 
 export const omit = (names, obj) => {
   const result = {}
@@ -50,13 +46,13 @@ export const omit = (names, obj) => {
     i += 1
   }
 
-  for (const key of keys(obj))
+  for (const key of keys(obj)) {
     if (!(key in index))
       result[key] = obj[key]
+  }
 
   return result
 }
-
 
 export const flatten = array => {
   const result = []

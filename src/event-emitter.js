@@ -1,12 +1,12 @@
 export default class EventEmitter {
-  constructor () {
+  constructor() {
     this.listenerCounter = 0
     this.listeners = {}
   }
 
   subscribe(listener) {
     const id = ++this.listenerCounter
-    this.listeners[id] = listener 
+    this.listeners[id] = listener
     return () => delete this.listeners[id]
   }
 

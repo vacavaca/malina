@@ -6,11 +6,11 @@ const getElementName = (block, element) => {
 }
 
 const getModifiers = modifiers => {
-  if (Array.isArray(modifiers)) {
+  if (Array.isArray(modifiers))
     return modifiers.reduce((a, modifier) => ({ [modifier]: true }), {})
-  } else if (typeof modifiers === "string") {
-    return getModifiers(modifiers.split(" "))
-  } else return modifiers
+  else if (typeof modifiers === 'string')
+    return getModifiers(modifiers.split(' '))
+  else return modifiers
 }
 
 const classNames = (name, modifiers) =>
@@ -28,14 +28,13 @@ const elementStep = (block, ...args) => {
   } else if (args.length === 2) {
     const [element, modifiers] = args
     return classNames(getElementName(block, element), getModifiers(modifiers))
-  } else throw new Error("Unrecognized arguments")
+  } else throw new Error('Unrecognized arguments')
 }
 
 export default (...args) => {
   if (args.length === 1) {
     const [block] = args
     return (...args) => elementStep(block, ...args)
-  } else {
+  } else
     return elementStep(...args)
-  }
 }
