@@ -1,14 +1,6 @@
-export {
-  h,
-  view,
-  mount,
-  decorator
-} from './ui'
-
-export {
-  withContext,
-  getContext
-} from './context'
+export * from './ui/index'
+export * from './decorator/index'
+export * from './router/index'
 
 export {
   default as classNames,

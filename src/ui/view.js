@@ -1,13 +1,8 @@
-import { none, shallowEqual, keys } from './util'
-
-const toOnEventName = event =>
-  `on${event[0].toUpperCase()}${event.substr(1)}`
-
-
-const normalizeEventName = name => {
-  const lower = name.toLowerCase()
-  return lower.startsWith("on") ? lower.substr(2) : lower
-}
+import { shallowEqual, keys } from '../util'
+import { h, isElementNode, isViewNode } from './node'
+import { view } from './declaration'
+import { toOnEventName, normalizeEventName } from './event'
+import RenderingContext from './context'
 
 
 const isParametrizedAction = value =>
@@ -19,96 +14,45 @@ const isSameParametrizedAction = (a, b) =>
   a[0] === b[0] && a[1] === b[1]
 
 
-class RenderingContext {
-  constructor({
-    isSvg = false
-  }) {
-    this.isSvg = isSvg
-  }
-}
-
-
-export class ViewDeclaration {
-  constructor(template, state, actions, hooks) {
-    this.template = template
-    this.state = state
-    this.actions = actions
-    this.hooks = hooks
-  }
-}
-
-
-export class ElementNode {
-  constructor(tag, attrs, children) {
-    this.tag = tag
-    this.attrs = attrs
-    this.children = children
-  }
-
-  toString() {
-    return `${this.tag} ${JSON.stringify(this.attrs || {})}${
-      this.children.length > 0 ? `\n${this.children.map(c => {
-        if (c == null)
-          return "\t''"
-        const str = c.toString()
-        return str.split('\n').map(s => `\t${s}`).join('\n')
-      }).join('\n')}` : ''
-      }`
-  }
-}
-
-
-export class ViewNode {
-  constructor(declaration, state = {}, children = {}) {
-    this.declaration = declaration
-    this.state = state
-    this.children = children
-  }
-
-  instantiate(renderingContext = null) {
-    return new View(this.declaration, this, renderingContext)
-  }
-
-  isSame(other) {
-    return this.declaration === other.declaration
-  }
-
-  is(declaration) {
-    return this.declaration === declaration
-  }
-
-  toString() {
-    const v = this.instantiate()
-    return `View(${JSON.stringify(v.state)}): ${v.template(v.state, v.children)}`
-  }
-}
-
-
 let mountLock = false
 let mountHookQueue = []
 const defaultRenderingContext = new RenderingContext({})
 const svgRenderingContext = new RenderingContext({ isSvg: true })
 
+const isRoot = path => path.length === 0
 
-class View {
-  constructor(declaration, node, renderingContext) {
+const isSameViewNode = (a, b) => a.tag === b.tag
+
+const isValidChildren = children =>
+  children.every((node, i) =>
+    i == 0 ||
+    !isViewNode(node) ||
+    !isViewNode(children[i - 1]) ||
+    node.attrs.key ||
+    !isSameViewNode(node, children[i - 1])
+  )
+
+export class View {
+  constructor(node, renderingContext) {
+    const { tag: declaration, attrs: state, children } = node
     const declaredState = declaration.state instanceof Function
-      ? declaration.state(node.state)
+      ? declaration.state(state)
       : declaration.state
     const declaredActions = declaration.actions instanceof Function
-      ? declaration.actions(node.state)
+      ? declaration.actions(state)
       : declaration.actions
     const declaredHooks = declaration.hooks instanceof Function
-      ? declaration.hooks(node.state)
+      ? declaration.hooks(state)
       : declaration.hooks
 
     this.template = declaration.template
-    this.state = { ...declaredState, ...node.state }
-    this.actions = this.bindActions(declaredActions)
-    this.children = node.children
-    this.hooks = declaredHooks
+    this.state = { ...(declaredState || {}), ...(state || {}) }
+    this.actions = this.bindActions(declaredActions || {})
+    this.children = children
+    this.hooks = declaredHooks || {}
     this.renderingContext = renderingContext || defaultRenderingContext
 
+    this.templateLock = false
     this.updateLock = false
     this.element = null
     this.node = null
@@ -118,8 +62,15 @@ class View {
     this.mounted = false
     this.destroyed = false
     this.trackedActionUpdate = false
+    this.container =
 
-    this.callHook('create')
+      this.callHook('create')
+  }
+
+  static instantiate(node, renderingContext = null) {
+    if (!isViewNode(node))
+      throw new Error("View can only be instantiated from view-nodes")
+    return new View(node, renderingContext)
   }
 
   mount(container, index) {
@@ -133,15 +84,19 @@ class View {
       top = true
     }
 
-    const next = this.template(this.state, this.actions, this.children)
-    if (next instanceof ElementNode) {
+    const next = this.renderTemplate()
+    if (Array.isArray(next))
+      throw new Error("View can only have one root element")
+
+    if (isElementNode(next)) {
       if (next.tag === 'svg')
         this.renderingContext = svgRenderingContext
       const element = this.mountNodeElement(container, index, next, [])
       this.element = element
-    } else if (next instanceof ViewNode) {
+    } else if (isViewNode(next)) {
       const view = this.instantiateInnerView(next, [])
       view.mount(container, index)
+      this.element = view.element
     } else {
       const element = document.createTextNode(`${next != null ? next : ''}`)
       this.element = element
@@ -165,12 +120,9 @@ class View {
     }
   }
 
-  update(state = none, children = none) {
+  update(state = null, children = null) {
     if (this.destroyed)
       throw new Error("View has been destroyed");
-
-    if (!this.mounted)
-      throw new Error("View has been unmounted");
 
     const nextState = this.updateState(state)
     const nextChildren = this.updateChildrenState(children)
@@ -180,7 +132,7 @@ class View {
     this.state = nextState
     this.children = nextChildren
 
-    if (update) {
+    if (this.mounted && update) {
       this.refresh()
       this.callHook('update')
     }
@@ -189,7 +141,7 @@ class View {
   }
 
   refresh() {
-    const next = this.template(this.state, this.actions, this.children)
+    const next = this.renderTemplate()
     const prev = this.node
     this.node = next
     this.patch(this.element, prev, next, [])
@@ -197,12 +149,17 @@ class View {
 
   unmount(removeElement) {
     this.mounted = false
-    this.destroyInnerViews(this.node, [])
+    if (isElementNode(this.node)) {
+      this.destroyInnerViews(this.node, [])
+    } else if (isViewNode(this.node)) {
+      this.destroyInnerView([])
+    }
 
     if (removeElement)
       this.element.remove()
 
     this.callHook('unmount')
+    this.element = null
   }
 
   destroy(removeElement) {
@@ -222,6 +179,19 @@ class View {
   }
 
   /** @private */
+  renderTemplate() {
+    this.templateLock = true
+    let next = this.template(this.state, this.actions, this.children)
+    if (Array.isArray(next))
+      throw new Error("Only one root element must be rendered for a view")
+
+    next = next != null ? next : ''
+
+    this.templateLock = false
+    return next
+  }
+
+  /** @private */
   bindActions(actions) {
     const bound = {}
     for (const key of keys(actions)) {
@@ -236,6 +206,9 @@ class View {
 
   /** @private */
   callAction(action, ...args) {
+    if (this.templateLock)
+      throw new Error("Actions can't be called while rendering view template")
+
     if (this.mounted) {
       const update = !this.updateLock
       this.updateLock = true
@@ -278,17 +251,17 @@ class View {
   }
 
   /** @private */
-  updateState(update = none) {
+  updateState(update = null) {
     if (update == null || update === this.state)
       return this.state
 
-    const nextState = update !== none ? { ...this.state, ...update } : this.state
+    const nextState = update !== null ? { ...this.state, ...update } : this.state
     return !shallowEqual(this.state, nextState) ? nextState : this.state
   }
 
   /** @private */
-  updateChildrenState(children = none) {
-    if (children === none || children === null)
+  updateChildrenState(children = null) {
+    if (children === null || children === null)
       return this.children
 
     const selfEmpty = this.children == null || this.children.length === 0
@@ -310,38 +283,49 @@ class View {
     if (prev === next)
       return
 
-    if (prev instanceof ElementNode) {
+    if (isElementNode(prev)) {
       if (next == null) this.patchFromNodeToNone(element, prev, path)
-      else if (next instanceof ElementNode) this.patchFromNodeToNode(element, prev, next, path)
-      else if (next instanceof ViewNode) this.patchFromNodeToView(element, prev, next, patth)
+      else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path)
+      else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path)
       else this.patchFromNodeToText(element, prev, next, path)
-    } else if (prev instanceof ViewNode) {
+    } else if (isViewNode(prev)) {
       if (next == null) this.patchFromViewToNone(element, prev, path)
-      else if (next instanceof ElementNode) this.patchFromViewToNode(element, prev, next, path)
-      else if (next instanceof ViewNode) this.patchFromViewToView(element, prev, next, path)
+      else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path)
+      else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path)
       else this.patchFromViewToText(element, prev, next, path)
     } else {
-      if (next == null) this.patchFromTextToNone(element)
-      else if (next instanceof ElementNode) this.patchFromTextToNode(element, next, path)
-      else if (next instanceof ViewNode) this.patchFromTextToView(element, next, path)
-      else this.patchTextNodes(element, prev, next)
+      if (next == null) this.patchFromTextToNone(element, path)
+      else if (isElementNode(next)) this.patchFromTextToNode(element, next, path)
+      else if (isViewNode(next)) this.patchFromTextToView(element, next, path)
+      else this.patchTextNodes(element, prev, next, path)
     }
   }
 
   /** @private */
-  patchFromTextToNone(element) {
+  patchFromTextToNone(element, path) {
+    if (isRoot(path))
+      throw new Error("Root element deleted during patch")
+
     element.parentNode.removeChild(element)
   }
 
   /** @private */
-  patchTextNodes(element, prev, next) {
-    if (prev !== next)
-      element.replaceWith(element.ownerDocument.createTextNode(`${next}`))
+  patchTextNodes(element, prev, next, path) {
+    if (prev !== next) {
+      const newElement = element.ownerDocument.createTextNode(`${next}`)
+      element.replaceWith(newElement)
+
+      if (isRoot(path))
+        this.element = newElement
+    }
   }
 
   /** @private */
   patchFromTextToNode(element, next, path) {
-    element.replacwWith(this.createNodeElement(element.ownerDocument, next, path))
+    const newElement = this.createNodeElement(element.ownerDocument, next, path)
+    element.replaceWith(newElement)
+    if (isRoot(path))
+      this.element = newElement
   }
 
   /** @private */
@@ -351,10 +335,16 @@ class View {
     const parent = element.parentNode
     element.remove()
     view.mount(parent, index)
+
+    if (isRoot(path))
+      this.element = view.element
   }
 
   /** @private */
   patchFromNodeToNone(element, prev, path) {
+    if (isRoot(path))
+      throw new Error("Root element deleted during patch")
+
     this.removeParametrizedListeners(prev, path)
     this.destroyInnerViews(prev, path)
     element.remove()
@@ -364,7 +354,10 @@ class View {
   patchFromNodeToText(element, prev, next, path) {
     this.removeParametrizedListeners(prev, path)
     this.destroyInnerViews(prev, path)
-    element.replaceWith(element.ownerDocument.createTextNode(`${next}`))
+    const newElement = element.ownerDocument.createTextNode(`${next}`)
+    element.replaceWith(newElement)
+    if (isRoot(path))
+      this.element = newElement
   }
 
   /** @private */
@@ -378,7 +371,11 @@ class View {
     } else {
       this.removeParametrizedListeners(prev, path)
       this.destroyInnerViews(prev, path)
-      element.replaceWith(this.createNodeElement(element.ownerDocument, next, path))
+      const newElement = this.createNodeElement(element.ownerDocument, next, path)
+      element.replaceWith(newElement)
+
+      if (isRoot(path))
+        this.element = newElement
     }
   }
 
@@ -391,10 +388,14 @@ class View {
     const parent = element.parentNode
     element.remove()
     view.mount(parent, index)
+    if (isRoot(path))
+      this.element = view.element
   }
 
   /** @private */
   patchFromViewToNone(element, prev, path) {
+    if (isRoot(path))
+      throw new Error("Root element deleted during patch")
     this.destroyInnerView(path)
     element.remove()
   }
@@ -402,13 +403,21 @@ class View {
   /** @private */
   patchFromViewToText(element, prev, next, path) {
     this.destroyInnerView(path)
-    element.replaceWith(element.ownerDocument.createTextNode(`${next}`))
+    const newElement = element.ownerDocument.createTextNode(`${next}`)
+    element.replaceWith(newElement)
+
+    if (isRoot(path))
+      this.element = newElement
   }
 
   /** @private */
   patchFromViewToNode(element, prev, next, path) {
     this.destroyInnerView(path)
-    element.replaceWith(this.createNodeElement(element.ownerDocument, next, path))
+    const newElement = this.createNodeElement(element.ownerDocument, next, path)
+    element.replaceWith(newElement)
+
+    if (isRoot(path))
+      this.element = newElement
   }
 
   /** @private */
@@ -416,9 +425,9 @@ class View {
     if (prev === next)
       return
 
-    if (prev.isSame(next)) {
+    if (isSameViewNode(prev, next) && prev.attrs.key === next.attrs.key) {
       const view = this.getInstantiatedView(path)
-      view.update(next.state, next.children)
+      view.update(next.attrs, next.children)
     } else {
       this.destroyInnerView(path)
       const view = this.instantiateInnerView(next, path)
@@ -426,7 +435,17 @@ class View {
       const parent = element.parentNode
       element.remove()
       view.mount(parent, index)
+
+      if (isRoot(path))
+        this.element = view.element
     }
+  }
+
+  /** @private */
+  unmountPatch() {
+    this.mounted = false
+    this.callHook('unmount')
+    this.element = null
   }
 
   /** @private */
@@ -434,9 +453,9 @@ class View {
     for (const ndx in node.children) {
       const nextPath = path.concat([ndx])
       const child = node.children[ndx]
-      if (child instanceof ViewNode) {
+      if (isViewNode(child)) {
         this.destroyInnerView(nextPath)
-      } else if (child instanceof ElementNode) {
+      } else if (isElementNode(child)) {
         this.destroyInnerViews(child, nextPath)
       }
     }
@@ -515,9 +534,14 @@ class View {
     } else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
-    } else if (name in element && !this.renderingContext.isSvg && value != null) element[name] = value
-    else if (typeof value === 'boolean') element.setAttribute(name, name)
-    else if (value != null) element.setAttribute(name, value)
+    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg && value != null)
+      element[name] = value
+    else if (typeof value === 'boolean') {
+      if (name === 'focus' && element.focus && element.blur) {
+        if (value) element.focus()
+        else element.blur()
+      } else element.setattribute(name, name)
+    } else if (value != null) element.setAttribute(name, value)
   }
 
   /** @private */
@@ -560,11 +584,18 @@ class View {
         for (const key in next)
           element.dataset[key] = next[key]
       }
-    } else if (name in element && !this.renderingContext.isSvg) {
+    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg) {
       element[name] = next
     } else if (typeof prev === 'boolean') {
-      if (next) element.setAttribute(name, name)
-      else element.removeAttribute(name)
+      if (name === 'focus') {
+        if (element.focus && element.blur) {
+          if (next) element.focus()
+          else element.blur()
+        }
+      } else {
+        if (next) element.setAttribute(name, name)
+        else element.removeAttribute(name)
+      }
     } else {
       if (next != null) element.setAttribute(name, next)
       else element.removeAttribute(next)
@@ -584,10 +615,13 @@ class View {
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
-    } else if (name in element && !this.renderingContext.isSvg) {
+    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg) {
       element[name] = undefined
-    } else if (typeof prev === 'boolean') element.removeAttribute(name)
-    else if (prev != null) element.removeAttribute(name)
+    } else if (typeof prev === 'boolean') {
+      if (name === 'focus' && element.blur) {
+        element.blur()
+      } else element.removeAttribute(name)
+    } else if (prev != null) element.removeAttribute(name)
   }
 
   /** @private */
@@ -649,6 +683,9 @@ class View {
 
   /** @private */
   refreshChildren(element, node, path, mount = false) {
+    if (!isValidChildren(node.children))
+      throw new Error("Every view node in an array must have an unique 'key' attribute")
+
     for (const ndx in node.children) {
       const child = node.children[ndx]
       const nextPath = path.concat([ndx])
@@ -658,20 +695,18 @@ class View {
 
   /** @private */
   addChildren(element, child, ndx = null, path, mount = false) {
-    if (child instanceof ElementNode) {
+    if (isElementNode(child)) {
       if (mount) this.mountNodeElement(element, null, child, path)
       else {
         const childElement = this.createNodeElement(element.ownerDocument, child, path)
         element.appendChild(childElement)
       }
-    } else if (child instanceof ViewNode) {
+    } else if (isViewNode(child)) {
       const view = this.instantiateInnerView(child, path)
       view.mount(element, ndx)
-    } else {
-      if (child != null) {
-        const childElement = element.ownerDocument.createTextNode(`${child}`)
-        element.appendChild(childElement)
-      }
+    } else if (child != null) {
+      const childElement = element.ownerDocument.createTextNode(`${child}`)
+      element.appendChild(childElement)
     }
   }
 
@@ -679,6 +714,9 @@ class View {
   updateChildren(element, prev, next, path) {
     if (prev === next)
       return
+
+    if (!isValidChildren(next.children))
+      throw new Error("Every view node in an array must have an unique 'key' attribute")
 
     const len = Math.max(prev.children.length, next.children.length)
     let nodeIndexShift = 0
@@ -701,7 +739,7 @@ class View {
   /** @private */
   instantiateInnerView(node, path) {
     const key = View.getPathKey(path)
-    const view = node.instantiate(this.renderingContext)
+    const view = View.instantiate(node, this.renderingContext)
     this.innerViews.set(key, { view, path: path.slice() })
     return view
   }
@@ -748,7 +786,7 @@ class View {
     for (const ndx in node.children) {
       const nextPath = path.concat([ndx])
       const child = node.children[ndx]
-      if (child instanceof ElementNode)
+      if (isElementNode(child))
         this.removeParametrizedListeners(child, nextPath)
     }
   }
@@ -761,36 +799,14 @@ class View {
 }
 
 
-export const h = (tag, attrs, ...children) => {
-  const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children
-  if (tag instanceof ViewDeclaration) return new ViewNode(tag, attrs, childrenArray)
-  else return new ElementNode(tag, attrs, childrenArray)
-}
-
-
-export const view = (template, state = none, actions = none, hooks = none) =>
-  new ViewDeclaration(template instanceof Function ? template : () => template, state, actions, hooks)
-
-
 export const mount = (container, node, index = 0) => {
   let viewNode = node
-  if (node instanceof ElementNode)
+  if (isElementNode(node))
     viewNode = h(view(node))
 
   const global = container.ownerDocument.defaultView
   const renderingContext = container instanceof global.SVGElement ? svgRenderingContext : defaultRenderingContext
-  const instance = viewNode.instantiate(renderingContext)
+  const instance = View.instantiate(viewNode, renderingContext)
   instance.mount(container, index)
   return instance
-}
-
-
-export const decorator = fn => Inner => {
-  let innerView;
-  if (Inner instanceof ViewDeclaration) innerView = Inner
-  else if (typeof Inner === 'string') innerView = view(state => h(Inner, state))
-  else innerView = view(Inner)
-  const result = fn(innerView)
-  if (result instanceof ViewDeclaration) return result
-  else return view(result, Inner.state, Inner.actions, Inner.hooks)
 }

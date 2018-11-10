@@ -1,5 +1,3 @@
-export const none = {}
-
 export const compose = (...fns) => {
   if (fns.length === 0) {
     return arg => arg
@@ -55,6 +53,28 @@ export const omit = (names, obj) => {
   for (const key of keys(obj))
     if (!(key in index))
       result[key] = obj[key]
+
+  return result
+}
+
+
+export const flatten = array => {
+  const result = []
+  const len = array.length
+  let i = 0
+
+  while (i < len) {
+    if (Array.isArray(array[i])) {
+      const value = flatten(array[i])
+      const nextLen = value.length
+      let j = 0
+      while (j < nextLen) {
+        result[result.length] = value[j]
+        j += 1
+      }
+    } else result[result.length] = array[i]
+    i += 1
+  }
 
   return result
 }
