@@ -60,8 +60,8 @@ const withRouterContext = compose(
   // create router if missing in context
   withContext(state => {
     if (state == null || (!('history' in state) && !('router' in state)))
-
       throw new Error('History object must be provided to the top-level routing view')
+
     if ('history' in state && !('router' in state)) {
       const router = createRouter(state.history)
       return { [routerKey]: router }

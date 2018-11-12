@@ -215,10 +215,8 @@ export class View {
         this.trackedActionUpdate = false
         return (async () => {
           const state = await result
-          if (!this.destroyed && this.mounted)
+          if (!this.destroyed)
             this.update(state)
-          else if (!this.destroyed)
-            this.state = this.updateState(state)
 
           return this.state
         })()
