@@ -1,0 +1,61 @@
+{
+  "name": "malina",
+  "version": "0.0.8",
+  "description": "Templating and state management tool",
+  "main": "dist/index.min.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -f dist/index.*.js",
+    "lint": "eslint src",
+    "build:bundle": "rollup -c rollup.config.js",
+    "build:uglify:browser": "uglifyjs -m toplevel dist/index.umd.js > dist/browser.min.js",
+    "build:uglify:node": "uglifyjs -m toplevel dist/index.src.js > dist/index.min.js",
+    "build:uglify": "npm run build:uglify:browser && npm run build:uglify:node",
+    "build:clean": "rm -f dist/index.src.js rm -f dist/index.umd.js",
+    "build": "npm rum clean && npm run build:bundle && npm run build:uglify && npm run build:clean",
+    "release": "npm rum lint && npm run build"
+  },
+  "keywords": [
+    "ui",
+    "jsx",
+    "template",
+    "hyperscript",
+    "virtualdom",
+    "dom",
+    "vdom",
+    "state",
+    "flux",
+    "dom",
+    "html"
+  ],
+  "author": "vacavaca <vacavaca@fastmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vacavaca/malina.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vacavaca/malina/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "rollup": "^0.66.6",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "uglify-js": "^3.4.9"
+  },
+  "dependencies": {
+    "malina-util": "0.0.*"
+  }
+}
