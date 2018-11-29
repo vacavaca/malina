@@ -1,6 +1,6 @@
 {
   "name": "malina",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Templating and state management tool",
   "main": "dist/index.min.js",
   "files": [
@@ -56,6 +56,6 @@
     "uglify-js": "^3.4.9"
   },
   "dependencies": {
-    "malina-util": "0.0.*"
+    "malina-util": "^0.0.9"
   }
 }
