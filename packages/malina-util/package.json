@@ -1,7 +1,7 @@
 {
   "name": "malina-util",
   "version": "0.0.9",
-  "description": "Templating and state management tool",
+  "description": "Utilities for the malina library",
   "main": "dist/index.min.js",
   "files": [
     "dist"
@@ -19,17 +19,7 @@
     "release": "npm rum lint && npm run build"
   },
   "keywords": [
-    "ui",
-    "jsx",
-    "template",
-    "hyperscript",
-    "virtualdom",
-    "dom",
-    "vdom",
-    "state",
-    "flux",
-    "dom",
-    "html"
+    "malina"
   ],
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {

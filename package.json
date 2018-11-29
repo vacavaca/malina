@@ -4,7 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "lerna clean -y && lerna exec 'rm -rf dist'",
-    "release": "lerna bootstrap --hoist && lerna run --bail release"
+    "release": "lerna bootstrap --hoist && lerna run --bail release && lerna publish"
   },
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {

@@ -1,7 +1,7 @@
 {
   "name": "malina-decorator",
   "version": "0.0.9",
-  "description": "Templating and state management tool",
+  "description": "Useful decorators and extensions for the malina library",
   "main": "dist/index.min.js",
   "files": [
     "dist"
@@ -19,6 +19,7 @@
     "release": "npm rum lint && npm run build"
   },
   "keywords": [
+    "malina",
     "ui",
     "jsx",
     "template",

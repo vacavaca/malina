@@ -1,7 +1,7 @@
 {
   "name": "malina",
   "version": "0.0.9",
-  "description": "Templating and state management tool",
+  "description": "Templating and state management tool for building user interfaces",
   "main": "dist/index.min.js",
   "files": [
     "dist"
@@ -12,13 +12,14 @@
     "lint": "eslint src",
     "build:bundle": "rollup -c rollup.config.js",
     "build:uglify:browser": "uglifyjs -m toplevel dist/index.umd.js > dist/browser.min.js",
-    "build:uglify:node": "uglifyjs -m toplevel dist/index.src.js > dist/index.min.js",
+    "build:uglify:node": "cp dist/index.src.js dist/index.min.js",
     "build:uglify": "npm run build:uglify:browser && npm run build:uglify:node",
     "build:clean": "rm -f dist/index.src.js rm -f dist/index.umd.js",
     "build": "npm rum clean && npm run build:bundle && npm run build:uglify && npm run build:clean",
     "release": "npm rum lint && npm run build"
   },
   "keywords": [
+    "malina",
     "ui",
     "jsx",
     "template",

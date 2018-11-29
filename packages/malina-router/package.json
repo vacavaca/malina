@@ -1,8 +1,8 @@
 {
   "name": "malina-router",
   "version": "0.0.9",
-  "description": "Templating and state management tool",
-  "main": "dist/endex.min.js",
+  "description": "Routing for the malina library",
+  "main": "dist/index.min.js",
   "files": [
     "dist"
   ],
@@ -19,6 +19,7 @@
     "release": "npm rum lint && npm run build"
   },
   "keywords": [
+    "malina",
     "ui",
     "jsx",
     "template",
@@ -29,7 +30,9 @@
     "state",
     "flux",
     "dom",
-    "html"
+    "html",
+    "routing",
+    "history"
   ],
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {
