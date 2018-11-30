@@ -46,9 +46,14 @@ const enableRouting = compose(
   })
 )
 
-const provideState = mapState(state => ({
+const provideLocationState = mapState(state => ({
   router: state.router.control,
   location: state.location || state.router.history.location,
+  ...omit(['history', 'router'], state)
+}))
+
+const provideRouterState = mapState(state => ({
+  router: state.router.control,
   ...omit(['history', 'router'], state)
 }))
 
@@ -71,11 +76,11 @@ const withRouterContext = compose(
 
 export const withRouter = compose(
   withRouterContext,
-  provideState
+  provideRouterState
 )
 
 export const connectRouter = compose(
   enableRouting,
   withRouterContext,
-  provideState
+  provideLocationState
 )

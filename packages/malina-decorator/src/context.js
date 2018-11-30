@@ -63,7 +63,7 @@ const defaultContextProvider = state => state
 
 export const withContext = (provider = defaultContextProvider) => {
   const normalizedProvider = (state, actions) => {
-    const context = provider(state)
+    const context = provider(state, actions)
     if (typeof context !== 'object')
       throw new Error("Context must be an object derived from view's state and actions")
 

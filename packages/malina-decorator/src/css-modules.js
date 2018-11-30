@@ -14,13 +14,13 @@ const memoizeDecorated = wrapped => decorator(Inner => {
   }
 })
 
-const setClasses = styles => memoizeDecorated(withTemplate(original =>
+const setClasses = (styles, styleAttribute) => memoizeDecorated(withTemplate(original =>
   (state, actions, children) => {
     const node = original(state, actions, children)
-    return decorateTemplate(styles)(node)
+    return decorateTemplate(styles, styleAttribute)(node)
   }))
 
-const decorateTemplate = (styles, styleAttribute = 'styleName') => node => {
+const decorateTemplate = (styles, styleAttribute) => node => {
   if (isViewNode(node))
     return h(setClasses(styles)(node.tag), node.attrs, node.children.map(decorateTemplate(styles)))
   else if (isElementNode(node)) {
@@ -44,4 +44,5 @@ const decorateTemplate = (styles, styleAttribute = 'styleName') => node => {
   } else return node
 }
 
-export default styles => decorator(View => setClasses(styles)(View))
+export default (styles, styleAttribute = 'styleName') =>
+  decorator(View => setClasses(styles, styleAttribute)(View))

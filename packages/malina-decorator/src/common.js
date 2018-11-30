@@ -1,59 +1,51 @@
 import { h, view, decorator } from 'malina'
 
-export const withState = state => decorator(Inner => {
-  const originalState = passed => {
-    if (Inner.state instanceof Function) return Inner.state(passed)
-    else return Inner.state
-  }
+const createInitializer = value => state => {
+  if (value instanceof Function) return value(state) || {}
+  else return value || {}
+}
 
-  const decoratedState = passed => {
-    if (state instanceof Function) return state(passed)
-    else return state
-  }
+export const withState = state => decorator(Inner => {
+  const originalState = createInitializer(Inner.state)
+  const decorateState = createInitializer(state)
 
   const next = passed => {
     const declared = originalState(passed)
-    const decorated = decoratedState(passed)
-    return {
-      ...(declared != null ? declared : {}),
-      ...(decorated != null ? decorated : {})
-    }
+    const decorate = decorateState(passed)
+    return { ...declared, ...decorate }
   }
 
   return view(Inner.template, next, Inner.actions, Inner.hooks)
 })
 
 export const withActions = actions => decorator(Inner => {
-  const originalActions = state => {
-    if (Inner.actions instanceof Function) return Inner.actions(state)
-    else return Inner.actions
-  }
+  const originalActions = createInitializer(Inner.actions)
+  const decorateActions = createInitializer(actions)
 
   const next = state => ({
-    ...(originalActions(state) || {}),
-    ...(actions || {})
+    ...originalActions(state),
+    ...decorateActions(state)
   })
 
   return view(Inner.template, Inner.state, next, Inner.hooks)
 })
 
 export const withHooks = hooks => decorator(Inner => {
-  const originalHooks = state => {
-    if (Inner.hooks instanceof Function) return Inner.hooks(state)
-    else return Inner.hooks
-  }
+  const originalHooks = createInitializer(Inner.hooks)
+  const decorateHooks = createInitializer(hooks)
 
   const next = state => {
-    const original = originalHooks(state) || {}
+    const original = originalHooks(state)
+    const decorate = decorateHooks(state)
 
     const result = { ...original }
-    for (const key in hooks) {
+    for (const key in decorate) {
       result[key] = (mount, state, actions) => {
         const originalHook = () => {
           if (original[key] != null)
             original[key](mount, state, actions)
         }
-        hooks[key](originalHook)(mount, state, actions)
+        decorate[key](originalHook)(mount, state, actions)
       }
     }
 

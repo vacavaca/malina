@@ -124,7 +124,7 @@ export const Switch = connectRouter(view((state, _, children) => {
     return null
 
   if (filtered.length > 1)
-    throw new Error('Root element must be defined inside Switch node')
+    throw new Error('Only one root node is allowed inside Switch')
 
   return filtered[0]
 }))
