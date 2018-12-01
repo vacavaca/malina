@@ -177,8 +177,12 @@ export class View {
   renderTemplate() {
     this.templateLock = true
     let next = this.template(this.state, this.actions, this.children)
-    if (Array.isArray(next))
-      throw new Error('Only one root element must be rendered for a view')
+    if (Array.isArray(next)) {
+      if (next.length !== 1)
+        throw new Error('Only one root element must be rendered for a view')
+
+      next = next[0]
+    }
 
     next = next != null ? next : ''
 

@@ -2,21 +2,15 @@
   "name": "malina",
   "version": "0.0.10",
   "description": "Templating and state management tool for building user interfaces",
-  "main": "dist/index.min.js",
+  "main": "dist/index.js",
+  "browser": "./dist/browser.js",
   "files": [
     "dist"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -f dist/index.*.js",
-    "lint": "eslint src",
-    "build:bundle": "rollup -c rollup.config.js",
-    "build:uglify:browser": "uglifyjs -m toplevel dist/index.umd.js > dist/browser.min.js",
-    "build:uglify:node": "uglifyjs -m dist/index.src.js > dist/index.min.js",
-    "build:uglify": "npm run build:uglify:browser && npm run build:uglify:node",
-    "build:clean": "rm -f dist/index.src.js rm -f dist/index.umd.js",
-    "build": "npm rum clean && npm run build:bundle && npm run build:uglify && npm run build:clean",
-    "release": "npm rum lint && npm run build"
+    "build": "make build",
+    "release": "NODE_ENV=production make release"
   },
   "keywords": [
     "malina",
@@ -54,9 +48,10 @@
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
-    "uglify-js": "^3.4.9"
+    "uglify-es": "^3.3.9"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.0.0",
     "malina-util": "^0.0.10"
   }
 }

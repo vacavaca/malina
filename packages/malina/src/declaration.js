@@ -1,4 +1,4 @@
-export class ViewDeclaration {
+class Declaration {
   constructor(template, state, actions, hooks) {
     this.template = template
     this.state = state
@@ -8,4 +8,6 @@ export class ViewDeclaration {
 }
 
 export const view = (template, state = null, actions = null, hooks = null) =>
-  new ViewDeclaration(template instanceof Function ? template : () => template, state, actions, hooks)
+  new Declaration(template instanceof Function ? template : () => template, state, actions, hooks)
+
+export const ViewDeclaration = Declaration
