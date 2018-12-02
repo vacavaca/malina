@@ -10,7 +10,7 @@ browser_release := dist/browser.js
 
 .PHONY: lint
 lint:
-	eslint *.js src
+	eslint *.js src test
 
 .PHONY: clean
 clean:
