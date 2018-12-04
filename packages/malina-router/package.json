@@ -3,7 +3,6 @@
   "version": "0.0.11",
   "description": "Routing for the malina library",
   "main": "dist/index.js",
-  "browser": "./dist/browser.js",
   "files": [
     "dist"
   ],

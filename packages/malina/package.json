@@ -3,7 +3,6 @@
   "version": "0.0.11",
   "description": "Templating and state management tool for building user interfaces",
   "main": "dist/index.js",
-  "browser": "./dist/browser.js",
   "files": [
     "dist"
   ],
