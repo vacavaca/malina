@@ -1,6 +1,6 @@
 {
   "name": "malina-router",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Routing for the malina library",
   "main": "dist/index.js",
   "browser": "./dist/browser.js",
@@ -39,9 +39,9 @@
   "license": "MIT",
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
-    "malina": "^0.0.10",
-    "malina-decorator": "^0.0.10",
-    "malina-util": "^0.0.10",
+    "malina": "^0.0.11",
+    "malina-decorator": "^0.0.11",
+    "malina-util": "^0.0.11",
     "path-to-regexp": "^2.4.0"
   },
   "devDependencies": {
