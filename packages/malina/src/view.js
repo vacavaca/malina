@@ -13,8 +13,8 @@ const isSameParametrizedAction = (a, b) =>
 
 let mountLock = false
 let mountHookQueue = []
-const defaultRenderingContext = new RenderingContext({})
-const svgRenderingContext = new RenderingContext({ isSvg: true })
+const defaultRenderingContext = () => new RenderingContext({})
+const svgRenderingContext = () => new RenderingContext({ isSvg: true })
 
 const isRoot = path => path.length === 0
 
@@ -47,7 +47,7 @@ export class View {
     this.actions = this.bindActions(declaredActions || {})
     this.children = children
     this.hooks = declaredHooks || {}
-    this.renderingContext = renderingContext || defaultRenderingContext
+    this.renderingContext = renderingContext || defaultRenderingContext()
 
     this.templateLock = false
     this.updateLock = false
@@ -59,9 +59,7 @@ export class View {
     this.mounted = false
     this.destroyed = false
     this.trackedActionUpdate = false
-    this.container =
-
-      this.callHook('create')
+    this.callHook('create')
   }
 
   static instantiate(node, renderingContext = null) {
@@ -87,7 +85,7 @@ export class View {
 
     if (isElementNode(next)) {
       if (next.tag === 'svg')
-        this.renderingContext = svgRenderingContext
+        this.renderingContext = svgRenderingContext()
       const element = this.mountNodeElement(container, index, next, [])
       this.element = element
     } else if (isViewNode(next)) {
@@ -176,18 +174,20 @@ export class View {
   /** @private */
   renderTemplate() {
     this.templateLock = true
-    let next = this.template(this.state, this.actions, this.children)
-    if (Array.isArray(next)) {
-      if (next.length !== 1)
-        throw new Error('Only one root element must be rendered for a view')
+    try {
+      let next = this.template(this.state, this.actions, this.children)
+      if (Array.isArray(next)) {
+        if (next.length !== 1)
+          throw new Error('Only one root element must be rendered for a view')
 
-      next = next[0]
+        next = next[0]
+      }
+
+      next = next != null ? next : ''
+      return next
+    } finally {
+      this.templateLock = false
     }
-
-    next = next != null ? next : ''
-
-    this.templateLock = false
-    return next
   }
 
   /** @private */
@@ -796,7 +796,7 @@ export const mount = (container, node, index = 0) => {
     viewNode = h(view(node))
 
   const global = container.ownerDocument.defaultView
-  const renderingContext = container instanceof global.SVGElement ? svgRenderingContext : defaultRenderingContext
+  const renderingContext = container instanceof global.SVGElement ? svgRenderingContext() : defaultRenderingContext()
   const instance = View.instantiate(viewNode, renderingContext)
   instance.mount(container, index)
   return instance

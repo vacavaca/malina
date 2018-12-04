@@ -58,7 +58,7 @@ const routeKey = Symbol('route')
 const RouteView = view((state, _, children = []) => {
   const render = children[0]
   if (children.length > 1)
-    throw new Error('You must provide ony one child to Route it can be a render function or a jsx node')
+    throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
 
   const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
   return render instanceof Function ? render(params) : render
