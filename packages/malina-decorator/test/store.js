@@ -3,26 +3,7 @@ const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('malina')
 const { withStore, connect, bindActions } = require('..')
-
-const asyncTest = test => async () => {
-  let queue = []
-  let wake = null
-  let lock = new Promise(resolve => { wake = resolve })
-
-  test(fn => (...args) => {
-    queue.push(fn(...args))
-    if (wake != null)
-      wake()
-  })
-
-  await lock
-  wake = null
-
-  while (queue.length > 0) {
-    await Promise.all(queue)
-    queue = []
-  }
-}
+const { asyncTest } = require('./util')
 
 describe('store', () => {
   describe('withStore', () => {

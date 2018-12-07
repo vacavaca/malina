@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Nothing to test yet\"",
     "build": "make build",
     "release": "NODE_ENV=production make release"
   },
@@ -50,7 +50,7 @@
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.0.0",
+    "diff": "^3.5.0",
     "malina-util": "^0.0.12"
   }
 }

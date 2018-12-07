@@ -1,1 +1,295 @@
-"use strict";Object.defineProperty(exports,"__esModule",{value:true});function t(t){return t&&typeof t==="object"&&"default"in t?t["default"]:t}var e=require("malina-decorator");var o=require("malina-util");var r=require("malina");var n=t(require("path-to-regexp"));const s=t=>({push(e,o){t.push(e,o)},replace(e,o){t.replace(e,o)},forward(){t.forward()},back(){t.back()}});const i=t=>({history:t,control:s(t)});const l=Symbol("update");const c=Symbol("subscription");const a=o.compose(e.withHooks({create:t=>(e,o,r)=>{t();const{router:n}=o;o[c]=n.history.listen(r[l])},destroy:t=>(e,o,r)=>{if(c in o)o[c]();t()}}),e.withActions({[l]:t=>()=>({location:t})}));const u=e.mapState(t=>({router:t.router.control,location:t.location||t.router.history.location,...o.omit(["history","router"],t)}));const h=e.mapState(t=>({router:t.router.control,...o.omit(["history","router"],t)}));const f=Symbol("router");const p=o.compose(e.getContext(t=>f in t?{router:t[f]}:{}),e.withContext(t=>{if(t==null||!("history"in t)&&!("router"in t))throw new Error("History object must be provided to the top-level routing view");if("history"in t&&!("router"in t)){const e=i(t.history);return{[f]:e}}else return{}}));const y=o.compose(p,h);const d=o.compose(a,p,u);const m=new Map;const w=1e4;const g=(t,e)=>{const o=Object.keys(e);if(!o.every(t=>{const o=e[t];return typeof o!=="object"&&typeof o!=="function"}))return null;o.sort();return`${t}${o.map(t=>`${t}:${e[t]}`).join(",")}`};const v=(t,e)=>{const o=g(t,e);if(m.has(o))return m.get(o);else{const r=[];const s=n(t,r,e);const i={regexp:s,keys:r};if(m.size<w)m.set(o,i);return i}};const b=(t,e,o={})=>{const{regexp:r,keys:n}=v(e,o);const s=r.exec(t);if(!s)return null;const i=s.slice(1);const l=n.reduce((t,e,o)=>((t[e.name]=i[o]||null)||true)&&t,{});return l};const x=(t,e,o={})=>{let r=o.hash?t.hash:t.pathname;if(o.hash&&!r.startsWith("#"))r=`#${r}`;if(!o.hash&&!r.startsWith("/"))r=`/${r}`;return b(r,e,o)};const k=Symbol("route");const S=r.view((t,e,o=[])=>{const r=o[0];if(o.length>1)throw new Error("You must provide only one child to the Route, it can be a render function or a jsx node");const n=x(t.location,t.path,{...t.options,hash:!!t.hash});return r instanceof Function?r(n):r},{[k]:true});const j=o.compose(e.withState({[k]:true}),d)(S);const $=(t,e=false)=>n=>{const s=r.isViewNode(n);let i=s&&n.tag.state!=null;let l=null;if(i){const t=n.tag.state;l=t instanceof Function?t(n.attrs):t;i=l[k]}if(i){const{attrs:r}=n;const{children:s}=n;const i=x(t,r.path,{...r.options,hash:!!r.hash});if(i==null)return null;if(s.length>1){if(e)throw new Error("You must provide ony one child to Route it can be a render function or a jsx node");if(Array.isArray(s)){return o.flatten(s.map($(t))).filter(t=>t!=null)}else return $(t)(s)}else if(s.length===1){const e=s[0];const r=e instanceof Function?e(i):e;if(Array.isArray(r)){return o.flatten(r.map($(t))).filter(t=>t!=null)}else return $(t)(r)}else return null}else if(!r.isTextNode(n)){const e=o.flatten(n.children.map($(t))).filter(t=>t!=null);return r.h(n.tag,n.attrs,e)}else return n};const A=d(r.view((t,e,o)=>{if(o.length===0)return null;const r=o.map($(t.location,true)).filter(t=>t!=null);if(r.length===0)return null;if(r.length>1)throw new Error("Only one root node is allowed inside Switch");return r[0]}));const C={to:null,target:null,replace:false,state:{}};const R={};R.handleClick=(t=>({router:e,to:o,target:r,replace:n,state:s})=>{if(o==null)return;const i=!!(t.metaKey||t.altKey||t.ctrlKey||t.shiftKey);if(!t.defaultPrevented&&t.button===0&&(!r||r==="_self")&&!i){t.preventDefault();const r=n?e.replace:e.push;r(o,s)}});var q=y(r.view(({to:t,...e},n,s)=>r.h("a",{href:t,onClick:n.handleClick,...o.omit(["router","replace","state"],e)},s),C,R));exports.Switch=A;exports.Route=j;exports.match=x;exports.Link=q;exports.withRouter=y;exports.connectRouter=d;
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var malinaDecorator = require('malina-decorator');
+var malinaUtil = require('malina-util');
+var malina = require('malina');
+var pathToRegexp = _interopDefault(require('path-to-regexp'));
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function _objectSpread(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    var ownKeys = Object.keys(source);
+
+    if (typeof Object.getOwnPropertySymbols === 'function') {
+      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+      }));
+    }
+
+    ownKeys.forEach(function (key) {
+      _defineProperty(target, key, source[key]);
+    });
+  }
+
+  return target;
+}
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+
+  var key, i;
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
+}
+
+const getRouterControl = history => ({
+  push(url, state) {
+    history.push(url, state);
+  },
+
+  replace(url, state) {
+    history.replace(url, state);
+  },
+
+  forward() {
+    history.forward();
+  },
+
+  back() {
+    history.back();
+  }
+
+});
+
+const createRouter = history => ({
+  history,
+  control: getRouterControl(history)
+});
+
+const updateKey = Symbol('update');
+const subscriptionKey = Symbol('subscription');
+const enableRouting = malinaUtil.compose(malinaDecorator.withHooks({
+  create: original => (mount, state, actions) => {
+    original();
+    const router = state.router;
+    state[subscriptionKey] = router.history.listen(actions[updateKey]);
+  },
+  destroy: original => (mount, state, actions) => {
+    if (subscriptionKey in state) state[subscriptionKey]();
+    original();
+  }
+}), malinaDecorator.withActions({
+  [updateKey]: location => () => ({
+    location
+  })
+}));
+const provideLocationState = malinaDecorator.mapState(state => _objectSpread({
+  router: state.router.control,
+  location: state.location || state.router.history.location
+}, malinaUtil.omit(['history', 'router'], state)));
+const provideRouterState = malinaDecorator.mapState(state => _objectSpread({
+  router: state.router.control
+}, malinaUtil.omit(['history', 'router'], state)));
+const routerKey = Symbol('router');
+const withRouterContext = malinaUtil.compose( // try to get router from context
+malinaDecorator.getContext(ctx => routerKey in ctx ? {
+  router: ctx[routerKey]
+} : {}), // create router if missing in context
+malinaDecorator.withContext(state => {
+  if (state == null || !('history' in state) && !('router' in state)) throw new Error('History object must be provided to the top-level routing view');
+
+  if ('history' in state && !('router' in state)) {
+    const router = createRouter(state.history);
+    return {
+      [routerKey]: router
+    };
+  } else return {};
+}));
+const withRouter = malinaUtil.compose(withRouterContext, provideRouterState);
+const connectRouter = malinaUtil.compose(enableRouting, withRouterContext, provideLocationState);
+
+const pathCache = new Map();
+const pathCacheLimit = 10000;
+
+const getCacheKey = (path, options) => {
+  const optionsKeys = Object.keys(options);
+  if (!optionsKeys.every(key => {
+    const option = options[key];
+    return typeof option !== 'object' && typeof option !== 'function';
+  })) return null;
+  optionsKeys.sort();
+  return `${path}${optionsKeys.map(k => `${k}:${options[k]}`).join(',')}`;
+};
+
+const compilePathRegexp = (path, options) => {
+  const cacheKey = getCacheKey(path, options);
+  if (pathCache.has(cacheKey)) return pathCache.get(cacheKey);else {
+    const keys = [];
+    const regexp = pathToRegexp(path, keys, options);
+    const result = {
+      regexp,
+      keys
+    };
+    if (pathCache.size < pathCacheLimit) pathCache.set(cacheKey, result);
+    return result;
+  }
+};
+
+const matchUrl = (url, path, options = {}) => {
+  const _compilePathRegexp = compilePathRegexp(path, options),
+        regexp = _compilePathRegexp.regexp,
+        keys = _compilePathRegexp.keys;
+
+  const match = regexp.exec(url);
+  if (!match) return null;
+  const values = match.slice(1);
+  const params = keys.reduce((a, key, index) => ((a[key.name] = values[index] || null) || true) && a, {});
+  return params;
+};
+
+const match = (location, path, options = {}) => {
+  let part = options.hash ? location.hash : location.pathname;
+  if (options.hash && !part.startsWith('#')) part = `#${part}`;
+  if (!options.hash && !part.startsWith('/')) part = `/${part}`;
+  return matchUrl(part, path, options);
+};
+const routeKey = Symbol('route');
+const RouteView = malina.view((state, _, children = []) => {
+  const render = children[0];
+  if (children.length > 1) throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node');
+  const params = match(state.location, state.path, _objectSpread({}, state.options, {
+    hash: !!state.hash
+  }));
+  return render instanceof Function ? render(params) : render;
+}, {
+  [routeKey]: true
+});
+const Route = malinaUtil.compose(malinaDecorator.withState({
+  [routeKey]: true
+}), connectRouter)(RouteView);
+
+const filterSwitchRoutes = (location, isRoot = false) => node => {
+  const viewNode = malina.isViewNode(node);
+  let isRoute = viewNode && node.tag.state != null;
+  let routeInitialState = null;
+
+  if (isRoute) {
+    const declaredState = node.tag.state;
+    routeInitialState = declaredState instanceof Function ? declaredState(node.attrs) : declaredState;
+    isRoute = routeInitialState[routeKey];
+  }
+
+  if (isRoute) {
+    const state = node.attrs;
+    const children = node.children;
+    const params = match(location, state.path, _objectSpread({}, state.options, {
+      hash: !!state.hash
+    }));
+    if (params == null) return null;
+
+    if (children.length > 1) {
+      if (isRoot) throw new Error('You must provide ony one child to Route it can be a render function or a jsx node');
+
+      if (Array.isArray(children)) {
+        return malinaUtil.flatten(children.map(filterSwitchRoutes(location))).filter(node => node != null);
+      } else return filterSwitchRoutes(location)(children);
+    } else if (children.length === 1) {
+      const render = children[0];
+      const next = render instanceof Function ? render(params) : render;
+
+      if (Array.isArray(next)) {
+        return malinaUtil.flatten(next.map(filterSwitchRoutes(location))).filter(node => node != null);
+      } else return filterSwitchRoutes(location)(next);
+    } else return null;
+  } else if (!malina.isTextNode(node)) {
+    const children = malinaUtil.flatten(node.children.map(filterSwitchRoutes(location))).filter(node => node != null);
+    return malina.h(node.tag, node.attrs, children);
+  } else return node;
+};
+
+const Switch = connectRouter(malina.view((state, _, children) => {
+  if (children.length === 0) return null;
+  const filtered = children.map(filterSwitchRoutes(state.location, true)).filter(node => node != null);
+  if (filtered.length === 0) return null;
+  if (filtered.length > 1) throw new Error('Only one root node is allowed inside Switch');
+  return filtered[0];
+}));
+
+const state = {
+  to: null,
+  target: null,
+  replace: false,
+  state: {}
+};
+const actions = {};
+
+actions.handleClick = e => ({
+  router,
+  to,
+  target,
+  replace,
+  state
+}) => {
+  if (to == null) return;
+  const modified = !!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey);
+
+  if (!e.defaultPrevented && e.button === 0 && (!target || target === '_self') && !modified) {
+    e.preventDefault();
+    const method = replace ? router.replace : router.push;
+    method(to, state);
+  }
+};
+
+var link = withRouter(malina.view((_ref, actions, children) => {
+  let to = _ref.to,
+      rest = _objectWithoutProperties(_ref, ["to"]);
+
+  return malina.h('a', _objectSpread({
+    href: to,
+    onClick: actions.handleClick
+  }, malinaUtil.omit(['router', 'replace', 'state'], rest)), children);
+}, state, actions));
+
+exports.Switch = Switch;
+exports.Route = Route;
+exports.match = match;
+exports.Link = link;
+exports.withRouter = withRouter;
+exports.connectRouter = connectRouter;

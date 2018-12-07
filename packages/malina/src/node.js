@@ -10,6 +10,15 @@ export class Node {
     this.children = children
   }
 
+  static isNode(obj) {
+    return typeof obj === 'object' && obj !== null &&
+      obj.isNode instanceof Function && obj.isNode()
+  }
+
+  isNode() {
+    return true // because instanceof can be inreliable on some build configurations
+  }
+
   toString() {
     const tagName = typeof this.tag === 'string' ? this.tag : 'View'
     return `${tagName} ${JSON.stringify(this.attrs || {})}${
@@ -23,11 +32,12 @@ export class Node {
   }
 }
 
-export const isViewNode = node => node instanceof Node && node.tag instanceof ViewDeclaration
+export const isViewNode = node =>
+  Node.isNode(node) && ViewDeclaration.isViewDeclaration(node.tag)
 
-export const isElementNode = node => node instanceof Node && !isViewNode(node)
+export const isElementNode = node => Node.isNode(node) && !ViewDeclaration.isViewDeclaration(node.tag)
 
-export const isTextNode = node => typeof node === 'string'
+export const isTextNode = node => !(node instanceof Object) && typeof node !== 'object'
 
 export const h = (tag, attrs, ...children) => {
   const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children

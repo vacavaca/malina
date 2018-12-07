@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "make test",
+    "test": "echo \"Nothing to test yet\"",
     "build": "make build",
     "release": "NODE_ENV=production make release"
   },
@@ -39,6 +39,5 @@
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.0.0"
   }
 }

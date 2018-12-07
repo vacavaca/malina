@@ -3,11 +3,11 @@ import { ViewDeclaration, view } from './declaration'
 
 export const decorator = fn => Inner => {
   let innerView
-  if (Inner instanceof ViewDeclaration) innerView = Inner
+  if (ViewDeclaration.isViewDeclaration(Inner)) innerView = Inner
   else if (typeof Inner === 'string') innerView = view((state, _, children) => h(Inner, state, children))
   else innerView = view(Inner)
 
   const decorated = fn(innerView)
-  if (decorated instanceof ViewDeclaration) return decorated
+  if (ViewDeclaration.isViewDeclaration(decorated)) return decorated
   else return view(decorated)
 }

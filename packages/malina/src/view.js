@@ -1,5 +1,5 @@
-import { shallowEqual, keys } from 'malina-util'
-import { h, isElementNode, isViewNode } from './node'
+import { shallowEqual, keys, compose } from 'malina-util'
+import { h, isElementNode, isViewNode, isTextNode } from './node'
 import { view } from './declaration'
 import { toOnEventName, normalizeEventName } from './event'
 import RenderingContext from './context'
@@ -18,16 +18,38 @@ const svgRenderingContext = () => new RenderingContext({ isSvg: true })
 
 const isRoot = path => path.length === 0
 
-const isSameViewNode = (a, b) => a.tag === b.tag
+const isSameViewNode = (a, b) => a.tag.id === b.tag.id
 
-const isValidChildren = children =>
-  children.every((node, i) =>
+const requireKeysSet = children => {
+  if (!children.every((node, i) =>
     i === 0 ||
     !isViewNode(node) ||
     !isViewNode(children[i - 1]) ||
     node.attrs.key ||
     !isSameViewNode(node, children[i - 1])
-  )
+  ))
+    throw new Error("Every view node in an array must have a 'key' attribute")
+  return children
+}
+
+const requireUniqueKeys = children => {
+  let index = {}
+  for (const node of children) {
+    if (isViewNode(node) && node.attrs.key) {
+      if (!(node.tag.id in index))
+        index[node.tag.id] = {}
+
+      if (node.attrs.key in index[node.tag.id])
+        throw new Error("Every view node in an array must have an unique 'key' attribute")
+    }
+  }
+  return children
+}
+
+const requireValidChildren = compose(
+  requireKeysSet,
+  requireUniqueKeys
+)
 
 export class View {
   constructor(node, renderingContext) {
@@ -92,12 +114,13 @@ export class View {
       const view = this.instantiateInnerView(next, [])
       view.mount(container, index)
       this.element = view.element
-    } else {
+    } else if (isTextNode(next)) {
       const element = document.createTextNode(`${next != null ? next : ''}`)
       this.element = element
       const before = container.childNodes[index] || null
       container.insertBefore(element, before)
-    }
+    } else throw new Error('Invalid template type')
+
     this.node = next
     this.mounted = true
     for (const [action, args] of this.scheduledActions)
@@ -105,13 +128,22 @@ export class View {
     this.scheduledActions = []
 
     if (top) {
-      for (const hook of mountHookQueue)
+      const queue = mountHookQueue
+      mountHookQueue = []
+      for (const hook of queue)
         hook()
 
       this.callHook('mount')
       mountLock = false
     } else
       mountHookQueue.push(() => this.callHook('mount'))
+  }
+
+  move(container, index) {
+    const before = container.childNodes[index] || null
+    container.insertBefore(this.element, before)
+    this.container = container
+    this.index = index
   }
 
   update(state = null, children = null) {
@@ -155,7 +187,7 @@ export class View {
     this.element = null
   }
 
-  destroy(removeElement) {
+  destroy(removeElement = true) {
     this.unmount(removeElement)
     this.callHook('destroy')
     this.destroyed = true
@@ -282,17 +314,20 @@ export class View {
       if (next == null) this.patchFromNodeToNone(element, prev, path)
       else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path)
       else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path)
-      else this.patchFromNodeToText(element, prev, next, path)
+      else if (isTextNode(next)) this.patchFromNodeToText(element, prev, next, path)
+      else throw new Error('Invalid template type')
     } else if (isViewNode(prev)) {
       if (next == null) this.patchFromViewToNone(element, prev, path)
       else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path)
       else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path)
-      else this.patchFromViewToText(element, prev, next, path)
+      else if (isTextNode(next)) this.patchFromViewToText(element, prev, next, path)
+      else throw new Error('Invalid template type')
     } else {
       if (next == null) this.patchFromTextToNone(element, path)
       else if (isElementNode(next)) this.patchFromTextToNode(element, next, path)
       else if (isViewNode(next)) this.patchFromTextToView(element, next, path)
-      else this.patchTextNodes(element, prev, next, path)
+      else if (isTextNode(next)) this.patchTextNodes(element, prev, next, path)
+      else throw new Error('Invalid template type')
     }
   }
 
@@ -594,7 +629,7 @@ export class View {
       }
     } else {
       if (next != null) element.setAttribute(name, next)
-      else element.removeAttribute(next)
+      else if (prev != null) element.removeAttribute(name)
     }
   }
 
@@ -674,7 +709,7 @@ export class View {
 
   /** @private */
   refreshChildren(element, node, path, mount = false) {
-    if (!isValidChildren(node.children))
+    if (!requireValidChildren(node.children))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
     for (const ndx in node.children) {
@@ -706,7 +741,7 @@ export class View {
     if (prev === next)
       return
 
-    if (!isValidChildren(next.children))
+    if (!requireValidChildren(next.children))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
     const len = Math.max(prev.children.length, next.children.length)

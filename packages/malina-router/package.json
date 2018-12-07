@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Nothing to test yet\"",
     "build": "make build",
     "release": "NODE_ENV=production make release"
   },
@@ -37,7 +37,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@babel/polyfill": "^7.0.0",
     "malina": "^0.0.12",
     "malina-decorator": "^0.0.12",
     "malina-util": "^0.0.12",
