@@ -3,7 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 
 bump := $(if $(strip $(bump)),$(bump),patch)
 
-changelog_msg := "doc: Update CHANGELOG.md"
+release_msg := "Update CHANGELOG.md and parent package version"
 
 .PHONY: clean
 clean:
@@ -25,10 +25,10 @@ release:
 	lerna run --bail --stream release
 
 .PHONY: publish
-publish: clean
+publish:
 	if [ -z "$(bump)" ]; then echo "\nPlease specify bump!\n"; exit 1; fi;
-	npm version $(bump) --no-git-tag-version
 	changelog --$(bump)
-	git add CHANGELOG.md
-	git commit -m $(changelog_msg)
+	npm version $(bump) --no-git-tag-version
+	git add CHANGELOG.md package.json package-lock.json
+	git commit -m $(release_msg)
 	lerna publish $(bump)
