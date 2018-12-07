@@ -1,6 +1,10 @@
 {
   "packages": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
-  "version": "0.0.12"
+  "version": "0.0.12",
+  "publish": {
+    "conventionalCommits": true
+  }
 }
