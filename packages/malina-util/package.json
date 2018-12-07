@@ -1,6 +1,6 @@
 {
   "name": "malina-util",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Utilities for the malina library",
   "main": "dist/index.js",
   "files": [
@@ -37,7 +37,5 @@
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "uglify-es": "^3.3.9"
-  },
-  "dependencies": {
   }
 }
