@@ -6,7 +6,9 @@
     "test": "make test",
     "commit": "git-cz",
     "clean": "make clean",
-    "release": "run () { make bump=$1 release; }; run"
+    "release": "make release",
+    "build": "make build",
+    "publish": "run () { make bump=$1 publish; }; run"
   },
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {
