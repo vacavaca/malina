@@ -1,0 +1,9 @@
+language: node_js
+dist: xenial
+node_js:
+  - "10"
+script:
+  - npm ci
+  - npm run release
+env:
+  - RUNNER_ENV=ci
