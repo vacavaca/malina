@@ -15,7 +15,7 @@
 * [eslint](https://eslint.org/) linting
 * [rollup](https://rollupjs.org/) bundler
 
-* [commitizen](npmjs.com/package/commitizen) and [generate-changelog](http://npmjs.com/package/generate-changelog) are configured to simplify publishing
+* [commitizen](https://npmjs.com/package/commitizen) and [generate-changelog](https://npmjs.com/package/generate-changelog) are configured to simplify publishing
 
 ## Commands
 
@@ -52,4 +52,4 @@ To lint the code inside a package make a `lint`:
 
 `make lint`
 
-
+Projects in the examples directory may differ in configuration, please refer to the corresponding package.json
