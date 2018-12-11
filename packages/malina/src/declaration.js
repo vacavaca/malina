@@ -1,3 +1,4 @@
+import { compose } from 'malina-util'
 import { genRandomId } from './id'
 
 class Declaration {
@@ -16,6 +17,10 @@ class Declaration {
 
   isViewDeclaration() {
     return true // because instanceof can be inreliable on some build configurations
+  }
+
+  decorate(...fns) {
+    return compose(...fns)(this)
   }
 }
 
