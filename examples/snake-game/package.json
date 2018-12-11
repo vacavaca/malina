@@ -1,0 +1,25 @@
+{
+  "name": "snake-game",
+  "version": "0.0.14",
+  "description": "",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel --no-hmr index.html"
+  },
+  "author": "",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "classnames": "^2.2.6",
+    "malina": "^0.0.14",
+    "malina-decorator": "^0.0.14",
+    "ramda": "^0.26.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "parcel": "^1.10.3",
+    "postcss-modules": "^1.4.1",
+    "sass": "^1.15.2"
+  }
+}

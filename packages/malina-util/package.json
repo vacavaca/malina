@@ -1,6 +1,6 @@
 {
   "name": "malina-util",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Utilities for the malina library",
   "main": "dist/index.js",
   "files": [
