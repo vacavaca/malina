@@ -1,0 +1,23 @@
+.level {
+  display: inline-block;
+  border: 1px solid #232323;
+
+  &-background {
+    fill: #080808;
+  }
+
+  &--gameover {
+    opacity: .6;
+    .level-background {
+      filL: #171717;
+    }
+  }
+
+  &--paused {
+    cursor: pointer;
+
+    .level-background {
+      filL: #101010;
+    }
+  }
+}
