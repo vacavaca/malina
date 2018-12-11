@@ -1,3 +1,4 @@
+import { flatten } from 'malina-util'
 import { ViewDeclaration } from './declaration'
 
 export class Node {
@@ -7,7 +8,7 @@ export class Node {
 
     this.tag = tag
     this.attrs = attrs
-    this.children = children
+    this.children = flatten(children)
   }
 
   static isNode(obj) {
