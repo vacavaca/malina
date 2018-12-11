@@ -22,7 +22,7 @@ const setClasses = (styles, styleAttribute) => memoizeDecorated(withTemplate(ori
 
 const decorateTemplate = (styles, styleAttribute) => node => {
   if (isViewNode(node))
-    return h(setClasses(styles)(node.tag), node.attrs, node.children.map(decorateTemplate(styles)))
+    return h(setClasses(styles)(node.tag), node.attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
   else if (isElementNode(node)) {
     if (node.attrs != null && styleAttribute in node.attrs) {
       const names = (node.attrs[styleAttribute] || '').split(' ').filter(name => name.length > 0)
@@ -38,9 +38,9 @@ const decorateTemplate = (styles, styleAttribute) => node => {
       if (styleClasses.length > 0)
         attrs.class = styleClasses
 
-      return h(node.tag, attrs, node.children.map(decorateTemplate(styles)))
+      return h(node.tag, attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
     } else
-      return h(node.tag, node.attrs, node.children.map(decorateTemplate(styles)))
+      return h(node.tag, node.attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
   } else return node
 }
 
