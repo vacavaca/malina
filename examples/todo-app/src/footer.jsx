@@ -7,7 +7,7 @@ import { branch } from './util'
 const countActive = todos =>
   todos.filter(({ completed }) => !completed).length
 
-const itemsLeft = left => `item${left > 1 ? 's' : ''} left`
+const itemsLeft = left => `item${left != 1 ? 's' : ''} left`
 
 const actions = {}
 

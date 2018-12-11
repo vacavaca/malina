@@ -2,7 +2,7 @@
   "name": "todo-app",
   "version": "0.0.13",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.jsx",
   "private": true,
   "scripts": {
     "test": "echo \"Nothing to test yet\"",
@@ -15,12 +15,10 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "diff": "^3.5.0",
     "history": "^4.7.2",
     "malina": "^0.0.13",
     "malina-decorator": "^0.0.13",
     "malina-router": "^0.0.13",
-    "malina-util": "^0.0.13",
     "todomvc-app-css": "^2.1.2",
     "todomvc-common": "^1.0.5"
   }

@@ -46,7 +46,7 @@ actions.onEditKeyUp = e => ({ editing, input }) => {
 }
 
 export default view(({ todo: { title, completed }, editing, input }, actions) =>
-  <li class={toggleClass({ completed, editing })}>
+  <li class={toggleClass({ todo: true, completed, editing })}>
     <div class="view">
       <input class="toggle" type="checkbox" checked={completed} onChange={actions.onComplete} />
       <label onDblClick={actions.onStartEdit}>{title}</label>
