@@ -25,8 +25,12 @@ else
 endif
 	rm -f $(build_node)
 
+.PHONY: test
+test: clean $(node_release)
+	mocha test
+
 .PHONY: check
-check: lint
+check: lint test
 
 .PHONY: build
 build:  						 \

@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Nothing to test yet\"",
+    "test": "make test",
     "build": "make build",
     "release": "NODE_ENV=production make release"
   },
@@ -47,7 +47,9 @@
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
-    "uglify-es": "^3.3.9"
+    "uglify-es": "^3.3.9",
+    "jsdom": "^13.0.0",
+    "mocha": "^5.2.0"
   },
   "dependencies": {
     "diff": "^3.5.0",
