@@ -1,0 +1,72 @@
+._cell_1j2ww_1._tail_1j2ww_1 {
+  fill: #dedede;
+}
+._cell_1j2ww_1._head_1j2ww_4 {
+  fill: #fff;
+}
+._cell_1j2ww_1._apple_1j2ww_7 {
+  fill: #af0;
+}._level_1gyjj_1 {
+  display: inline-block;
+  border: 1px solid #303030;
+}
+._level_1gyjj_1._gameover_1gyjj_5 {
+  opacity: 0.6;
+}
+._level_1gyjj_1._paused_1gyjj_8 {
+  cursor: pointer;
+}
+._level-background_1gyjj_11 {
+  fill: #080808;
+}
+._level-background_1gyjj_11._paused_1gyjj_8 {
+  fill: #101010;
+}
+._level-background_1gyjj_11._gameover_1gyjj_5 {
+  fill: #171717;
+}
+._level-info_1gyjj_20 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 2em);
+  color: #aaa;
+  display: none;
+  pointer-events: none;
+  z-index: 1;
+}
+._level-info_1gyjj_20._show_1gyjj_30 {
+  display: block;
+}
+._level-container_1gyjj_33 {
+  display: inline-block;
+  position: relative;
+}body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background: #0a0a0a;
+  color: #fdfdfd;
+  font-family: sans-serif;
+}
+
+._app_1qk96_11 {
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+._app-score_1qk96_16 {
+  margin-top: 10vh;
+  margin-bottom: 2em;
+}
+._app-currentScore_1qk96_20, ._app-bestCore_1qk96_20 {
+  display: inline-block;
+  margin: 0 2em;
+}
+._app-currentScore_1qk96_20:first-child, ._app-bestCore_1qk96_20:first-child {
+  margin-left: 0;
+}
+._app-currentScore_1qk96_20:last-child, ._app-bestCore_1qk96_20:last-child {
+  margin-right: 0;
+}

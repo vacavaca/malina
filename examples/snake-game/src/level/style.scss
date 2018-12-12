@@ -1,23 +1,44 @@
 .level {
   display: inline-block;
-  border: 1px solid #232323;
+  border: 1px solid #303030;
+
+  &.gameover {
+    opacity: 0.6;
+  }
+
+  &.paused {
+    cursor: pointer;
+  }
 
   &-background {
     fill: #080808;
-  }
 
-  &--gameover {
-    opacity: .6;
-    .level-background {
-      filL: #171717;
+    &.paused {
+      fill: #101010;
+    }
+
+    &.gameover {
+      fill: #171717;
     }
   }
 
-  &--paused {
-    cursor: pointer;
+  &-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% - 2em);
+    color: #aaa;
+    display: none;
+    pointer-events: none;
+    z-index: 1;
 
-    .level-background {
-      filL: #101010;
+    &.show {
+      display: block;
     }
+  }
+
+  &-container {
+    display: inline-block;
+    position: relative;
   }
 }

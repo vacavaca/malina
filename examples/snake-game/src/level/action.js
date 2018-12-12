@@ -121,5 +121,9 @@ actions.handleBlur = () => (_, actions) => {
   actions.pause()
 }
 
+actions.handleFocusHook = ref => state => {
+  // doing off-state to avoid unnecessary call of the template function
+  state.focusHook = ref
+}
 
 export default actions

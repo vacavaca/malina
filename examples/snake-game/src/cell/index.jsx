@@ -12,5 +12,5 @@ const state = {
 }
 
 export default view(({ x, y, size, style }) =>
-  <rect x={x} y={y} width={1 - 1 / size} height={1 - 1 / size}styleName={cn('cell', style)} />, state)
+  <rect x={x} y={y} width={1 - 1 / size} height={1 - 1 / size} styleName={cn('cell', style)} />, state)
   .decorate(cssModules(styles))

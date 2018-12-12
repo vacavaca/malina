@@ -1,9 +1,7 @@
 const hooks = {}
 
-hooks.mount = (element, state, actions) => {
-  state.focusHook = element.firstChild
+hooks.mount = (element, state, actions) =>
   actions.focus()
-}
 
 hooks.unmount = (e, s, actions) =>
   actions.pause()
