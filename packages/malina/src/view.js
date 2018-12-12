@@ -2,7 +2,7 @@ import { shallowEqual, keys, compose } from 'malina-util'
 import { h, isElementNode, isViewNode, isTextNode } from './node'
 import { view } from './declaration'
 import { toOnEventName, normalizeEventName } from './event'
-import RenderingContext from './context'
+import { defaultContext, svgContext } from './context'
 
 const isParametrizedAction = value =>
   Array.isArray(value) && value.length === 2 && value[0] instanceof Function
@@ -13,8 +13,6 @@ const isSameParametrizedAction = (a, b) =>
 
 let mountLock = false
 let mountHookQueue = []
-const defaultRenderingContext = () => new RenderingContext({})
-const svgRenderingContext = () => new RenderingContext({ isSvg: true })
 
 const isRoot = path => path.length === 0
 
@@ -52,7 +50,7 @@ const requireValidChildren = compose(
 )
 
 export class View {
-  constructor(node, renderingContext) {
+  constructor(node, context) {
     const { tag: declaration, attrs: state, children } = node
     const declaredState = declaration.state instanceof Function
       ? declaration.state(state)
@@ -69,8 +67,8 @@ export class View {
     this.actions = this.bindActions(declaredActions || {})
     this.children = children
     this.hooks = declaredHooks || {}
-    this.renderingContext = renderingContext || defaultRenderingContext()
 
+    this.context = context.setMounting(false)
     this.templateLock = false
     this.updateLock = false
     this.element = null
@@ -84,10 +82,10 @@ export class View {
     this.callHook('create')
   }
 
-  static instantiate(node, renderingContext = null) {
+  static instantiate(node, context) {
     if (!isViewNode(node))
       throw new Error('View can only be instantiated from view-nodes')
-    return new View(node, renderingContext)
+    return new View(node, context)
   }
 
   mount(container, index) {
@@ -106,12 +104,10 @@ export class View {
       throw new Error('View can only have one root element')
 
     if (isElementNode(next)) {
-      if (next.tag === 'svg')
-        this.renderingContext = svgRenderingContext()
-      const element = this.mountNodeElement(container, index, next, [])
+      const element = this.mountNodeElement(container, index, next, [], this.context)
       this.element = element
     } else if (isViewNode(next)) {
-      const view = this.instantiateInnerView(next, [])
+      const view = this.instantiateInnerView(next, [], this.context)
       view.mount(container, index)
       this.element = view.element
     } else if (isTextNode(next)) {
@@ -170,7 +166,7 @@ export class View {
     const next = this.renderTemplate()
     const prev = this.node
     this.node = next
-    this.patch(this.element, prev, next, [])
+    this.patch(this.element, prev, next, [], this.context)
   }
 
   unmount(removeElement) {
@@ -306,26 +302,26 @@ export class View {
   }
 
   /** @private */
-  patch(element, prev, next, path) {
+  patch(element, prev, next, path, context) {
     if (prev === next)
       return
 
     if (isElementNode(prev)) {
       if (next == null) this.patchFromNodeToNone(element, prev, path)
-      else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path)
-      else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path)
+      else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path, context)
+      else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path, context)
       else if (isTextNode(next)) this.patchFromNodeToText(element, prev, next, path)
       else throw new Error('Invalid template type')
     } else if (isViewNode(prev)) {
       if (next == null) this.patchFromViewToNone(element, prev, path)
-      else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path)
-      else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path)
+      else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path, context)
+      else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path, context)
       else if (isTextNode(next)) this.patchFromViewToText(element, prev, next, path)
       else throw new Error('Invalid template type')
     } else {
       if (next == null) this.patchFromTextToNone(element, path)
-      else if (isElementNode(next)) this.patchFromTextToNode(element, next, path)
-      else if (isViewNode(next)) this.patchFromTextToView(element, next, path)
+      else if (isElementNode(next)) this.patchFromTextToNode(element, next, path, context)
+      else if (isViewNode(next)) this.patchFromTextToView(element, next, path, context)
       else if (isTextNode(next)) this.patchTextNodes(element, prev, next, path)
       else throw new Error('Invalid template type')
     }
@@ -351,16 +347,16 @@ export class View {
   }
 
   /** @private */
-  patchFromTextToNode(element, next, path) {
-    const newElement = this.createNodeElement(element.ownerDocument, next, path)
+  patchFromTextToNode(element, next, path, context) {
+    const newElement = this.createNodeElement(element.ownerDocument, next, path, context)
     element.replaceWith(newElement)
     if (isRoot(path))
       this.element = newElement
   }
 
   /** @private */
-  patchFromTextToView(element, next, path) {
-    const view = this.instantiateInnerView(next, path)
+  patchFromTextToView(element, next, path, context) {
+    const view = this.instantiateInnerView(next, path, context)
     const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
     const parent = element.parentNode
     element.remove()
@@ -391,17 +387,17 @@ export class View {
   }
 
   /** @private */
-  patchFromNodeToNode(element, prev, next, path) {
+  patchFromNodeToNode(element, prev, next, path, context) {
     if (prev === next)
       return
 
     if (prev.tag === next.tag) {
-      this.updateAttributes(element, prev, next, path)
-      this.updateChildren(element, prev, next, path)
+      this.updateAttributes(element, prev, next, path, context)
+      this.updateChildren(element, prev, next, path, context)
     } else {
       this.removeParametrizedListeners(prev, path)
       this.destroyInnerViews(prev, path)
-      const newElement = this.createNodeElement(element.ownerDocument, next, path)
+      const newElement = this.createNodeElement(element.ownerDocument, next, path, context)
       element.replaceWith(newElement)
 
       if (isRoot(path))
@@ -410,10 +406,10 @@ export class View {
   }
 
   /** @private */
-  patchFromNodeToView(element, prev, next, path) {
+  patchFromNodeToView(element, prev, next, path, context) {
     this.removeParametrizedListeners(prev, path)
     this.destroyInnerViews(prev, path)
-    const view = this.instantiateInnerView(next, path)
+    const view = this.instantiateInnerView(next, path, context)
     const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
     const parent = element.parentNode
     element.remove()
@@ -441,9 +437,9 @@ export class View {
   }
 
   /** @private */
-  patchFromViewToNode(element, prev, next, path) {
+  patchFromViewToNode(element, prev, next, path, context) {
     this.destroyInnerView(path)
-    const newElement = this.createNodeElement(element.ownerDocument, next, path)
+    const newElement = this.createNodeElement(element.ownerDocument, next, path, context)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -451,7 +447,7 @@ export class View {
   }
 
   /** @private */
-  patchFromViewToView(element, prev, next, path) {
+  patchFromViewToView(element, prev, next, path, context) {
     if (prev === next)
       return
 
@@ -460,7 +456,7 @@ export class View {
       view.update(next.attrs, next.children)
     } else {
       this.destroyInnerView(path)
-      const view = this.instantiateInnerView(next, path)
+      const view = this.instantiateInnerView(next, path, context)
       const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
       const parent = element.parentNode
       element.remove()
@@ -498,40 +494,46 @@ export class View {
   }
 
   /** @private */
-  createNodeElement(document, node, path) {
+  createNodeElement(document, node, path, context) {
     let element
-    if (this.renderingContext.isSvg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
+    context = context
+      .setSvg(context.svg || node.tag === 'svg')
+    if (context.svg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
 
-    this.refreshAttributes(element, node, path)
-    this.refreshChildren(element, node, path)
+    this.refreshAttributes(element, node, path, context)
+    this.refreshChildren(element, node, path, context)
     return element
   }
 
   /** @private */
-  mountNodeElement(container, index, node, path) {
+  mountNodeElement(container, index, node, path, context) {
     const document = container.ownerDocument
     let element
-    if (this.renderingContext.isSvg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
+    context = context
+      .setSvg(context.svg || node.tag === 'svg')
+      .setMounting(true)
+
+    if (context.svg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
 
-    this.refreshAttributes(element, node, path)
+    this.refreshAttributes(element, node, path, context)
     const before = container.childNodes[index] || null
     container.insertBefore(element, before)
-    this.refreshChildren(element, node, path, true)
+    this.refreshChildren(element, node, path, context)
     return element
   }
 
   /** @private */
-  refreshAttributes(element, node, path) {
+  refreshAttributes(element, node, path, context) {
     for (const name in node.attrs) {
       const value = node.attrs[name]
-      this.addAttribute(element, name, value, path)
+      this.addAttribute(element, name, value, path, context)
     }
   }
 
   /** @private */
-  updateAttributes(element, prev, next, path) {
+  updateAttributes(element, prev, next, path, context) {
     if (prev === next)
       return
 
@@ -539,18 +541,18 @@ export class View {
       const nextValue = next.attrs[name]
       if (name in prev.attrs) {
         const prevValue = prev.attrs[name]
-        this.updateAttribute(element, name, prevValue, nextValue, path)
-      } else this.addAttribute(element, name, nextValue, path)
+        this.updateAttribute(element, name, prevValue, nextValue, path, context)
+      } else this.addAttribute(element, name, nextValue, path, context)
     }
 
     for (const name in prev.attrs) {
       if (!(name in next.attrs))
-        this.removeAttribute(element, name, prev.attrs[name], path)
+        this.removeAttribute(element, name, prev.attrs[name], path, context)
     }
   }
 
   /** @private */
-  addAttribute(element, name, value, path) {
+  addAttribute(element, name, value, path, context) {
     if (name === 'style') {
       for (const prop in value)
         this.setStyleProp(element, prop, value[prop] || '')
@@ -563,7 +565,7 @@ export class View {
     } else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
-    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg && value != null)
+    } else if (name !== 'focus' && name in element && !context.svg && value != null)
       element[name] = value
     else if (typeof value === 'boolean') {
       if (name === 'focus' && element.focus && element.blur) {
@@ -574,7 +576,7 @@ export class View {
   }
 
   /** @private */
-  updateAttribute(element, name, prev, next, path) {
+  updateAttribute(element, name, prev, next, path, context) {
     if (prev === next)
       return
 
@@ -615,7 +617,7 @@ export class View {
         for (const key in next)
           element.dataset[key] = next[key]
       }
-    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg)
+    } else if (name !== 'focus' && name in element && !context.svg)
       element[name] = next
     else if (typeof prev === 'boolean') {
       if (name === 'focus') {
@@ -634,7 +636,7 @@ export class View {
   }
 
   /** @private */
-  removeAttribute(element, name, prev, path) {
+  removeAttribute(element, name, prev, path, context) {
     if (name === 'style') element.style.cssText = ''
     else if (prev instanceof Function) {
       const event = normalizeEventName(name)
@@ -646,7 +648,7 @@ export class View {
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
-    } else if (name !== 'focus' && name in element && !this.renderingContext.isSvg)
+    } else if (name !== 'focus' && name in element && !context.svg)
       element[name] = undefined
     else if (typeof prev === 'boolean') {
       if (name === 'focus' && element.blur)
@@ -708,27 +710,27 @@ export class View {
   }
 
   /** @private */
-  refreshChildren(element, node, path, mount = false) {
+  refreshChildren(element, node, path, context) {
     if (!requireValidChildren(node.children))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
     for (const ndx in node.children) {
       const child = node.children[ndx]
       const nextPath = path.concat([ndx])
-      this.addChildren(element, child, ndx, nextPath, mount)
+      this.addChildren(element, child, ndx, nextPath, context)
     }
   }
 
   /** @private */
-  addChildren(element, child, ndx = null, path, mount = false) {
+  addChildren(element, child, ndx = null, path, context) {
     if (isElementNode(child)) {
-      if (mount) this.mountNodeElement(element, null, child, path)
+      if (context.mounting) this.mountNodeElement(element, ndx, child, path, context)
       else {
-        const childElement = this.createNodeElement(element.ownerDocument, child, path)
+        const childElement = this.createNodeElement(element.ownerDocument, child, path, context)
         element.appendChild(childElement)
       }
     } else if (isViewNode(child)) {
-      const view = this.instantiateInnerView(child, path)
+      const view = this.instantiateInnerView(child, path, context)
       view.mount(element, ndx)
     } else if (child != null) {
       const childElement = element.ownerDocument.createTextNode(`${child}`)
@@ -737,12 +739,15 @@ export class View {
   }
 
   /** @private */
-  updateChildren(element, prev, next, path) {
+  updateChildren(element, prev, next, path, context) {
     if (prev === next)
       return
 
     if (!requireValidChildren(next.children))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
+
+    context = context
+      .setSvg(context.svg || next.tag === 'svg')
 
     const len = Math.max(prev.children.length, next.children.length)
     let nodeIndexShift = 0
@@ -752,20 +757,20 @@ export class View {
       const nextChild = ndx in next.children ? next.children[ndx] : null
       const nextPath = path.concat([ndx])
       if (prevChild != null) {
-        this.patch(childNode, prevChild, nextChild, nextPath)
+        this.patch(childNode, prevChild, nextChild, nextPath, context)
         if (nextChild == null)
           nodeIndexShift += 1
       } else {
-        this.addChildren(element, nextChild, ndx, nextPath)
+        this.addChildren(element, nextChild, ndx, nextPath, context)
         nodeIndexShift -= 1
       }
     }
   }
 
   /** @private */
-  instantiateInnerView(node, path) {
+  instantiateInnerView(node, path, context) {
     const key = View.getPathKey(path)
-    const view = View.instantiate(node, this.renderingContext)
+    const view = View.instantiate(node, context)
     this.innerViews.set(key, { view, path: path.slice() })
     return view
   }
@@ -825,14 +830,22 @@ export class View {
   }
 }
 
-export const mount = (container, node, index = 0) => {
+export const mount = (container, node, index = 0, {
+  insideSvg = false
+} = {}) => {
   let viewNode = node
   if (isElementNode(node))
     viewNode = h(view(node))
 
-  const global = container.ownerDocument.defaultView
-  const renderingContext = container instanceof global.SVGElement ? svgRenderingContext() : defaultRenderingContext()
-  const instance = View.instantiate(viewNode, renderingContext)
+  let context = defaultContext()
+    .setSvg(insideSvg)
+
+  if (!context.svg) {
+    const global = container.ownerDocument.defaultView
+    context = context.setSvg(container instanceof global.SVGElement)
+  }
+
+  const instance = View.instantiate(viewNode, context)
   instance.mount(container, index)
   return instance
 }

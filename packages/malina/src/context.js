@@ -1,7 +1,30 @@
-export default class RenderingContext {
-  constructor({
-    isSvg = false
-  }) {
-    this.isSvg = isSvg
+
+export default class Context {
+  constructor(options) {
+    this.options = options
+  }
+
+  get svg() {
+    return this.options.isSvg
+  }
+
+  get mounting() {
+    return this.options.mounting
+  }
+
+  setSvg(isSvg) {
+    return this.update({ isSvg })
+  }
+
+  setMounting(mounting) {
+    return this.update({ mounting })
+  }
+
+  update(options) {
+    return new Context({ ...this.options, ...options })
   }
 }
+
+export const defaultContext = () => new Context()
+
+export const svgContext = () => new Context()
