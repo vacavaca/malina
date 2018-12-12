@@ -44,5 +44,5 @@ const decorateTemplate = (styles, styleAttribute) => node => {
   } else return node
 }
 
-export default (styles, styleAttribute = 'styleName') =>
+export const cssModules = (styles, styleAttribute = 'styleName') =>
   decorator(View => setClasses(styles, styleAttribute)(View))

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "make test",
     "check": "make test",
-    "commit": "npm run check && git-cz",
+    "commit": "git-cz",
     "clean": "make clean",
     "release": "make release",
     "build": "make build",

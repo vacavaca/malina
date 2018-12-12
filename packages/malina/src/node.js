@@ -20,16 +20,29 @@ export class Node {
     return true // because instanceof can be inreliable on some build configurations
   }
 
+  /**
+   * Used only for debugging purposes
+   */
   toString() {
-    const tagName = typeof this.tag === 'string' ? this.tag : 'View'
-    return `${tagName} ${JSON.stringify(this.attrs || {})}${
-      this.children.length > 0 ? `\n${this.children.map(c => {
-        if (c == null)
-          return "\t''"
-        const str = c.toString()
-        return str.split('\n').map(s => `\t${s}`).join('\n')
-      }).join('\n')}` : ''
-    }`
+    const attrString = Object.keys(this.attrs).reduce((a, k) => {
+      const value = this.attrs[k]
+      if (typeof value === 'string') return `${a} ${k}="${value}"`
+      else if (value instanceof Function) return `${a} ${k}=[Function]`
+      else return `${a} ${k}={${JSON.stringify(value)}}`
+    }, '')
+
+    const tagName = typeof this.tag === 'string' ? this.tag : '[View]'
+
+    if (this.children.length > 0) {
+      return `<${tagName}${attrString}>\n${
+        this.children.map(child => {
+          if (child == null)
+            return '\t""'
+          const str = child.toString()
+          return str.split('\n').map(s => `\t${s}`).join('\n')
+        })
+      }\n</${tagName}>`
+    } else return `<${tagName}${attrString}/>`
   }
 }
 

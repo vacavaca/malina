@@ -54,7 +54,7 @@ const decorateTemplate = context => node => {
   if (!Array.isArray(node)) {
     if (isViewNode(node)) {
       const attrs = { ...(node.attrs != null ? node.attrs : {}), [contextKey]: context }
-      return h(provideContext(node.tag), attrs, node.children.map(decorateTemplate(context)))
+      return h(provideContext(node.tag), attrs, node.children)
     } else if (isElementNode(node))
       return h(node.tag, node.attrs, node.children.map(decorateTemplate(context)))
     else return node
