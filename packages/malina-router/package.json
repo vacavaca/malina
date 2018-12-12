@@ -9,6 +9,7 @@
   "scripts": {
     "test": "echo \"Nothing to test yet\"",
     "build": "make build",
+    "check": "make check",
     "release": "NODE_ENV=production make release"
   },
   "keywords": [

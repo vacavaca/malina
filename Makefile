@@ -6,9 +6,13 @@ release_msg := "Update CHANGELOG.md and parent package version"
 
 .PHONY: clean
 clean:
-	lerna clean -y && lerna exec 'rm -rf dist'
+	lerna clean -y
 
-.PHONY: build
+.PHONY: clean-dist
+clean-dist:
+	lerna exec 'rm -rf dist'
+
+.PHONY: prepare
 prepare: clean
 ifeq ($(RUNNER_ENV),ci)
 	lerna bootstrap
@@ -17,15 +21,19 @@ else
 endif
 
 .PHONY: build
-build: prepare
-	lerna run --bail build
+build: prepare clean-dist
+	lerna run --bail --no-private build
+
+.PHONY: check
+check: prepare
+	lerna run --bail --stream check
 
 .PHONY: test
-test: build
-	lerna run --bail --stream test
+test:
+	lerna run --bail --stream --no-private test
 
-.PHONY: build
-release: prepare
+.PHONY: release
+release: prepare clean-dist
 	lerna run --bail --stream release
 
 .PHONY: publish

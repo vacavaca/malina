@@ -2,7 +2,7 @@ import { shallowEqual, keys, compose } from 'malina-util'
 import { h, isElementNode, isViewNode, isTextNode } from './node'
 import { view } from './declaration'
 import { toOnEventName, normalizeEventName } from './event'
-import { defaultContext, svgContext } from './context'
+import { defaultContext } from './context'
 
 const isParametrizedAction = value =>
   Array.isArray(value) && value.length === 2 && value[0] instanceof Function

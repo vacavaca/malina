@@ -9,6 +9,7 @@
   "scripts": {
     "test": "make test",
     "build": "make build",
+    "check": "make check",
     "release": "NODE_ENV=production make release"
   },
   "keywords": [

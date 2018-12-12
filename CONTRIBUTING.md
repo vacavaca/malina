@@ -23,6 +23,10 @@
 
 `npm run test`
 
+### Run linter and tests
+
+`npm run check`
+
 ### Clean build directories
 
 `npm run clean`

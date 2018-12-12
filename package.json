@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "make test",
-    "commit": "git-cz",
+    "check": "make test",
+    "commit": "npm run check && git-cz",
     "clean": "make clean",
     "release": "make release",
     "build": "make build",
