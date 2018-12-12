@@ -7,6 +7,7 @@ module.exports = {
     format: 'cjs'
   },
   external: ['malina', 'malina-util', 'malina-decorator', 'path-to-regexp'],
+  context: 'this',
   plugins: [
     babel()
   ]

@@ -7,6 +7,7 @@ module.exports = {
     format: 'cjs'
   },
   external: ['malina', 'malina-util'],
+  context: 'this',
   plugins: [
     babel()
   ]

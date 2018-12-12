@@ -6,6 +6,7 @@ module.exports = {
     file: 'dist/index.node.js',
     format: 'cjs'
   },
+  context: 'this',
   plugins: [
     babel()
   ]
