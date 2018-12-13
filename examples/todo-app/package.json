@@ -1,6 +1,6 @@
 {
   "name": "todo-app",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "",
   "main": "src/index.jsx",
   "private": true,
@@ -16,9 +16,9 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "history": "^4.7.2",
-    "malina": "^0.0.14",
-    "malina-decorator": "^0.0.14",
-    "malina-router": "^0.0.14",
+    "malina": "^0.0.15",
+    "malina-decorator": "^0.0.15",
+    "malina-router": "^0.0.15",
     "todomvc-app-css": "^2.1.2",
     "todomvc-common": "^1.0.5"
   }
