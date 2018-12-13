@@ -1,5 +1,4 @@
-import { compose } from 'malina-util'
-import { genRandomId } from './id'
+import { compose, genRandomId } from 'malina-util'
 
 class Declaration {
   constructor(template, state, actions, hooks) {
