@@ -109,7 +109,7 @@ const publishRefs = (root, prev, next) => {
 }
 
 const publishUnmount = refs => {
-  for (const { consumer } of refs.values)
+  for (const { consumer } of refs.values())
     consumer(null)
 }
 

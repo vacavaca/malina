@@ -1,17 +1,8 @@
-import { h, isViewNode, isElementNode, decorator } from 'malina'
+import { h, isElementNode } from 'malina'
 import { withTemplate } from './common'
 
-const setClasses = (styles, styleAttribute) =>
-  withTemplate(original =>
-    (state, actions, children) => {
-      const node = original(state, actions, children)
-      return decorateTemplate(styles, styleAttribute)(node)
-    })
-
 const decorateTemplate = (styles, styleAttribute) => node => {
-  if (isViewNode(node))
-    return h(setClasses(styles)(node.tag), node.attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
-  else if (isElementNode(node)) {
+  if (isElementNode(node)) {
     if (node.attrs != null && styleAttribute in node.attrs) {
       const names = (node.attrs[styleAttribute] || '').split(' ').filter(name => name.length > 0)
       const existing = (node.attrs.class || '').split(' ').filter(name => name.length > 0)
@@ -27,10 +18,12 @@ const decorateTemplate = (styles, styleAttribute) => node => {
         attrs.class = styleClasses
 
       return h(node.tag, attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
-    } else
-      return h(node.tag, node.attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
+    } else return h(node.tag, node.attrs, node.children.map(decorateTemplate(styles, styleAttribute)))
   } else return node
 }
 
-export const cssModules = (styles, styleAttribute = 'styleName') =>
-  decorator(View => setClasses(styles, styleAttribute)(View))
+export const cssModules = (styles, styleAttribute = 'styleName') => withTemplate(original =>
+  (state, actions, children) => {
+    const node = original(state, actions, children)
+    return decorateTemplate(styles, styleAttribute)(node)
+  })
