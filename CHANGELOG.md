@@ -1,3 +1,46 @@
+#### 0.0.15 (2018-12-13)
+
+##### Build System / Dependencies
+
+*  Improvements in the build pipeline ([702d60c9](https://github.com/vacavaca/malina/commit/702d60c9fdd632017bdd32e5ff22e7b6f2741a07))
+*  Fix rollup bundling a bit ([e29393a9](https://github.com/vacavaca/malina/commit/e29393a92b9062b216301590470d1964292fea1f))
+
+##### Chores
+
+*  Update package distributions ([acc2cc3f](https://github.com/vacavaca/malina/commit/acc2cc3f7d7c1de850ee7878e7d9b10a10dd3300))
+*  Update snake-game example ([8a939593](https://github.com/vacavaca/malina/commit/8a9395939f966a472c254437be3d54a3328e7ec3))
+*  Update snake-game example ([6dc12c7f](https://github.com/vacavaca/malina/commit/6dc12c7f69415abd88f7fe57640ecaf519a87836))
+*  Add snake-game example ([22d9db81](https://github.com/vacavaca/malina/commit/22d9db8107aa230196490e7a59fa014e8d1b7f77))
+
+##### Documentation Changes
+
+*  Update contribution guide ([cd0c2b7d](https://github.com/vacavaca/malina/commit/cd0c2b7d684986475bfebb034f987405108335b6))
+
+##### New Features
+
+* **malina-decorator:**
+  *  Add new `withUniqIds` decorator ([6cd60d2e](https://github.com/vacavaca/malina/commit/6cd60d2e7c07c964e07b17410bddf37feb1a4896))
+  *  Add new `withRefs` decorator ([fe1b0f7f](https://github.com/vacavaca/malina/commit/fe1b0f7fe4229ef8ff0e3059538e597bab96825f))
+* **malina:**
+  *  Add key, data and index arguments to the render function of the Map collection ([4563ea20](https://github.com/vacavaca/malina/commit/4563ea2007d1810776f29ac053f0a52e897082ff))
+  *  Add utils to work with project environment ([383b17de](https://github.com/vacavaca/malina/commit/383b17dec15483ea617a91c4f4dfb76592e93cdf))
+
+##### Bug Fixes
+
+* **malina:**
+  *  Fix keyed collections ([3ebe7db1](https://github.com/vacavaca/malina/commit/3ebe7db1fb314d62d35d8f06e494dae4a7415885))
+  *  Fix `warn` method of the env utils ([581209fa](https://github.com/vacavaca/malina/commit/581209faf5dc9106692da254d4b1000a14dbcc7f))
+  *  Fix rendering inside svg elements ([c4ad9591](https://github.com/vacavaca/malina/commit/c4ad9591f0c69c7f6c4f43a0d2370291e82a26ad))
+* **malina-decorator:**  Fixes in `cssModules` and `withRefs` decorators ([ce2fd9bb](https://github.com/vacavaca/malina/commit/ce2fd9bb97dfbbec4a6e44277fa554fe453e6b56))
+
+##### Refactors
+
+* **malina:**  Move `genRandomId` method to the malina-util package ([018e8394](https://github.com/vacavaca/malina/commit/018e8394ead13338fb3cdd9b5e72a7001901043d))
+
+##### Tests
+
+* **malina:**  Add tests to the malina package ([cc39b34d](https://github.com/vacavaca/malina/commit/cc39b34d57a0930c34773311883050ddffa11c14))
+
 #### 0.0.14 (2018-12-11)
 
 ##### Chores
