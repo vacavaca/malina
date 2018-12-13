@@ -1,24 +1,12 @@
 import { h, isViewNode, isElementNode, decorator } from 'malina'
 import { withTemplate } from './common'
 
-const decoratedCache = new Map()
-const decoratedCacheLimit = 10000
-
-const memoizeDecorated = wrapped => decorator(Inner => {
-  if (decoratedCache.has(Inner.template)) return decoratedCache.get(Inner.template)
-  else {
-    let decorated = wrapped(Inner)
-    if (decoratedCache.size < decoratedCacheLimit)
-      decoratedCache.set(Inner.template, decorated)
-    return decorated
-  }
-})
-
-const setClasses = (styles, styleAttribute) => memoizeDecorated(withTemplate(original =>
-  (state, actions, children) => {
-    const node = original(state, actions, children)
-    return decorateTemplate(styles, styleAttribute)(node)
-  }))
+const setClasses = (styles, styleAttribute) =>
+  withTemplate(original =>
+    (state, actions, children) => {
+      const node = original(state, actions, children)
+      return decorateTemplate(styles, styleAttribute)(node)
+    })
 
 const decorateTemplate = (styles, styleAttribute) => node => {
   if (isViewNode(node))

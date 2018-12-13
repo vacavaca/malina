@@ -1,5 +1,6 @@
-import { h, isViewNode, isElementNode, decorator } from 'malina'
+import { h, isViewNode, isElementNode } from 'malina'
 import { compose, shallowEqual } from 'malina-util'
+import { memoizedDecorator } from './memoized'
 import { withHooks, withActions, withTemplate } from './common'
 import EventEmitter from './event-emitter'
 
@@ -29,20 +30,7 @@ class Context {
   }
 }
 
-const decoratedCache = new Map()
-const decoratedCacheLimit = 10000
-
-const memoizeDecorated = wrapped => decorator(Inner => {
-  if (decoratedCache.has(Inner.template)) return decoratedCache.get(Inner.template)
-  else {
-    let decorated = wrapped(Inner)
-    if (decoratedCache.size < decoratedCacheLimit)
-      decoratedCache.set(Inner.template, decorated)
-    return decorated
-  }
-})
-
-const provideContext = memoizeDecorated(withTemplate(original =>
+const provideContext = memoizedDecorator(withTemplate(original =>
   (state, actions, children) => {
     const context = state[contextKey]
     const node = original(state, actions, children)
@@ -79,6 +67,9 @@ export const withContext = (provider = defaultContextProvider) => {
         if (!(contextKey in state)) {
           const context = new Context(normalizedProvider(state, actions))
           state[contextKey] = context
+        } else {
+          const context = state[contextKey]
+          context.update(normalizedProvider(state, actions))
         }
       },
       update: original => (mount, state, actions) => {

@@ -26,7 +26,7 @@ Incorrect use of refs:
 
 ${node}
 
-Views can only handle its own refs. When the ref passed to a child-node inside another view-node it will be ignored`)
+Views can only handle its own refs. When a ref passed to a child-node inside another view-node it will be ignored`)
 
 const warnInnerViewRefs = (key, node, parent = null) => {
   const elementNode = isElementNode(node)
@@ -74,8 +74,18 @@ const collectRefsInt = (key, node, path, refs) => {
   return { refs, node }
 }
 
-const collectRefs = (key, node) =>
-  collectRefsInt(key, node, [], new Map())
+const collectRefs = (key, node) => {
+  const refs = new Map()
+  if (Array.isArray(node)) {
+    const result = []
+    for (const i in node) {
+      const nextPath = [i]
+      result.push(collectRefsInt(key, node, nextPath, refs).node)
+    }
+
+    return { refs, node: result }
+  } else return collectRefsInt(key, node, [], refs)
+}
 
 const publishRef = (root, { path, consumer }) => {
   const element = accessElement(root, path)
