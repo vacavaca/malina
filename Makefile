@@ -10,7 +10,7 @@ clean:
 
 .PHONY: clean-dist
 clean-dist:
-	lerna exec 'rm -rf dist'
+	lerna run --stream clean
 
 .PHONY: prepare
 prepare: clean
@@ -21,15 +21,15 @@ else
 endif
 
 .PHONY: build
-build: prepare clean-dist
-	lerna run --bail --no-private build
+build: prepare
+	lerna run --bail --stream --no-private build
 
 .PHONY: check
-check: prepare
+check: build
 	lerna run --bail --stream check
 
 .PHONY: test
-test:
+test: build
 	lerna run --bail --stream --no-private test
 
 .PHONY: release

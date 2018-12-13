@@ -10,6 +10,7 @@
     "test": "echo \"Nothing to test yet\"",
     "build": "make build",
     "check": "make check",
+    "clean": "make clean",
     "release": "NODE_ENV=production make release"
   },
   "keywords": [

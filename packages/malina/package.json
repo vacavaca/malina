@@ -10,6 +10,7 @@
     "test": "make test",
     "build": "make build",
     "check": "make check",
+    "clean": "make clean",
     "release": "NODE_ENV=production make release"
   },
   "keywords": [

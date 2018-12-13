@@ -14,6 +14,10 @@ lint:
 clean:
 	rm -rf dist/*
 
+.PHONY: post-clean
+post-clean:
+	rm $(build_node)
+
 $(build_node): src
 	rollup -c rollup.config.js
 
@@ -23,11 +27,10 @@ ifeq ($(NODE_ENV),production)
 else
 	cp $(build_node) $(node_release)
 endif
-	rm -f $(build_node)
 
 .PHONY: test
-test: clean $(node_release)
-	mocha test
+test: $(node_release)
+	NODE_ENV=testing mocha test
 
 .PHONY: check
 check: lint test
@@ -41,5 +44,5 @@ build:  						 \
 release:						 \
 	clean 	  				 \
 	check 						 \
-	$(node_release)
-
+	$(node_release)		 \
+	post-clean
