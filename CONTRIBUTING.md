@@ -57,3 +57,11 @@ To lint the code inside a package make a `lint`:
 `make lint`
 
 Projects in the examples directory may differ in configuration, please refer to the corresponding package.json
+
+## Publishing
+
+1. Commit or stash all changes in the working tree
+2. Build and check packages `npm run build && npm run check`
+3. Build packages for production `npm run release`
+4. Commit builded packages using this message: "*chore: Update package distributions*"
+5. Run `npm run publish [BUMP]` to publish packages 
