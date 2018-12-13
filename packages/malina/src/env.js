@@ -19,5 +19,5 @@ const warnAvailable = consoleAvailable && 'warn' in _global.console
 
 export const warn = msg => {
   if (isDevelopment && warnAvailable)
-    console.warn(msg)
+    _global.console.warn(msg)
 }
