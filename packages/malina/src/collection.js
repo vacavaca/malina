@@ -6,7 +6,7 @@ import { mount } from './view'
 
 const index = index => {
   if (index == null)
-    throw new Error("'indexBy' attribute of the List view must be defined as a string or function")
+    return (_, i) => i
 
   if (index instanceof Function) return index
   else return item => item[index]
@@ -20,7 +20,7 @@ const state = state => ({
 
   mountPoint: null,
   initialized: false,
-  views: [],
+  views: {},
   index: [],
   prevData: []
 })
@@ -69,8 +69,7 @@ const normalizeDiffPatches = patches => {
 
 actions.initialize = () => state => {
   const [container, mountIndex] = state.mountPoint
-  while (container.firstChild)
-    container.firstChild.remove()
+  container.childNodes[mountIndex].remove()
   state.initialized = true
 
   state.index = []
@@ -78,7 +77,7 @@ actions.initialize = () => state => {
   for (const i in state.data) {
     const index = +i
     const item = state.data[index]
-    const key = state.accessor(item)
+    const key = state.accessor(item, index, state.data)
     state.index.push(key)
 
     const node = h(ItemRenderer, { render: state.render(item, index, state.data) })
@@ -177,8 +176,10 @@ hooks.update = (m, s, actions) => {
 
 hooks.unmount = (_, state) => {
   state.mountPoint = null
-  state.views = []
+  state.initialized = false
+  state.views = {}
   state.index = []
+  state.prevData = []
 }
 
 const ListRenderer = view(null, state, actions, hooks)
