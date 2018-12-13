@@ -1,13 +1,18 @@
 .level {
   display: inline-block;
-  border: 1px solid #303030;
+  position: relative;
 
-  &.gameover {
-    opacity: 0.6;
-  }
+  &-field {
+    display: inline-block;
+    border: 1px solid #303030;
 
-  &.paused {
-    cursor: pointer;
+    &.gameover {
+      opacity: 0.6;
+    }
+
+    &.paused {
+      cursor: pointer;
+    }
   }
 
   &-background {
@@ -35,10 +40,5 @@
     &.show {
       display: block;
     }
-  }
-
-  &-container {
-    display: inline-block;
-    position: relative;
   }
 }

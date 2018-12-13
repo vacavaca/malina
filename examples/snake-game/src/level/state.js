@@ -27,6 +27,12 @@ export const getRandomPosOnField = state => ({
   y: Math.floor(Math.random() * state.fieldSize),
 })
 
+export const getRandomDirection = () => {
+  const dir = Math.random() - 0.5
+  const sign = Math.sign(Math.random() - 0.5)
+  return { x: dir >= 0 ? sign : 0, y: dir < 0 ? sign : 0 }
+}
+
 export const getNewApplePos = state => {
   if (state.snake.length === (state.fieldSize * state.fieldSize))
     return null
@@ -77,7 +83,15 @@ export const reset = state => {
     paused: true
   }
 
-  next.snake = [getRandomPosOnField(next)]
+  let direction = null
+  while (direction == null || (direction.x == 0 && direction.y == 0))
+    direction = getRandomDirection()
+
+  const head = getRandomPosOnField(next)
+  next.snake = [head]
+  for (let i = 1; i < 3; i++)
+    next.snake.unshift(constrainPos(state, posAdd(next.snake[0], direction)))
+
   next.apple = getNewApplePos(next)
   return next
 }

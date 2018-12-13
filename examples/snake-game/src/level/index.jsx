@@ -1,4 +1,4 @@
-import { h, view } from 'malina'
+import { h, view, List } from 'malina'
 import cn from 'classnames'
 import { cssModules, withRefs } from 'malina-decorator'
 import { default as state, gridLengthToScreen } from './state'
@@ -40,7 +40,7 @@ const renderApple = state =>
     size={state.cellSize}
     style="apple" />
 
-const renderSnake = (state, pos, index) =>
+const renderSnakeCell = (state, pos, index) =>
   <Cell
     key={`snake.${index}`}
     {...pos}
@@ -55,6 +55,11 @@ const renderFocusHook = (state, actions) =>
     onKeyDown={actions.handleKeyDown}
     onBlur={actions.handleBlur} />
 
+const renderSnake = state =>
+  <List data={state.snake}>{
+    (pos, index) => renderSnakeCell(state, pos, index)
+  }</List>
+
 const renderField = (state, actions) => {
   const screenSize = getScreenSize(state)
   const screenSizeStyle = {
@@ -64,7 +69,7 @@ const renderField = (state, actions) => {
 
   return (
     <svg
-      styleName={cn('level', {
+      styleName={cn('level-field', {
         'gameover': state.gameOver,
         'paused': state.paused
       })}
@@ -75,7 +80,7 @@ const renderField = (state, actions) => {
     >
       {renderBackground(state)}
       {renderApple(state)}
-      {state.snake.map((pos, i) => renderSnake(state, pos, i))}
+      {renderSnake(state)}
     </svg>
   )
 }
@@ -85,8 +90,9 @@ const renderInfo = state =>
     "show": state.paused
   })}>{getInfoText(state)}</div>
 
+
 export default view((state, actions) =>
-  <div styleName="level-container">
+  <div styleName="level">
     {renderFocusHook(state, actions)}
     {renderInfo(state)}
     {renderField(state, actions)}
