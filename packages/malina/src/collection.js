@@ -204,7 +204,7 @@ export const Map = view((state, _, children) => {
     return null
 
   render = render instanceof Function ? render : () => render
-  const mapRender = ([key, value]) => render(value)
+  const mapRender = ([key, value], i, data) => render(value, key, data, i)
   const data = keys(state.data || {}).map(k => [k, state.data[k]])
   const indexBy = ([k]) => k
   return h(ListRenderer, { data, indexBy, render: mapRender })
