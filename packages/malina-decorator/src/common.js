@@ -41,9 +41,13 @@ export const withHooks = hooks => decorator(Inner => {
     const result = { ...original }
     for (const key in decorate) {
       result[key] = (mount, state, actions) => {
-        const originalHook = () => {
+        const originalHook = (innerMount, innerState, innerActions) => {
+          mount = innerMount !== undefined ? innerMount : mount
+          innerState = innerState !== undefined ? innerState : state
+          innerActions = innerActions !== undefined ? innerActions : actions
+
           if (original[key] != null)
-            original[key](mount, state, actions)
+            original[key](innerMount, innerState, innerActions)
         }
         decorate[key](originalHook)(mount, state, actions)
       }
@@ -59,4 +63,4 @@ export const withTemplate = getTemplate => decorator(Inner =>
   view(getTemplate(Inner.template), Inner.state, Inner.actions, Inner.hooks))
 
 export const mapState = mapper => decorator(Inner =>
-  (state, actions, children) => h(Inner, mapper(state), children))
+  (state, _, children) => h(Inner, mapper(state), children))
