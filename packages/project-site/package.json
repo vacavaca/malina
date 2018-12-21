@@ -1,0 +1,31 @@
+{
+  "name": "project-site",
+  "version": "0.0.16",
+  "private": true,
+  "description": "",
+  "main": "src/index.jsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "make compile-docs && parcel --no-hmr index.html || make clean",
+    "build": "NODE_ENV=production parcel build --no-source-maps --no-cache index.html"
+  },
+  "author": "vacavaca <vacavaca@fastmail.com>",
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "classnames": "^2.2.6",
+    "highlight.js": "^9.13.1",
+    "history": "^4.7.2",
+    "malina": "^0.0.16",
+    "malina-decorator": "^0.0.16",
+    "malina-router": "^0.0.16",
+    "malina-util": "^0.0.16",
+    "marked": "^0.5.2",
+    "normalize.css": "^8.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "parcel": "^1.10.3",
+    "postcss-modules": "^1.4.1",
+    "sass": "^1.15.2"
+  }
+}
