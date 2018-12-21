@@ -4,7 +4,7 @@ import { memoizedDecorator } from './memoized'
 import { withHooks, withActions, withTemplate } from './common'
 import EventEmitter from './event-emitter'
 
-const contextKey = Symbol('context')
+const contextKey = Symbol.for('__malina_context')
 
 class Context {
   constructor(value = {}) {
@@ -16,13 +16,14 @@ class Context {
     return this.emitter.subscribe(listener)
   }
 
-  update(value) {
+  update(value, silent = false) {
     const next = { ...this.value, ...value }
     if (shallowEqual(this.value, next))
       return
 
     this.value = next
-    this.emitter.notify(this.value)
+    if (!silent)
+      this.emitter.notify(this.value)
   }
 
   get() {
@@ -83,8 +84,8 @@ export const withContext = (provider = defaultContextProvider) => {
   )
 }
 
-const updateKey = Symbol('update')
-const subscriptionKey = Symbol('subscription')
+const updateKey = Symbol.for('__malina_context_update')
+const subscriptionKey = Symbol.for('__malina_context_subscription')
 const defaultContextGetter = context => ({ context })
 
 export const getContext = (getter = defaultContextGetter) =>
@@ -92,19 +93,23 @@ export const getContext = (getter = defaultContextGetter) =>
     withHooks({
       create: original => (mount, state, actions) => {
         let context = state[contextKey]
-        if (context != null)
+        let prevContextValue = null
+        if (context != null) {
+          prevContextValue = context.value
           Object.assign(state, getter(context.value))
+        }
 
         original()
 
         // becaue previous hook could be 'withContext'
-        if (context == null)
-          context = state[contextKey]
+        const wasNull = context == null
+        context = state[contextKey]
 
-        if (context != null) {
-          state[subscriptionKey] = context.subscribe(actions[updateKey])
+        if (context != null && (wasNull || prevContextValue !== context.value))
           Object.assign(state, getter(context.value))
-        }
+
+        if (context != null)
+          state[subscriptionKey] = context.subscribe(actions[updateKey])
       },
 
       destroy: original => (mount, state, actions) => {

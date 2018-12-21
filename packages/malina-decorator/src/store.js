@@ -1,12 +1,17 @@
 import { h, view, decorator } from 'malina'
-import { shallowEqual, keys } from 'malina-util'
-import { withTemplate } from './common'
+import { shallowEqual, keys, compose } from 'malina-util'
 import { getContext, withContext } from './context'
 
 const actions = {}
 
-actions.update = updater => async ({ store }) => {
-  let next = { ...store }
+actions.finishUpdate = update => state => {
+  const next = { ...state.store, ...update }
+  if (!shallowEqual(state.store, next))
+    return { store: next }
+}
+
+actions.update = updater => async (state, actions) => {
+  let next = { ...state.store }
   let result = updater
   if (updater instanceof Function)
     result = updater(next)
@@ -15,25 +20,27 @@ actions.update = updater => async ({ store }) => {
     result = await result
 
   if (result != null)
-    next = { ...next, ...result }
-
-  if (!shallowEqual(store, next))
-    return { store: next }
+    await actions.finishUpdate(result)
 }
 
-const key = Symbol('store')
+const wrapUpdate = update => async (...args) => {
+  const result = await update(...args)
+  return result.store
+}
 
-const passToContext = withContext((state, actions) =>
-  ({ [key]: { state: state.store, update: actions.update } }))
+const key = Symbol.for('__malina_store')
 
-const getStoreView = initial =>
-  passToContext(view((s, a, children) => children, { store: initial }, actions))
+const passToContext = compose(
+  getContext(ctx => key in ctx ? { store: ctx[key].state } : {}),
+  withContext((state, actions) =>
+    ({ [key]: { state: state.store, update: wrapUpdate(actions.update) } }))
+)
+
+const StoreView = view((state, a, children) => h(state.view, state.passed, children), { store: null }, actions)
+  .decorate(passToContext)
 
 export const withStore = initial => decorator(Inner => {
-  const Store = getStoreView(initial)
-
-  return withTemplate(original => (state, actions, children) =>
-    h(Store, { store: initial }, original(state, actions, children)))(Inner)
+  return (state, _, children) => h(StoreView, { store: initial, passed: state, view: Inner }, children)
 })
 
 const empty = (...a) => ({})
@@ -42,9 +49,11 @@ export const connect = (mapState = empty, mapUpdate = empty) =>
   getContext(ctx => {
     if (key in ctx) {
       const store = ctx[key]
+      const normMapState = mapState != null ? mapState : empty
+      const normMapUpdate = mapUpdate != null ? mapUpdate : empty
       return {
-        ...mapState(store.state),
-        ...mapUpdate(store.update)
+        ...normMapState(store.state),
+        ...normMapUpdate(store.update)
       }
     } else return {}
   })

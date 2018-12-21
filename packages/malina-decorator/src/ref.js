@@ -13,7 +13,7 @@ const accessElement = (root, path) => {
   return next
 }
 
-const key = Symbol('refs')
+const key = Symbol.for('__malina_refs')
 
 const pathKey = path => path.join('.')
 

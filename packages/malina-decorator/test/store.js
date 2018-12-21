@@ -2,7 +2,7 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('malina')
-const { withStore, connect, bindActions } = require('..')
+const { withStore, connect, bindActions, withContext } = require('..')
 const { asyncTest } = require('./util')
 
 describe('store', () => {
@@ -21,9 +21,9 @@ describe('store', () => {
     it('should pass the store around', () => {
       const dom = new JSDOM('<body></body>')
 
-      const Bottom = connect(store => ({ store }))(view(({ store }) => `value: ${store.foo}`))
+      const Bottom = view(({ store }) => `value: ${store.foo}`).decorate(connect(store => ({ store })))
       const Middle = view((s, a, children) => h('div', {}, [h(Bottom)]))
-      const Top = withStore({ foo: 42 })(view((s, a, children) => h(Middle)))
+      const Top = view((s, a, children) => h(Middle)).decorate(withStore({ foo: 42 }))
 
       mount(dom.window.document.body, h(Top))
 
@@ -45,11 +45,84 @@ describe('store', () => {
       })
 
       const Bottom = view(({ store }) => `value: ${store.foo}`, {}, {}, hooks)
-      const ConnectedBottom = connect(store => ({ store }), bindActions(actions))(Bottom)
+      const ConnectedBottom = Bottom.decorate(connect(store => ({ store }), bindActions(actions)))
       const Middle = view((s, a, children) => h('div', {}, [h(ConnectedBottom)]))
-      const Top = withStore({ foo: 42 })(view((s, a, children) => h(Middle)))
+      const Top = view((s, a, children) => h(Middle)).decorate(withStore({ foo: 42 }))
 
       mount(dom.window.document.body, h(Top))
     }))
+
+    it('should not overwrite existing context', () => {
+      const dom = new JSDOM('<body></body>')
+
+      const Test = view(state => {
+        assert.strictEqual(state.first, 1)
+        assert.strictEqual(state.second, 2)
+        return null
+      }).decorate(
+        withContext(state => ({ first: state.first })),
+        withStore({ second: 2 }),
+        connect(store => ({ second: store.second }))
+      )
+
+      mount(dom.window.document.body, h(Test, { first: 1 }))
+    })
+
+    //   it('should save store state after update', asyncTest(async (track) => {
+    //     const dom = new JSDOM('<body></body>')
+    //     let counter = 0
+
+    //     let liftedStoreUpdate = null
+
+    //     let hooks = {}
+
+    //     hooks.update = track(async (_, state) => {
+    //       console.log('iner', unsafeGetStore(state))
+    //       if (state.counter == 1)
+    //         liftedTopUpdate()
+    //     })
+
+    //     const Inner = view(state => {
+    //       liftedStoreUpdate = state.update
+    //     }, {}, {}, hooks).decorate(
+    //       connect(null, bindActions({
+    //         update: () => store => ({ foo: store.foo + 1 })
+    //       }))
+    //     )
+
+    //     const state = {
+    //       test: 1
+    //     }
+
+    //     const actions = {}
+
+    //     actions.update = () => state => ({
+    //       test: state.test + 1
+    //     })
+
+    //     hooks = {}
+
+    //     hooks.update = track(async (_, state) => {
+    //       const store = unsafeGetStore(state)
+    //       // console.log(store)
+    //     })
+
+    //     let liftedTopUpdate = null
+    //     let ctxRef = null
+
+    //     const Test = view((state, actions) => {
+    //       liftedTopUpdate = actions.update
+    //       ctxRef = unsafeGetContext(state)
+    //       return h(Inner, { counter: ++counter })
+    //     }, state, actions, hooks).decorate(
+    //       withStore({ foo: 1 })
+    //     )
+
+    //     mount(dom.window.document.body, h(Test))
+    //     liftedStoreUpdate()
+    //     // liftedTopUpdate()
+
+    //     // console.log(ctxRef.value[Symbol.for("__malina_store")])
+    //   }))
   })
 })
