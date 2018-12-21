@@ -24,8 +24,8 @@ const createRouter = history => ({
   control: getRouterControl(history)
 })
 
-const updateKey = Symbol('update')
-const subscriptionKey = Symbol('subscription')
+const updateKey = Symbol.for('__malina_router_update')
+const subscriptionKey = Symbol.for('__malina_router_subscription')
 
 const enableRouting = compose(
   withHooks({
@@ -57,7 +57,7 @@ const provideRouterState = mapState(state => ({
   ...omit(['history', 'router'], state)
 }))
 
-const routerKey = Symbol('router')
+const routerKey = Symbol.for('__malina_router')
 
 const withRouterContext = compose(
   // try to get router from context

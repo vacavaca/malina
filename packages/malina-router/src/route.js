@@ -1,4 +1,4 @@
-import { h, view, isViewNode, isTextNode } from 'malina'
+import { h, view, isViewNode, isElementNode } from 'malina'
 import { compose, flatten } from 'malina-util'
 import { withState } from 'malina-decorator'
 import pathToRegexp from 'path-to-regexp'
@@ -53,7 +53,7 @@ export const match = (location, path, options = {}) => {
   return matchUrl(part, path, options)
 }
 
-const routeKey = Symbol('route')
+const routeKey = Symbol.for('__malina_route')
 
 const RouteView = view((state, _, children = []) => {
   const render = children[0]
@@ -104,7 +104,7 @@ const filterSwitchRoutes = (location, isRoot = false) => node => {
           .filter(node => node != null)
       } else return filterSwitchRoutes(location)(next)
     } else return null
-  } else if (!isTextNode(node)) {
+  } else if (isElementNode(node)) {
     const children = flatten(node.children
       .map(filterSwitchRoutes(location)))
       .filter(node => node != null)
