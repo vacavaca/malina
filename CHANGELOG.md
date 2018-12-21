@@ -1,3 +1,24 @@
+#### 0.0.16 (2018-12-21)
+
+##### Build System / Dependencies
+
+*  Change build configuration slightly ([7638169c](https://github.com/vacavaca/malina/commit/7638169cef6edc439eb8bc5ce585c2e814da084a))
+
+##### Chores
+
+*  Update package distributions ([e60ccffd](https://github.com/vacavaca/malina/commit/e60ccffd53ed5f0b27049c1491ce0ed2266cd4e9))
+
+##### New Features
+
+* **malina:**  Add support for "innerHtml" attribute ([a8ee7003](https://github.com/vacavaca/malina/commit/a8ee70033afae1e6d80d52a247c6b9cbf58fbd1f))
+
+##### Bug Fixes
+
+* **malina:**  Fix keyed collections to work with nested templates ([6148bf87](https://github.com/vacavaca/malina/commit/6148bf8755a1b76cb57a307763cca1a6fb559d1e))
+* **malina-router:**  Fixes and minor improvements in router ([00ac6b6c](https://github.com/vacavaca/malina/commit/00ac6b6cbc5737941a029300b42d42ea2d6694c8))
+* **malina-dacorator:**  Fix usage of symbols in decorators ([45083d07](https://github.com/vacavaca/malina/commit/45083d075f20d7a22ed90cc77ca91898606494e8))
+* **malina-decorator:**  Fix `withHooks` decorator ([79ea1b3f](https://github.com/vacavaca/malina/commit/79ea1b3f328d97b28271374d83caa56f84d789a7))
+
 #### 0.0.15 (2018-12-13)
 
 ##### Build System / Dependencies
