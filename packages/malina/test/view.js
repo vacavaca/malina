@@ -28,5 +28,18 @@ describe('view', () => {
       instance.actions.increment()
       assert.strictEqual(dom.window.document.body.innerHTML, '<div><div><p class="test">Hello 1</p></div><div><p class="test">Hello 2</p></div></div>')
     })
+
+    it('should process innerHTML', () => {
+      const dom = new JSDOM('<body></body>')
+
+      const Test = view(
+        h('div', {}, [
+          h('div', { class: 'test', innerHtml: '<p>Hello world</p>' })
+        ])
+      )
+
+      mount(dom.window.document.body, h(Test))
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div class="test"><p>Hello world</p></div></div>')
+    })
   })
 })

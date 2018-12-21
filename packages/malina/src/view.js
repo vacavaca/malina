@@ -3,6 +3,7 @@ import { h, isElementNode, isViewNode, isTextNode } from './node'
 import { view } from './declaration'
 import { toOnEventName, normalizeEventName } from './event'
 import { defaultContext } from './context'
+import { isDevelopment } from './env'
 
 const isParametrizedAction = value =>
   Array.isArray(value) && value.length === 2 && value[0] instanceof Function
@@ -18,7 +19,8 @@ const isRoot = path => path.length === 0
 
 const isSameViewNode = (a, b) => a.tag.id === b.tag.id
 
-const requireKeysSet = children => {
+const requireKeysSet = node => {
+  const { children } = node
   if (!children.every((node, i) =>
     i === 0 ||
     !isViewNode(node) ||
@@ -27,10 +29,11 @@ const requireKeysSet = children => {
     !isSameViewNode(node, children[i - 1])
   ))
     throw new Error("Every view node in an array must have a 'key' attribute")
-  return children
+  return node
 }
 
-const requireUniqueKeys = children => {
+const requireUniqueKeys = node => {
+  const { children } = node
   let index = {}
   for (const node of children) {
     if (isViewNode(node) && node.attrs.key) {
@@ -39,22 +42,33 @@ const requireUniqueKeys = children => {
 
       if (node.attrs.key in index[node.tag.id])
         throw new Error("Every view node in an array must have an unique 'key' attribute")
+
+      index[node.tag.id][node.attrs.key] = true
     }
   }
-  return children
+  return node
+}
+
+const requireNoInnerHtmlOverlap = node => {
+  const { attrs, children } = node
+  if ('innerHtml' in attrs && attrs.innerHtml != null && children != null && children.length > 0)
+    throw new Error('Nodes with "innerHtml" attribute must not have children')
+
+  return node
 }
 
 const requireValidChildren = compose(
   requireKeysSet,
-  requireUniqueKeys
+  requireUniqueKeys,
+  requireNoInnerHtmlOverlap
 )
 
-export class View {
+class ViewInt {
   constructor(node, context) {
     const { tag: declaration, attrs: state, children } = node
-    const declaredState = declaration.state instanceof Function
-      ? declaration.state(state)
-      : declaration.state
+    const initialState = declaration.state instanceof Function
+      ? { ...state, ...(declaration.state(state) || {}) }
+      : { ...(declaration.state || {}), ...state }
     const declaredActions = declaration.actions instanceof Function
       ? declaration.actions(state)
       : declaration.actions
@@ -63,7 +77,7 @@ export class View {
       : declaration.hooks
 
     this.template = declaration.template
-    this.state = { ...(declaredState || {}), ...(state || {}) }
+    this.state = initialState
     this.actions = this.bindActions(declaredActions || {})
     this.children = children
     this.hooks = declaredHooks || {}
@@ -236,41 +250,41 @@ export class View {
     if (this.templateLock)
       throw new Error("Actions can't be called while rendering view template")
 
-    if (this.mounted) {
-      const update = !this.updateLock
-      this.updateLock = true
-      const result = action(...args)(this.state, this.actions)
-      if (result instanceof Promise) {
-        this.updateLock = false
-        if (this.trackedActionUpdate)
-          this.refresh()
-        this.trackedActionUpdate = false
-        return (async () => {
-          const state = await result
-          if (!this.destroyed)
-            this.update(state)
-
-          return this.state
-        })()
-      } else {
-        if (update) {
-          if (!this.destroyed && this.mounted) {
-            const updated = this.update(result)
-            if (!updated && this.trackedActionUpdate)
-              this.refresh()
-            this.trackedActionUpdate = false
-          } else if (!this.destroyed)
-            this.state = this.updateState(result)
-        } else {
-          const nextState = this.updateState(result)
-          this.trackedActionUpdate = this.trackedActionUpdate || this.state !== nextState
-          this.state = nextState
-        }
-        this.updateLock = false
+    const update = !this.updateLock
+    this.updateLock = true
+    let result = action(...args)(this.state, this.actions)
+    if (result instanceof Promise) {
+      return (async () => {
+        this.finishAction(update)
+        result = await result
+        this.finishAction(update, result)
         return this.state
-      }
-    } else
-      this.scheduledActions.push([action, args])
+      })()
+    } else {
+      this.finishAction(update, result)
+      return this.state
+    }
+  }
+
+  /** @private */
+  finishAction(update, result = null) {
+    this.updateLock = false
+    if (update) {
+      if (!this.destroyed && this.mounted) {
+        const updated = this.update(result)
+        if (!updated && this.trackedActionUpdate) {
+          this.trackedActionUpdate = false
+          this.refresh()
+          this.callHook('update')
+        } else
+          this.trackedActionUpdate = false
+      } else if (!this.destroyed)
+        this.state = this.updateState(result)
+    } else {
+      const nextState = this.updateState(result)
+      this.trackedActionUpdate = this.trackedActionUpdate || this.state !== nextState
+      this.state = nextState
+    }
   }
 
   /** @private */
@@ -527,6 +541,9 @@ export class View {
   /** @private */
   refreshAttributes(element, node, path, context) {
     for (const name in node.attrs) {
+      if (name === 'innerHtml')
+        continue
+
       const value = node.attrs[name]
       this.addAttribute(element, name, value, path, context)
     }
@@ -538,6 +555,9 @@ export class View {
       return
 
     for (const name in next.attrs) {
+      if (name === 'innerHtml')
+        continue
+
       const nextValue = next.attrs[name]
       if (name in prev.attrs) {
         const prevValue = prev.attrs[name]
@@ -546,6 +566,9 @@ export class View {
     }
 
     for (const name in prev.attrs) {
+      if (name === 'innerHtml')
+        continue
+
       if (!(name in next.attrs))
         this.removeAttribute(element, name, prev.attrs[name], path, context)
     }
@@ -571,7 +594,7 @@ export class View {
       if (name === 'focus' && element.focus && element.blur) {
         if (value) element.focus()
         else element.blur()
-      } else element.setattribute(name, name)
+      } else element.setAttribute(name, name)
     } else if (value != null) element.setAttribute(name, value)
   }
 
@@ -711,13 +734,17 @@ export class View {
 
   /** @private */
   refreshChildren(element, node, path, context) {
-    if (!requireValidChildren(node.children))
+    if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
-    for (const ndx in node.children) {
-      const child = node.children[ndx]
-      const nextPath = path.concat([ndx])
-      this.addChildren(element, child, ndx, nextPath, context)
+    if ('innerHtml' in node.attrs)
+      element.innerHTML = node.attrs.innerHtml
+    else {
+      for (const ndx in node.children) {
+        const child = node.children[ndx]
+        const nextPath = path.concat([ndx])
+        this.addChildren(element, child, ndx, nextPath, context)
+      }
     }
   }
 
@@ -743,26 +770,30 @@ export class View {
     if (prev === next)
       return
 
-    if (!requireValidChildren(next.children))
+    if (!requireValidChildren(next))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
-    context = context
-      .setSvg(context.svg || next.tag === 'svg')
+    if ('innerHtml' in next.attrs)
+      element.innerHTML = next.attrs.innerHtml
+    else {
+      context = context
+        .setSvg(context.svg || next.tag === 'svg')
 
-    const len = Math.max(prev.children.length, next.children.length)
-    let nodeIndexShift = 0
-    for (let ndx = 0; ndx < len; ndx++) {
-      const childNode = element.childNodes[ndx - nodeIndexShift]
-      const prevChild = prev.children[ndx]
-      const nextChild = ndx in next.children ? next.children[ndx] : null
-      const nextPath = path.concat([ndx])
-      if (prevChild != null) {
-        this.patch(childNode, prevChild, nextChild, nextPath, context)
-        if (nextChild == null)
-          nodeIndexShift += 1
-      } else {
-        this.addChildren(element, nextChild, ndx, nextPath, context)
-        nodeIndexShift -= 1
+      const len = Math.max(prev.children.length, next.children.length)
+      let nodeIndexShift = 0
+      for (let ndx = 0; ndx < len; ndx++) {
+        const childNode = element.childNodes[ndx - nodeIndexShift]
+        const prevChild = prev.children[ndx]
+        const nextChild = ndx in next.children ? next.children[ndx] : null
+        const nextPath = path.concat([ndx])
+        if (prevChild != null) {
+          this.patch(childNode, prevChild, nextChild, nextPath, context)
+          if (nextChild == null)
+            nodeIndexShift += 1
+        } else {
+          this.addChildren(element, nextChild, ndx, nextPath, context)
+          nodeIndexShift -= 1
+        }
       }
     }
   }
@@ -829,6 +860,33 @@ export class View {
     this.parametrizedEventListeners.delete(key)
   }
 }
+
+if (isDevelopment) {
+  let catchLock = false
+  for (const method of Object.getOwnPropertyNames(ViewInt.prototype)) {
+    if (ViewInt.prototype[method] instanceof Function) {
+      const buff = ViewInt.prototype[method]
+      ViewInt.prototype[method] = function(...args) {
+        const catchError = !catchLock
+        catchLock = true
+        try {
+          return buff.apply(this, args)
+        } catch (error) {
+          if (catchError) {
+            if (this.node != null)
+              error.message = `${error.message}\n\tThis error has occurred in view:\n${this.node}`
+          }
+          throw error
+        } finally {
+          if (catchError)
+            catchLock = false
+        }
+      }
+    }
+  }
+}
+
+export const View = ViewInt
 
 export const mount = (container, node, index = 0, {
   insideSvg = false

@@ -40,7 +40,7 @@ export class Node {
             return '\t""'
           const str = child.toString()
           return str.split('\n').map(s => `\t${s}`).join('\n')
-        })
+        }).join('\n')
       }\n</${tagName}>`
     } else return `<${tagName}${attrString}/>`
   }
