@@ -1,6 +1,6 @@
 import { diffArrays } from 'diff'
 import { keys } from 'malina-util'
-import { h } from './node'
+import { h, isElementNode } from './node'
 import { view } from './declaration'
 import { mount } from './view'
 
@@ -17,6 +17,7 @@ const state = state => ({
   accessor: index(state.indexBy),
 
   render: state.render,
+  path: state.path,
 
   mountPoint: null,
   initialized: false,
@@ -69,7 +70,8 @@ const normalizeDiffPatches = patches => {
 
 actions.initialize = () => state => {
   const [container, mountIndex] = state.mountPoint
-  container.childNodes[mountIndex].remove()
+  if (state.path.length === 0)
+    container.childNodes[mountIndex].remove()
   state.initialized = true
 
   state.index = []
@@ -166,7 +168,14 @@ actions.update = () => (state, actions) => {
 const hooks = {}
 
 hooks.mount = (mount, state, actions) => {
-  state.mountPoint = [mount.parentNode, Array.prototype.indexOf.call(mount.parentNode.childNodes, mount)]
+  if (state.path.length > 0) {
+    let container = mount
+    for (const index of state.path.slice(0, -1))
+      container = container.childNodes[index]
+
+    state.mountPoint = [container, state.path[state.path.length - 1]]
+  } else
+    state.mountPoint = [mount.parentNode, Array.prototype.indexOf.call(mount.parentNode.childNodes, mount)]
   actions.update()
 }
 
@@ -182,31 +191,73 @@ hooks.unmount = (_, state) => {
   state.prevData = []
 }
 
-const ListRenderer = view(null, state, actions, hooks)
+const ListRenderer = view((s, a, children) => children, state, actions, hooks)
+
+const findRenderer = (node, path = []) => {
+  if (node instanceof Function)
+    return [path, node]
+
+  if (isElementNode(node)) {
+    for (const i in node.children) {
+      const nextPath = path.concat([+i])
+      const renderer = findRenderer(node.children[i], nextPath)
+      if (renderer != null)
+        return renderer
+    }
+  }
+}
+
+const removeRenderer = (node, path) => {
+  if (isElementNode(node)) {
+    let children
+    if (path.length === 1) {
+      const index = path[path.length - 1]
+      children = node.children.slice(0, index).concat(node.children.slice(index + 1))
+    } else {
+      const index = path[0]
+      children = node.children.map((child, i) => {
+        if (i === index) return removeRenderer(child, path.slice(1))
+        else return child
+      })
+    }
+    return h(node.tag, node.attrs, children)
+  } else return node
+}
 
 export const List = view((state, _, children) => {
-  let render = children[0]
-  if (children.length > 1)
-    throw new Error('You must provide only one child to the List, it can be a render function or a jsx node')
+  if (children.length !== 0) {
+    if (children.length !== 1)
+      throw new Error('You must provide only one child to the List')
 
-  if (render == null)
-    return null
+    let childrenToRender
+    let path = []
+    let render
+    if (!(children[0] instanceof Function)) {
+      [path, render] = findRenderer(children[0])
+      childrenToRender = removeRenderer(children[0], path)
+    } else {
+      render = children[0]
+      childrenToRender = null
+    }
 
-  render = render instanceof Function ? render : () => render
-  return h(ListRenderer, { ...state, render })
+    return h(ListRenderer, { ...state, path, render }, childrenToRender)
+  } else return null
 })
 
 export const Map = view((state, _, children) => {
-  let render = children[0]
-  if (children.length > 1)
-    throw new Error('You must provide only one child to the Map, it can be a render function or a jsx node')
+  if (children.length !== 1)
+    throw new Error('You must provide only one child to the List')
 
-  if (render == null)
-    return null
+  let childrenToRender = children
+  let path = []
+  let render
+  if (!(children[0] instanceof Function)) {
+    [path, render] = findRenderer(children[0])
+    childrenToRender = removeRenderer(children[0], path)
+  } else render = children[0]
 
-  render = render instanceof Function ? render : () => render
   const mapRender = ([key, value], i, data) => render(value, key, data, i)
   const data = keys(state.data || {}).map(k => [k, state.data[k]])
   const indexBy = ([k]) => k
-  return h(ListRenderer, { data, indexBy, render: mapRender })
+  return h(ListRenderer, { data, indexBy, path, render: mapRender }, childrenToRender)
 }, { data: {} })
