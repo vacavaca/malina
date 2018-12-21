@@ -7,9 +7,9 @@
     "dist"
   ],
   "scripts": {
-    "test": "make test",
+    "test": "make clean test",
     "build": "make build",
-    "check": "make check",
+    "check": "make clean check",
     "clean": "make clean",
     "release": "NODE_ENV=production make release"
   },

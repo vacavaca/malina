@@ -21,16 +21,16 @@ else
 endif
 
 .PHONY: build
-build: prepare
+build:
 	lerna run --bail --stream --no-private build
 
 .PHONY: check
 check: build
-	lerna run --bail --stream check
+	lerna exec --no-private 'make check'
 
 .PHONY: test
 test: build
-	lerna run --bail --stream --no-private test
+	lerna exec --no-private 'make test'
 
 .PHONY: release
 release: prepare clean-dist

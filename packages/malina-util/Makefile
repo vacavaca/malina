@@ -31,6 +31,10 @@ endif
 .PHONY: check
 check: lint
 
+.PHONY: test
+test:
+	echo "Nothing to test yet"
+
 .PHONY: build
 build:  						 \
 	clean			 				 \

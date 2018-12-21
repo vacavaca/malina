@@ -7,9 +7,9 @@
     "dist"
   ],
   "scripts": {
-    "test": "make test",
+    "test": "make clean test",
     "build": "make build",
-    "check": "make check",
+    "check": "make clean check",
     "clean": "make clean",
     "release": "NODE_ENV=production make release"
   },
@@ -37,7 +37,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@babel/polyfill": "^7.0.0",
     "malina": "^0.0.15",
     "malina-util": "^0.0.15"
   },
