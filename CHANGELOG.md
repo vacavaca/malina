@@ -1,3 +1,13 @@
+#### 0.0.17 (2019-01-09)
+
+##### Chores
+
+*  Update package distributions ([1fd8a837](https://github.com/vacavaca/malina/commit/1fd8a83780b17098ad8fd59d98f6057a91398731))
+
+##### Bug Fixes
+
+*  Fix mounting algorithm and several decorators ([2dd4d740](https://github.com/vacavaca/malina/commit/2dd4d740b73e7bf390e23d60eec976c6e81ea68b))
+
 #### 0.0.16 (2018-12-21)
 
 ##### Build System / Dependencies
