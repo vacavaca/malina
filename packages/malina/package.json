@@ -1,6 +1,6 @@
 {
   "name": "malina",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Templating and state management tool for building user interfaces",
   "main": "dist/index.js",
   "files": [
@@ -55,6 +55,6 @@
   },
   "dependencies": {
     "diff": "^3.5.0",
-    "malina-util": "^0.0.16"
+    "malina-util": "^0.0.17"
   }
 }

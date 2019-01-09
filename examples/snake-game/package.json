@@ -1,6 +1,6 @@
 {
   "name": "snake-game",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "",
   "private": true,
   "main": "index.js",
@@ -12,8 +12,8 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.6",
-    "malina": "^0.0.16",
-    "malina-decorator": "^0.0.16",
+    "malina": "^0.0.17",
+    "malina-decorator": "^0.0.17",
     "ramda": "^0.26.1"
   },
   "devDependencies": {

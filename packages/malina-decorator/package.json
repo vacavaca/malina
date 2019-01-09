@@ -1,6 +1,6 @@
 {
   "name": "malina-decorator",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Useful decorators and extensions for the malina library",
   "main": "dist/index.js",
   "files": [
@@ -37,8 +37,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "malina": "^0.0.16",
-    "malina-util": "^0.0.16"
+    "malina": "^0.0.17",
+    "malina-util": "^0.0.17"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
