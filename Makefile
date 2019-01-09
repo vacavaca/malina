@@ -3,6 +3,7 @@ export PATH := node_modules/.bin:$(PATH)
 RUNNER_ENV ?= development
 bump := $(if $(strip $(bump)),$(bump),patch)
 release_msg := "Update CHANGELOG.md and parent package version"
+lock_msg := "Update package-lock.json files"
 
 .PHONY: clean
 clean:
@@ -44,3 +45,8 @@ publish:
 	git add CHANGELOG.md package.json package-lock.json
 	git commit -m $(release_msg)
 	lerna publish $(bump)
+	npm install
+	lerna exec 'npm install'
+	git add packages/*/package-lock.json package-lock.json
+	git commit -m $(lock_msg)
+	git push origin master
