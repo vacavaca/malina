@@ -28,7 +28,7 @@ export class Node {
       const value = this.attrs[k]
       if (typeof value === 'string') return `${a} ${k}="${value}"`
       else if (value instanceof Function) return `${a} ${k}=[Function]`
-      else return `${a} ${k}={${JSON.stringify(value)}}`
+      else return `${a} ${k}={${typeof value !== 'object' ? JSON.stringify(value) : '{...}'}}`
     }, '')
 
     const tagName = typeof this.tag === 'string' ? this.tag : '[View]'

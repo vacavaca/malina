@@ -7,6 +7,7 @@ class Declaration {
     this.actions = actions
     this.hooks = hooks
     this.id = genRandomId(8)
+    this.originalId = null
   }
 
   static isViewDeclaration(obj) {

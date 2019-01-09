@@ -37,7 +37,7 @@ const provideContext = memoizedDecorator(withTemplate(original =>
     const node = original(state, actions, children)
     if (context != null) return decorateTemplate(context)(node)
     else return node
-  }))
+  }), true)
 
 const decorateTemplate = context => node => {
   if (!Array.isArray(node)) {
@@ -62,6 +62,7 @@ export const withContext = (provider = defaultContextProvider) => {
   }
 
   return compose(
+    provideContext,
     withHooks({
       create: original => (mount, state, actions) => {
         original()
@@ -79,8 +80,7 @@ export const withContext = (provider = defaultContextProvider) => {
         const context = state[contextKey]
         context.update(normalizedProvider(state, actions))
       }
-    }),
-    provideContext
+    })
   )
 }
 
@@ -101,7 +101,7 @@ export const getContext = (getter = defaultContextGetter) =>
 
         original()
 
-        // becaue previous hook could be 'withContext'
+        // becaue previous hook might be 'withContext'
         const wasNull = context == null
         context = state[contextKey]
 

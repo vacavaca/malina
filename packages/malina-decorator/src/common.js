@@ -60,7 +60,16 @@ export const withHooks = hooks => decorator(Inner => {
 })
 
 export const withTemplate = getTemplate => decorator(Inner =>
-  view(getTemplate(Inner.template), Inner.state, Inner.actions, Inner.hooks))
+  view((originalState, originalActions, originalChildren) => {
+    const original = (state, actions, children) => {
+      const passState = state !== undefined ? state : originalState
+      const passActions = actions !== undefined ? actions : originalActions
+      const passChildren = children !== undefined ? children : originalChildren
+      return Inner.template(passState, passActions, passChildren)
+    }
+
+    return getTemplate(original)(originalState, originalActions, originalChildren)
+  }, Inner.state, Inner.actions, Inner.hooks))
 
 export const mapState = mapper => decorator(Inner =>
   (state, _, children) => h(Inner, mapper(state), children))

@@ -144,6 +144,7 @@ export const withRefs = (attrKey = 'ref') => compose(
 
     unmount: original => (_, state) => {
       publishUnmount(state[key].next)
+      state[key].prev = null
       original()
     }
   })

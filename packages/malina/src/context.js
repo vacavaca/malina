@@ -12,6 +12,10 @@ export default class Context {
     return this.options.mounting
   }
 
+  get store() {
+    return this.options.store
+  }
+
   setSvg(isSvg) {
     return this.update({ isSvg })
   }
@@ -25,6 +29,6 @@ export default class Context {
   }
 }
 
-export const defaultContext = () => new Context()
+export const defaultContext = options => new Context(options)
 
-export const svgContext = () => new Context()
+export const svgContext = options => new Context(options)

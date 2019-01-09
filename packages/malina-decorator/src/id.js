@@ -1,4 +1,4 @@
-import { isElementNode, isViewNode, h, isDevelopment } from 'malina'
+import { isElementNode, h, isDevelopment } from 'malina'
 import { compose, genRandomId } from 'malina-util'
 import { withContext, getContext } from './context'
 import { withTemplate } from './common'
@@ -38,10 +38,6 @@ const mapTemplate = (length, realKey, ctx) => node => {
     }
 
     return h(node.tag, nextAttrs, node.children.map(mapTemplate(length, realKey, ctx)))
-  } else if (isViewNode(node)) {
-    let nextAttrs = { ...node.attrs }
-    nextAttrs[key] = ctx
-    return h(node.tag, nextAttrs, node.children)
   } else return node
 }
 

@@ -6,14 +6,16 @@ exports.asyncTest = test => done => {
       let wake = null
       let lock = new Promise(resolve => { wake = resolve })
 
-      test(fn => (...args) => {
+      await test(fn => (...args) => {
         queue.push(fn(...args).catch(err => {
-          isDone = true
-          done(err)
+          if (!isDone) {
+            isDone = true
+            done(err)
+          }
         }))
         if (wake != null)
           wake()
-      }).catch(done)
+      })
 
       await lock
       wake = null
@@ -23,10 +25,20 @@ exports.asyncTest = test => done => {
         queue = []
       }
 
-      if (!isDone)
+      if (!isDone) {
+        isDone = true
         done()
-    })()
+      }
+    })().catch(err => {
+      if (!isDone) {
+        isDone = true
+        done(err)
+      }
+    })
   } catch (err) {
-    done(err)
+    if (!isDone) {
+      isDone = true
+      done(err)
+    }
   }
 }

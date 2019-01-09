@@ -12,9 +12,6 @@ const isSameParametrizedAction = (a, b) =>
   isParametrizedAction(a) && isParametrizedAction(b) &&
   a[0] === b[0] && a[1] === b[1]
 
-let mountLock = false
-let mountHookQueue = []
-
 const isRoot = path => path.length === 0
 
 const isSameViewNode = (a, b) => a.tag.id === b.tag.id
@@ -108,8 +105,9 @@ class ViewInt {
       return
 
     let top = false
-    if (!mountLock) {
-      mountLock = true
+    if (!this.context.store.mountLock) {
+      // no need to copy context here
+      this.context.store.mountLock = true
       top = true
     }
 
@@ -138,15 +136,16 @@ class ViewInt {
     this.scheduledActions = []
 
     if (top) {
-      const queue = mountHookQueue
-      mountHookQueue = []
+      const queue = this.context.store.mountHookQueue
+      this.context.store.mountHookQueue = []
+      this.context.store.mountLock = false
+
       for (const hook of queue)
         hook()
 
       this.callHook('mount')
-      mountLock = false
     } else
-      mountHookQueue.push(() => this.callHook('mount'))
+      this.context.store.mountHookQueue.push(() => this.callHook('mount'))
   }
 
   move(container, index) {
@@ -895,7 +894,12 @@ export const mount = (container, node, index = 0, {
   if (isElementNode(node))
     viewNode = h(view(node))
 
-  let context = defaultContext()
+  const store = {
+    mountLock: false,
+    mountHookQueue: []
+  }
+
+  let context = defaultContext({ store })
     .setSvg(insideSvg)
 
   if (!context.svg) {
