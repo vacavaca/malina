@@ -64,7 +64,7 @@ export const bindActions = actions => update => {
     const action = actions[key]
     if (action instanceof Function)
       bound[key] = (...args) => update(action(...args))
-    else bound[key] = bindActions(action)
+    else bound[key] = bindActions(action)(update)
   }
 
   return bound

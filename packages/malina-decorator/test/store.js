@@ -68,6 +68,27 @@ describe('store', () => {
       mount(dom.window.document.body, h(Test, { first: 1 }))
     })
 
+    it('should bind nested actions', () => {
+      const dom = new JSDOM('<body></body>')
+
+      const Test = view(state => {
+        assert(typeof state.foo === 'object')
+        assert(state.foo.first instanceof Function)
+        assert(state.foo.second instanceof Function)
+        return null
+      }).decorate(
+        withStore({ test: 42 }),
+        connect(null, bindActions({
+          foo: {
+            first: () => () => { },
+            second: () => () => { }
+          }
+        }))
+      )
+
+      mount(dom.window.document.body, h(Test))
+    })
+
     //   it('should save store state after update', asyncTest(async (track) => {
     //     const dom = new JSDOM('<body></body>')
     //     let counter = 0
