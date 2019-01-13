@@ -1,3 +1,17 @@
+#### 0.0.18 (2019-01-13)
+
+##### Build System / Dependencies
+
+*  Update publishing target in Makefile ([1752533c](https://github.com/vacavaca/malina/commit/1752533c9817824431696a2e8a9f8423dad4e5ad))
+
+##### Chores
+
+*  Update package distributions ([5988476a](https://github.com/vacavaca/malina/commit/5988476a4b921074a265e46beccccc01f619a10a))
+
+##### Bug Fixes
+
+* **malina-decorator:**  Fix bindActions method ([4771fe72](https://github.com/vacavaca/malina/commit/4771fe72a39a478fadb73103c7a975f0d218f208))
+
 #### 0.0.17 (2019-01-09)
 
 ##### Chores
