@@ -251,7 +251,28 @@ class ViewInt {
 
     const update = !this.updateLock
     this.updateLock = true
-    let result = action(...args)(this.state, this.actions)
+    let result = action(...args)
+    if (result instanceof Function)
+      result = result(this.state, this.actions)
+    else if (result instanceof Promise) {
+      return (async () => {
+        this.finishAction(update)
+        result = await result
+        if (result instanceof Function)
+          result = result(this.state, this.actions)
+
+        if (result instanceof Promise) {
+          this.finishAction(update)
+          result = await result
+          this.finishAction(update, result)
+          return this.state
+        } else {
+          this.finishAction(update, result)
+          return this.state
+        }
+      })()
+    }
+
     if (result instanceof Promise) {
       return (async () => {
         this.finishAction(update)
@@ -865,7 +886,7 @@ if (isDevelopment) {
   for (const method of Object.getOwnPropertyNames(ViewInt.prototype)) {
     if (ViewInt.prototype[method] instanceof Function) {
       const buff = ViewInt.prototype[method]
-      ViewInt.prototype[method] = function(...args) {
+      ViewInt.prototype[method] = function (...args) {
         const catchError = !catchLock
         catchLock = true
         try {
