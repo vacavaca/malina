@@ -886,7 +886,7 @@ if (isDevelopment) {
   for (const method of Object.getOwnPropertyNames(ViewInt.prototype)) {
     if (ViewInt.prototype[method] instanceof Function) {
       const buff = ViewInt.prototype[method]
-      ViewInt.prototype[method] = function (...args) {
+      ViewInt.prototype[method] = function(...args) {
         const catchError = !catchLock
         catchLock = true
         try {
