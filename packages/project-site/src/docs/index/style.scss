@@ -1,0 +1,39 @@
+.index {
+  position: relative;
+  top: 20px;
+  flex: 1 0 40%;
+  list-style: none;
+  margin: 6px 0 0 0;
+  padding: 0 0 0 4em;
+  line-height: 1.5;
+  max-height: calc(100vh - 88px - 4px - 24px);
+  overflow-y: auto;
+}
+
+.subIndex {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  .link {
+    padding-left: calc(14px + 1em);
+  }
+}
+
+.link {
+  display: inline-block;
+  padding: 8px 0 8px 14px;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+
+  &,
+  &:active,
+  &focus {
+    border-bottom: none;
+  }
+
+  &--active {
+    border-left: 4px solid #f05;
+    box-shadow: inset 20px 0px 27px -27px #f05;
+  }
+}

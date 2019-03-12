@@ -1,0 +1,101 @@
+html {
+  font-size: 1em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background: #fcfcfc;
+  color: #333;
+  line-height: 1.45;
+
+  &::-moz-selection {
+    color: white;
+    background: #e75071;
+  }
+
+  ::selection {
+    color: white;
+    background: #e75071;
+  }
+}
+
+a {
+  &,
+  &:visited,
+  &:active {
+    color: #000;
+    transition: color 0.2s ease;
+    text-decoration: none;
+    border-bottom: 1px solid #a09e9e;
+  }
+
+  &:hover {
+    color: #f05;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+p {
+  margin-bottom: 1.3em;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 1.414em 0 0.5em;
+  line-height: 1.2;
+}
+
+h5 {
+  margin: 1.25em 0 0.4em;
+  line-height: 1.2;
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 2.441em;
+}
+
+h2 {
+  font-size: 1.953em;
+}
+
+h3 {
+  font-size: 1.563em;
+}
+
+h4 {
+  font-size: 1.25em;
+}
+h5 {
+  font-size: 1.18em;
+}
+h6 {
+  font-size: 1.18em;
+}
+
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: #ddd;
+
+  &:hover {
+    background: #f05;
+  }
+}

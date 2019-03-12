@@ -1,0 +1,12 @@
+.content {
+  flex: 0 1 60%;
+}
+
+.content pre {
+  font-size: 14px;
+  background: #f9f9f9;
+  padding: 1em 1em;
+  margin-left: -1em;
+  width: calc(100% + 2em);
+  line-height: 1.4;
+}

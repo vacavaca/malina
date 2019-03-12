@@ -1,0 +1,86 @@
+.home {
+  margin-top: 16vh;
+
+  @media screen and (max-height: 800px) {
+    margin-top: 10vh;
+  }
+}
+
+.container {
+  // flex: 0 1 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.left {
+  flex: 1 0 50%;
+  position: relative;
+  top: -2em;
+  padding-right: 3em;
+  padding-left: 25px;
+}
+
+.right {
+  flex: 1 0 57%;
+  padding-left: 3em;
+}
+
+@keyframes nameSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-20px, -80px) scale(0.4);
+  }
+
+  20% {
+    opacity: 0.03;
+    transform: translate(-20px, -60px) scale(0.4);
+  }
+
+  80% {
+    opecity: 1;
+    transform: scale(1.1);
+  }
+
+  to {
+    opecity: 1;
+    transform: none;
+  }
+}
+
+.name {
+  display: inline-block;
+  font-family: "Nunito", sans-serif;
+  color: #ee4d53;
+  letter-spacing: 1px;
+  font-size: 56px;
+  text-shadow: 0 1px 0 #bd191f, 0 0 15px #ee4d5336;
+
+  &--show {
+    animation-name: nameSlideIn;
+    animation-duration: 0.3s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: 1;
+    animation-play-state: running;
+    animation-fill-mode: both;
+  }
+}
+
+.desc {
+  font-size: 1.24em;
+}
+
+.version {
+  color: #ccc;
+  margin-left: 0.8em;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.project {
+  height: 58px;
+}
+
+.project:hover .version {
+  opacity: 1;
+}

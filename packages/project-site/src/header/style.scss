@@ -1,0 +1,253 @@
+.header {
+  display: flex;
+  justify-content: center;
+  height: 64px;
+  background: #fcfcfc;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  transition: box-shadow 0.3s ease;
+
+  &--scroll {
+    box-shadow: 0 0 66px -24px #ee4d5336;
+  }
+
+  a {
+    &,
+    &:active,
+    &:focus {
+      border-bottom: none;
+    }
+  }
+}
+
+.content {
+  flex: 0 1 1024px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home {
+  flex: 0 1;
+  white-space: nowrap;
+  position: relative;
+  user-select: none;
+}
+
+.logo {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: #f05;
+  border-radius: 12px;
+  margin-right: 10px;
+  position: absolute;
+  top: 5px;
+  left: calc(50% - 12px);
+  right: 0;
+
+  opacity: 0;
+  transform: translateY(-40px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  &--show {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes headerNameSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.4);
+  }
+
+  80% {
+    opecity: 1;
+    transform: scale(1.15);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes headerNameSlideOut {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.4);
+  }
+}
+
+.name {
+  display: inline-block;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: #ee4d53;
+  text-shadow: 0 0.5px 0 #bd191f, 0 0 15px #ee4d5326;
+  opacity: 0;
+
+  &--show {
+    opacity: 1;
+  }
+
+  &--slideIn {
+    animation-name: headerNameSlideIn;
+    animation-duration: 0.3s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: 1;
+    animation-play-state: running;
+    animation-fill-mode: both;
+  }
+
+  &--slideOut {
+    animation-name: headerNameSlideOut;
+    animation-duration: 0.13s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: 1;
+    animation-play-state: running;
+    animation-fill-mode: both;
+  }
+}
+
+.menu {
+  flex: 1 0;
+  text-align: right;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link {
+  padding: 22px 1em;
+  display: block;
+}
+
+.item {
+  display: inline-block;
+  position: relative;
+}
+
+// @keyframes loaderFadeIn {
+//   from {
+//     opacity: 0;
+//   }
+
+//   to {
+//     opacity: 1;
+//   }
+// }
+
+// @keyframes loaderLoading {
+//   from {
+//     opacity: 1;
+//   }
+
+//   50% {
+//     opacity: .4;
+//   }
+
+//   to {
+//     opacity: 1;
+//   }
+// }
+
+@keyframes loaderLoading {
+  from {
+    opacity: 0;
+    left: 0;
+    right: 0;
+  }
+
+  50% {
+    opacity: 1;
+    left: -50vh;
+    right: -50vh;
+  }
+
+  to {
+    opacity: 1;
+    left: -100vw;
+    right: -100vw;
+  }
+}
+
+@keyframes loaderLoaded {
+  from {
+    left: -100vw;
+    right: -100vw;
+  }
+
+  to {
+    left: 0;
+    right: 0;
+  }
+}
+
+.loader {
+  position: absolute;
+  height: 4px;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f05;
+  box-shadow: 0 0 22px -1px #f04;
+
+  // transition: left .3s ease, right .3s ease, opacity .3s ease;
+
+  &--in {
+    // left: -100vw;
+    // right: -100vw;
+    // opacity: 1;
+
+    animation: loaderLoading;
+    animation-duration: .3s;
+    animation-timing-function: linear;
+    animation-delay: 0;
+    animation-play-state: running;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+  }
+
+  &--out {
+    animation: loaderLoaded;
+    animation-duration: 0.3s;
+    animation-timing-function: linear;
+    animation-delay: 0;
+    animation-play-state: running;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    // left: 0;
+    // right: 0;
+    // animation: none;
+    // opacity: 1;
+  }
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+  margin-right: 3px;
+}
+
+.github {
+  background: url("./github.svg") no-repeat;
+}
+
+.npm {
+  background: url("./npm.svg") no-repeat;
+}

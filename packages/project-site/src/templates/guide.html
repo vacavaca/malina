@@ -1,0 +1,273 @@
+<h1 id="guide">Guide</h1>
+<h2 id="installation">Installation</h2>
+<p>Just add malina to your project:</p>
+<pre><code>npm install --save malina</code></pre><h2 id="getting-started">Getting Started</h2>
+<p>An example is worth a thousand words</p>
+<pre><code class="language-jsx">import { h, view, mount } from &#39;malina&#39;
+
+const state = {
+  counter: 0
+}
+
+const actions = {
+  click: () =&gt; state =&gt; ({ counter: state.counter + 1 })
+}
+
+const App = view((state, actions) =&gt; (
+  &lt;div&gt; 
+    &lt;p&gt;Clicked: {state.counter} times!&lt;/p&gt;
+    &lt;button onClick={actions.click}&gt;Click me&lt;/button&gt;
+  &lt;/div&gt;
+), state, actions)
+
+mount(document.body, &lt;App /&gt;)
+</code></pre>
+<p>This minimalistic example actually contains all the functions usually needed to solve most of the tasks, let&#39;s examine them in more detail</p>
+<p>There are few functions imported here to set up the application:</p>
+<blockquote>
+<p><strong>h</strong> (<strong>tag</strong>: <em>string|Object</em>, <strong>attrs</strong>: <em>Object</em>, <strong>children</strong>: <em>Array</em>) -&gt; <em>Object</em></p>
+</blockquote>
+<p>The <strong>h</strong> function is needed to create vDOM nodes, if you prefer JSX syntax then babel must be configured accordingly, here is an example of the .babelrc file:</p>
+<pre><code class="language-json">{
+  &quot;plugins&quot;: [[&quot;@babel/plugin-transform-react-jsx&quot;, { &quot;pragma&quot;: &quot;h&quot; }]]
+}</code></pre>
+<p>Or you can do without jsx:</p>
+<pre><code class="language-js">h(&#39;div&#39;, {}, [
+  h(&#39;p&#39;, {}, &#39;Hello world&#39;),
+  h(App, { counter: 42 }),
+])</code></pre>
+<blockquote>
+<p><strong>view</strong> (<strong>tempalte</strong>: *, <strong>state</strong>: <em>Object|Function</em>, <strong>actions</strong>: <em>Object|Function</em>, <strong>hooks</strong>: <em>Object|Function</em>) -&gt; <em>Object</em></p>
+</blockquote>
+<p><strong>view</strong> is needed to declare UI components, its template, state, actions and hooks, it is the main building block of applications, so let&#39;s take a more detailed look at its arguments.</p>
+<h3 id="template">Template</h3>
+<p><strong>template</strong> - used to map state and actions on to the markup, it can be <code>null</code>, <code>string</code>, vDOM node, or a function that takes current view&#39;s <strong>state</strong>, <strong>actions</strong> and <strong>children</strong> in arguments</p>
+<p>Here is an example of it:</p>
+<pre><code class="language-jsx">view((state, actions, children) =&gt;
+    &lt;button class=&quot;btn&quot; onClick={actions.handleClick}&gt;
+        {children}
+    &lt;/button&gt;
+), ...)</code></pre>
+<p>or it can be just a vDOM node</p>
+<pre><code class="language-jsx">view(
+    &lt;section&gt;
+        &lt;h1&gt;Hello, malina!&lt;/h1&gt;
+    &lt;/section&gt;
+)</code></pre>
+<h3 id="state">State</h3>
+<p>The second argument of the <code>view</code> function is <strong>state</strong>. It is an initial state of the view, it can be an <code>Object</code> or a <code>Function</code> that takes attributes passed to the vDOM node as an argument</p>
+<p>State as an object:</p>
+<pre><code class="language-jsx">const state = {
+    greeting: &#39;Howdy stranger!&#39;
+}
+
+const WelcomeText = view(state =&gt; &lt;p&gt;{state.greeting}&lt;/p&gt;, state)
+
+const App = view(&lt;WelcomeText /&gt;)</code></pre>
+<p>State as a function:</p>
+<pre><code class="language-jsx">const state = props =&gt; ({
+    greeting: `Hello, ${props.name}!`
+})
+
+const WelcomeText = view(state = &lt;p&gt;{state.greeting}&lt;/p&gt;, state)
+
+const App = view(
+    &lt;WelcomeText name=&quot;John&quot; /&gt;
+)</code></pre>
+<h3 id="actions">Actions</h3>
+<p><strong>actions</strong> is a set of functions that allows us to change view&#39;s state. Actions can be written in many different forms with the same global pattern:</p>
+<pre><code class="language-js">const actions = {
+    /**
+     * Action takes arbutrary arguments returning a function that can
+     * update the state or call other actions
+     */
+    increment: value =&gt; (state, actions) =&gt; ({ counter: state.counter })
+}</code></pre>
+<p>An action can be asynchronous:</p>
+<pre><code class="language-js">const actions = {}
+
+actions.submit = data =&gt; async (state, actions) =&gt; {
+    await fetch(...)
+    return { submitted: true }
+}</code></pre>
+<p>or it may not update the state:</p>
+<pre><code class="language-js">actions.submit = data =&gt; (_, actions) =&gt; {
+    actions.clearForm()
+    actions.showLoader()
+    actions.ajaxSendData(data)
+}</code></pre>
+<p>or it may update the state but not update the view </p>
+<pre><code class="language-js">actions.doOffStateUpdate = value =&gt; state =&gt; {
+    state.someAuxField = value
+}</code></pre>
+<p>Doing so is a bit dangerous and it&#39;s recommended to return an update object from actions as normal but it rarely can be useful for optimisation purposes.</p>
+<h3 id="hooks">Hooks</h3>
+<p>Last but not least argument to the view function is <strong>hooks</strong> object. Hooks are used to control the view&#39;s lifecycle. Each hook takes in arguments the DOM node in which the view was rendered, view&#39;s current state and its actions:</p>
+<pre><code class="language-js">const hooks = {
+    /**
+     * Called after the view&#39;s initialisation.
+     *
+     * `element` argument is always null here because the view wasn&#39;t mounted yet
+     */
+    create: (element, state, actions) =&gt; { /*...*/ },
+
+    /**
+     * Called after the view was mounted.
+     */
+    mount: (element, state, actions) =&gt; { /*...*/ },
+
+    /**
+     * Called after each update
+     */
+    update: (element, state, actions) =&gt; { /*...*/ },
+
+    /**
+     * Called after the view was unmounted
+     * 
+     * `element` is null here
+     */
+    unmount: (element, state, actions) =&gt; { /*...*/ }
+
+    /**
+     * Called after the view was destroyed completely
+     * 
+     * `element` is null here
+     */
+    unmount: (element, state, actions) =&gt; { /*...*/ }
+}</code></pre>
+<p><em>Note</em> that if you just need to access the DOM of the view it&#39;s beter to use the <a href="">withRefs</a> decorator.</p>
+<h3 id="mounting-views">Mounting Views</h3>
+<p>The last line of our example was:</p>
+<pre><code class="language-js">mount(document.body, &lt;App /&gt;)</code></pre>
+<p>The <strong>mount</strong> function mounts the vDOM into the real DOM tree. It takes:</p>
+<ul>
+<li><strong>container</strong> - DOM element into which the node will be rendered</li>
+<li><strong>node</strong> - vDOM node to render</li>
+<li><strong>index</strong> - numeric index at which the node will be rendered <em>(optional)</em></li>
+<li><strong>options</strong> - mounting options <em>(optional)</em><ul>
+<li><em>insideSvg</em> - boolean flag, set it to <code>true</code> if you&#39;re rendering your tree inside an svg tag</li>
+</ul>
+</li>
+</ul>
+<p>You can mount as many nodes as you want, you can even mount new views from other views&#39; actions and hooks, but an attempt to mount something from the outside into the view&#39;s tree may lead to the broken markup</p>
+<p><em>Note</em> that <strong>container</strong> element is not required to be a real HTMLElement, you can use other DOM implementations as well such as <a href="https://github.com/jsdom/jsdom">jsdom</a>. It can be really useful for <a href="">SSR</a> and <a href="">Testing</a></p>
+<p>The <strong>mount</strong> function returns a <em>view</em> instance, it&#39;s an object that has <strong>state</strong> and <strong>actions</strong> properties and you can manipilate them as you need:</p>
+<pre><code class="language-jsx">const app = mount(document.body, &lt;App /&gt;)
+
+app.actions.doAwesomeStuff()</code></pre>
+<h2 id="examples">Examples</h2>
+<p>Check out the <a href="https://github.com/vacavaca/malina/blob/master/examples">examples</a> directory of the project to see how to write more complex applications such are:</p>
+<h3 id="todo-app"><a href="https://github.com/vacavaca/malina/blob/master/examples/todo-app">Todo App</a></h3>
+<p>The reference implementation of the <a href="http://todomvc.com">TodoMVC</a> app, here you can find:</p>
+<ul>
+<li>An example of a simple project structure</li>
+<li>How to pass state and actions down the tree</li>
+<li>How to manage global state and save it to the localStorage</li>
+<li>How to work with router</li>
+</ul>
+<h2 id="snake-game"><a href="https://github.com/vacavaca/malina/blob/master/examples/todo-app">Snake Game</a></h2>
+<p>A simple <a href="https://en.wikipedia.org/wiki/Snake_(video_game_genre)">snake</a> game, contains examples of:</p>
+<ul>
+<li>A more complex project structure</li>
+<li><em>SVG</em> views</li>
+<li><em>SASS</em> (scss) integration</li>
+<li>Working with DOM using the <a href="">withRefs</a> decorator</li>
+</ul>
+<p><em>Contributions are welcome</em>!</p>
+<h2 id="constraints-and-limitations">Constraints and Limitations</h2>
+<p>The great simplicity of this library internals  comes with a little cost and that cost is reflected in some limitations of the usage, here they are:</p>
+<ol>
+<li><p><em>Each view must end up rendering a single DOM element</em></p>
+<p> It&#39;s impossible to render multiple elements or multiple views:</p>
+<pre><code class="language-jsx"> // This won&#39;t work
+ const App = view(
+     {[
+         &lt;li&gt;First&lt;/li&gt;,
+         &lt;li&gt;Second&lt;/li&gt;
+     ]}
+ )</code></pre>
+<p> But is allowed to render just a view without DOM:</p>
+<pre><code class="language-jsx"> // It&#39;s ok, we can pass multiple elements to view&#39;s children as well
+ const App = view(
+     &lt;OtherView&gt;
+         &lt;li&gt;First&lt;/li&gt;
+         &lt;li&gt;Second&lt;/li&gt;
+     &lt;OtherView /&gt;
+ )</code></pre>
+<p> In this example <code>App</code> and <code>OtherView</code> will probably share a single DOM Element</p>
+</li>
+<li><p><em>The only way to access or change the view state is via its <strong>actions</strong> and <strong>hooks</strong>, except when the view was mounted using the <strong>mount</strong> function</em></p>
+<p> There is one important consequence of this rule:</p>
+<p> <strong>You cannot call actions of your child views</strong>, there are workarounds but if you need to do so it&#39;s probable that you have some flaws in your design, try to refactor your data flow a bit.</p>
+</li>
+</ol>
+<p>That&#39;s it for the limitations but here are few more important notes to consider:</p>
+<ol>
+<li>Remember that your UI code must stay purely declarative. That means you cannot access the view&#39;s state or actions unless you&#39;re &quot;inside&quot; the view&#39;s scope, it also means that you cannot &quot;know&quot; when and where your views will end up rendering, and can not control it from the view&#39;s definitions. </li>
+<li>Do not relly on the template function as an indicator for updates, use the <strong>update</strong> hook if necessary.</li>
+<li><a href="https://en.wikipedia.org/wiki/KISS_principle">Keep It Simple</a>! Keep your views, state and actions small, separate it into multiple functions or even files if needed. Remember that it&#39;s better to <a href="https://en.wikipedia.org/wiki/Composition_over_inheritance">contain</a> things one inside another than to extend it via inheritance or modifications from the outside. </li>
+</ol>
+<h2 id="comparison-with-other-frameworks">Comparison with other Frameworks</h2>
+<p>First, it&#39;s important to mention that <a href="https://github.com/vacavaca/malina">malina</a> is more like a &quot;library&quot; than a framework, it has a very little <a href="https://en.wikipedia.org/wiki/Inversion_of_control">Inversion of control</a> i.e. it gives more control of the program flow to the user and it only manages rendering and state updates. The other thing that separates it from other large-scale frameworks is the size: it contains a very limited set of functions, providing the &quot;core&quot; functionality for building user interfaces so if you need a tool to build an application using a big set of predefined components, widgets, and modules then maybe malina is not a perfect fit, but if you&#39;re willing to develop a robust and efficient app taking full control of the all of its parts then this library is here for you.</p>
+<p>In the following paragraphs this library is compared with other popular tools, keep in mind that this is a subjective author&#39;s opinion, and it can be a bit biased sometimes. If you find a mistake here or think that some information is outdated, or you think that author misunderstands some concepts, please, let us known by opening an issue or you can suggest an edit to this guide, your feedback is very welcome! </p>
+<h3 id="js-micro-frameworks">JS Micro-frameworks</h3>
+<p><a href="https://github.com/jorgebucaran/hyperapp">hyperapp</a> is the closest analog for this library, it has very similar public interface and was writen in the same time period (independently) as malina, but for now (v1, late 2018) it lacks some crucial functions needed to build complex applications:</p>
+<ul>
+<li><p>No support for multiple stateful views in a template, composition of views is possible but messy.</p>
+<p>  On the other side, in malina, multiple views are fully supported, it goes even further: optimisation for keyed (indexed) colletions in malina is written using only view composition, not touching the rendering core.</p>
+</li>
+<li><p>Missing DOM utilities</p>
+<p>  Working with DOM in hyperapp is possible using the native DOM API, but it&#39;s very usefull to have some utilities to access DOM nodes of the specific parts of the template without the need to manualy search the DOM tree using the low-level API</p>
+<p>  Malina has <a href="">refs</a> and <a href="#hooks">hooks</a> for that</p>
+</li>
+<li><p>General design goals</p>
+<p>  Based on the <a href="https://github.com/jorgebucaran/hyperapp/pull/726">V2 discussions</a> overall design vision of the hyperapp is at odds with that in malina. Malina&#39;s main focus is at providing the core functionality giving the necessary primitives and flexibility to other <a href="https://github.com/vacavaca/malina/blob/master/packages">packages</a> and libraries to develop more abstract and high-level APIs and tools. The public API will unlikely be changed, all the modern framework magic can be arcived using this simple but powerful API.</p>
+</li>
+</ul>
+<p><a href="https://mithril.js.org/">mithril.js</a> is another beautiful library. It can perfectly fit many needs of the modern web development and it shares a lot of concepts with malina:</p>
+<ul>
+<li>Both use virtual DOM</li>
+<li>Both has view-library core along with some more high-level features (routing for example)</li>
+<li>Both has similar aproach to code organisation</li>
+</ul>
+<p>But there are some differences:</p>
+<ul>
+<li>malina has more abstract, functional interface</li>
+<li>malina use <a href="">decorators</a> as a primary tool for extending components. <em>Not to be confused with the <a href="https://github.com/tc39/proposal-decorators">decorators proposal</a></em></li>
+<li>malina has actions and hooks as are built-ins in its interface</li>
+</ul>
+<p>Lastly, <a href="https://redom.js.org">redom</a>, <a href="https://monkberry.js.org/">monkberry</a>, and <a href="https://github.com/search?l=JavaScript&amp;q=microframework&amp;type=Repositories">many other tools</a> can be considered as a replacement for malina, all have many similarities and they definatelly worth taking a look. But an in-detail comparison is out of scope of this guide. </p>
+<h3 id="react"><a href="http://reactjs.org/">React</a></h3>
+<p>React shares a lot with malina, they both was built with almost identical ideas in mind, and malina could be considered as the <em>essence of the react</em>. However, there are some differences, mostly in design, that makes malina more suitable in many cases:</p>
+<ul>
+<li>The size. Malina is far smaller than react, incomparably smaller, ~ <strong>1k</strong> in malina vs ~ <strong>17k</strong> lines of code in react (react and react-dom excluding tests)</li>
+<li>The components API. React was initially built around the concept of classes, objects, and inheritance, on the other side, malina is more functional and declarative. Currently, React is changing towards more functional approach (with <a href="https://reactjs.org/docs/hooks-intro.html">hooks</a> for example), but for now a lot of code in real applications must be written using classes. Classes in React are frequently a lot more verbose than malina or similar tools and they also make it harder to separate components&#39; state and &quot;actions&quot; from the template.</li>
+<li>Lifecycle API. React has a big and a bit overloaded set of lifecycle methods, some of them are presented in malina as well (<a href="#hooks">hooks</a>) but some of them are missing and, if needed, can be easily replaced with view composition and decorators, so malina is more simple and flexible in this regard.</li>
+<li>Hooks and Effects. Those are the new APIs in React and malina has the same functinality too, but the react’s APIs have more  inversion of the program flow in them, it&#39;s somethimes referred as &quot;magic&quot; in the code. Somebody may like it but in malina the main goal is to provide more transparent and comprehensible API that both simblifies application development and increases code maintainability.</li>
+<li>Because React is a &quot;view-library&quot; you are usually have to include other tools in your project, such as state management tool, router, styling tool etc. In malina many of such tools are already presented in the companion <a href="">pacakges</a>, so you don&#39;t need to depend on third-party libraries. This approach increases consistency in code and simplifies onboarding process in teams, but if you really need to use third-party tools (for example <a href="https://redux.js.org">redux</a> as state-management) you are free to do so.</li>
+</ul>
+<h3 id="vue"><a href="https://vuejs.org">Vue</a></h3>
+<p>Vue has a completely different API and design concepts than malina, so it&#39;s out of scope to compare them in depth, but here are some key differences:</p>
+<ul>
+<li>Malina uses JSX templates with the implementation inspired by React and hyperscript. Vue utilities its own template syntax.</li>
+<li>Malina has no concept of &quot;binding&quot; and watchers. The state is propagated downwards in purely functional way.</li>
+<li>Malina uses decorators and functional composition for extending components. Vue has plugins and mixins for that.</li>
+</ul>
+<p>Comparison with other popular tools will be added soon as a separate section of the docs.</p>
+<h3 id="performance-comparison">Performance Comparison</h3>
+<p>Almost all UI tools today has a similar performance and in most cases that is enough to satisfy modern needs of speed and responsiveness in web applications. In many cases the problems with performance come from the user&#39;s code and they can be handled optimising algorithms, style, markup, and animations. But, for your reference, complete benchmarks of malina compared to many other popular tools will be released soon.</p>
+<p>If you are interested in performance optimisations in malina take a look at the <a href="">Performance</a> page.</p>
+<h2 id="advanced-topics">Advanced Topics</h2>
+<ul>
+<li><a href="">Decorators</a></li>
+<li><a href="">Routing</a></li>
+<li><a href="">Server Side Rendering</a></li>
+<li><a href="">Performance</a></li>
+<li><a href="">Testing</a></li>
+</ul>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="">API Reference</a></li>
+<li><a href="https://github.com/vacavaca/malina/blob/master/CHANGELOG.md">Changelog</a></li>
+<li><a href="https://github.com/vacavaca/malina/blob/master/CONTRIBUTING.md">Contribution</a></li>
+</ul>
