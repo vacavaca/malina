@@ -18,7 +18,9 @@ export class InnerFacade {
   get children() {
     return this.view.children
   }
+}
 
+export class ConcurrentFacade extends InnerFacade {
   get isMounted() {
     return this.view.mounted
   }
@@ -30,9 +32,7 @@ export class InnerFacade {
   get element() {
     return this.view.element
   }
-}
 
-export class ConcurrentFacade extends InnerFacade {
   update(updater) {
     if (!this.isDestroyed) return this.view.update(updater)
     else return this.state
@@ -47,7 +47,7 @@ export class ConcurrentFacade extends InnerFacade {
   }
 
   nextUpdate() {
-    return this.view.dispatcher.wait('update')
+    return this.view.dispatcher.wait('update', true)
   }
 
   onUpdate(handler) {
@@ -104,14 +104,29 @@ export class ConcurrentFacade extends InnerFacade {
 }
 
 export class OuterFacade extends InnerFacade {
+  get isMounted() {
+    return this.view.mounted
+  }
+
+  get isDestroyed() {
+    return this.view.destroyed
+  }
+
+  get element() {
+    return this.view.element
+  }
+
   mount(...args) {
-    // delegating
     return this.view.mount(...args)
   }
 
   update(updater) {
     if (!this.isDestroyed) return this.view.update(updater)
     else return this.state
+  }
+
+  destroy() {
+    this.view.destroy()
   }
 
   onMount(handler) {

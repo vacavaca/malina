@@ -27,8 +27,6 @@ const state = state => ({
 
 const ItemRenderer = view(({ state: { render } }) => render)
 
-const actions = {}
-
 const normalizeDiffPatches = patches => {
   let ndx = 0
   const result = []
@@ -165,27 +163,28 @@ const update = view => {
 }
 
 const handleMount = view => {
+  const { state, element } = view
   if (state.path.length > 0) {
-    let container = mount
+    let container = element
     for (const index of state.path.slice(0, -1))
       container = container.childNodes[index]
 
     state.mountPoint = [container, state.path[state.path.length - 1]]
   } else
-    state.mountPoint = [mount.parentNode, Array.prototype.indexOf.call(mount.parentNode.childNodes, mount)]
-  actions.update()
+    state.mountPoint = [element.parentNode, Array.prototype.indexOf.call(element.parentNode.childNodes, element)]
+  update(view)
 }
 
-const handleUnmount = view => {
-  view.state.mountPoint = null
-  view.state.initialized = false
-  view.state.views = {}
-  view.state.index = []
-  view.state.prevData = []
+const handleUnmount = ({ state }) => {
+  state.mountPoint = null
+  state.initialized = false
+  state.views = {}
+  state.index = []
+  state.prevData = []
 }
 
 const behavior = async view => {
-  view.state = { ...view.state, ...state }
+  view.state = { ...view.state, ...state(view.state) }
 
   view.onMount(handleMount)
   view.onUpdate(update)
@@ -225,7 +224,7 @@ const removeRenderer = (node, path) => {
   } else return node
 }
 
-export const List = view((state, _, children) => {
+export const List = view(({ state, children }) => {
   if (children.length !== 0) {
     if (children.length !== 1)
       throw new Error('You must provide only one child to the List')
@@ -245,7 +244,7 @@ export const List = view((state, _, children) => {
   } else return null
 })
 
-export const Map = view((state, _, children) => {
+export const Map = view(({ state, children }) => {
   if (children.length !== 1)
     throw new Error('You must provide only one child to the List')
 
@@ -261,4 +260,4 @@ export const Map = view((state, _, children) => {
   const data = keys(state.data || {}).map(k => [k, state.data[k]])
   const indexBy = ([k]) => k
   return h(ListRenderer, { data, indexBy, path, render: mapRender }, childrenToRender)
-}, { data: {} })
+})

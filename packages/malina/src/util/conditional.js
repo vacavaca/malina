@@ -1,10 +1,6 @@
 import { view } from '../view'
 
-export const branch = (test, left, right = null) =>
-  view(() => {
-    if (test) return left
-    else return right
-  })
+export const branch = (test, left, right = null) => test ? left : right
 
 export const Show = view(({ state: { when = false }, children }) => {
   if (when) return children

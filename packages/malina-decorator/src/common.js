@@ -1,4 +1,4 @@
-import { h, view, decorator } from 'malina'
+import { view, decorator } from 'malina'
 
 const createInitializer = value => state => {
   if (value instanceof Function) return value(state) || {}
@@ -51,6 +51,3 @@ export const withTemplate = getTemplate => decorator(Inner =>
 
     return getTemplate(original)(view)
   }, Inner.behavior, Inner.actions))
-
-export const mapState = mapper => decorator(Inner =>
-  ({ state, children }) => h(Inner, mapper(state), children))
