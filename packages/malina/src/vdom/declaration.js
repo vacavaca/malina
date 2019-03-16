@@ -7,6 +7,7 @@ export default class Declaration {
     this.actions = actions || {}
     this.id = genRandomId(8)
     this.originalId = null
+    this.isDevOnly = false
   }
 
   static isViewDeclaration(obj) {
@@ -16,6 +17,11 @@ export default class Declaration {
 
   isViewDeclaration() {
     return true // because instanceof can be inreliable on some build configurations
+  }
+
+  setDevelopmentOnly(value) {
+    this.isDevOnly = value
+    return this
   }
 
   decorate(...fns) {

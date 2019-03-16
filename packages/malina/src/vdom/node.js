@@ -9,6 +9,7 @@ export class Node {
     this.tag = tag
     this.attrs = attrs || {}
     this.children = flatten(children)
+    this.isDevOnly = typeof tag === 'object' && tag.isDevOnly
   }
 
   static isNode(obj) {

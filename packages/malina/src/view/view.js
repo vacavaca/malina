@@ -1,6 +1,7 @@
 import { shallowEqual, compose, keys } from 'malina-util'
 import { h, isElementNode, isViewNode, isTextNode, Declaration } from '../vdom'
 import { Dispatcher } from '../concurrent'
+import { isProduction, testDevelopmnet } from '../env'
 import { InnerFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { toOnEventName, normalizeEventName } from './event'
 import { defaultContext } from './context'
@@ -549,9 +550,14 @@ class View {
 
   /** @private */
   destroyInnerViews(node, path) {
+    let shift = 0
     for (const ndx in node.children) {
-      const nextPath = path.concat([ndx])
       const child = node.children[ndx]
+      if (this.context.options.isProduction && child.isDevOnly) {
+        shift += 1
+        continue
+      }
+      const nextPath = path.concat([ndx - shift])
       if (isViewNode(child))
         this.destroyInnerView(nextPath)
       else if (isElementNode(child))
@@ -802,11 +808,17 @@ class View {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
+    let shift = 0
     if (!('innerHtml' in node.attrs)) {
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        const nextPath = path.concat([ndx])
-        this.attachChild(element, child, ndx, nextPath, context)
+        if (context.options.isProduction && child.isDevOnly) {
+          shift += 1
+          continue
+        }
+
+        const nextPath = path.concat([ndx - shift])
+        this.attachChild(element, child, ndx - shift, nextPath, context)
       }
     }
   }
@@ -819,10 +831,16 @@ class View {
     if ('innerHtml' in node.attrs)
       element.innerHTML = node.attrs.innerHtml
     else {
+      let shift = 0
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        const nextPath = path.concat([ndx])
-        this.addChildren(element, child, ndx, nextPath, context)
+        if (context.options.isProduction && child.isDevOnly) {
+          shift += 1
+          continue
+        }
+
+        const nextPath = path.concat([ndx - shift])
+        this.addChildren(element, child, ndx - shift, nextPath, context)
       }
     }
   }
@@ -871,9 +889,18 @@ class View {
       const len = Math.max(prev.children.length, next.children.length)
       let nodeIndexShift = 0
       for (let ndx = 0; ndx < len; ndx++) {
+        let prevChild = prev.children[ndx]
+        let nextChild = ndx in next.children ? next.children[ndx] : null
+        if (context.options.isProduction) {
+          if (prevChild != null && nextChild != null && prevChild.isDevOnly && nextChild.isDevOnly)
+            continue
+          else if (prevChild != null && prevChild.isDevOnly)
+            prevChild = null
+          else if (nextChild != null && nextChild.isDevOnly)
+            nextChild = null
+        }
+
         const childNode = element.childNodes[ndx - nodeIndexShift]
-        const prevChild = prev.children[ndx]
-        const nextChild = ndx in next.children ? next.children[ndx] : null
         const nextPath = path.concat([ndx])
         if (prevChild != null) {
           this.patch(childNode, prevChild, nextChild, nextPath, context)
@@ -935,9 +962,14 @@ class View {
         this.removeParametrizedListener(path, name)
     }
 
+    let shift = 0
     for (const ndx in node.children) {
-      const nextPath = path.concat([ndx])
       const child = node.children[ndx]
+      if (this.context.options.isProduction && child.isDevOnly) {
+        shift += 1
+        continue
+      }
+      const nextPath = path.concat([ndx - shift])
       if (isElementNode(child))
         this.removeParametrizedListeners(child, nextPath)
     }
@@ -951,7 +983,7 @@ class View {
 }
 
 const mountOrAttach = (container, node, index, {
-  insideSvg, attach
+  insideSvg, attach, isProduction
 }) => {
   let viewNode = node
   if (isElementNode(node))
@@ -962,7 +994,7 @@ const mountOrAttach = (container, node, index, {
     mountHookQueue: []
   }
 
-  let context = defaultContext({ store })
+  let context = defaultContext({ store, isProduction })
     .setSvg(insideSvg)
 
   if (!context.svg) {
@@ -980,12 +1012,12 @@ const mountOrAttach = (container, node, index, {
 }
 
 export const mount = (container, node, index = 0, {
-  insideSvg = false
-} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: false })
+  insideSvg = false, env = isProduction ? 'production' : 'development'
+} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: false, isProduction: !testDevelopmnet(env) })
 
 export const attach = (container, node, index = 0, {
-  insideSvg = false
-} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: true })
+  insideSvg = false, env = isProduction ? 'production' : 'development'
+} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: true, isProduction: !testDevelopmnet(env) })
 
 export const view = (template, behavior, actions) =>
   new Declaration(template instanceof Function ? template : () => template, behavior, actions)

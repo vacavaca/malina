@@ -4,9 +4,12 @@ try {
   env = process.env.NODE_ENV
 } catch (ignore) { }
 
-export const isProduction = env === 'production'
+export const testDevelopmnet = env => env === 'development' || env === 'testing'
 
-export const isDevelopment = !isProduction
+// this must stay static
+export const isDevelopment = env === 'development' || env === 'testing'
+
+export const isProduction = !isDevelopment
 
 /* eslint-disable no-undef, no-use-before-define */
 const _global = (typeof self === 'object' && self.self === self && self) ||
