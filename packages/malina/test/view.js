@@ -2,7 +2,7 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { asyncTest, withState, withActions } = require('./util')
-const { h, view, mount } = require('..')
+const { h, view, mount, attach } = require('..')
 
 describe('view', () => {
   describe('update', () => {
@@ -127,5 +127,28 @@ describe('view', () => {
 
       done()
     }))
+  })
+
+  describe('attach', () => {
+    it('should attach to the prerendered dom', () => {
+      const dom = new JSDOM(`<body><div class="test"><span>Lorem ipsum</span></div></body>`)
+
+      const Inner = view(({ state }) => h('span', {}, state.text))
+
+      const behavior = view => {
+        view.state = { text: 'Lorem ipsum' }
+      }
+
+      const actions = {
+        update: () => ({ text: 'Updated' })
+      }
+
+      const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+      const instance = attach(dom.window.document.body, h(View))
+
+      instance.actions.update()
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div class="test"><span>Updated</span></div>')
+    })
   })
 })

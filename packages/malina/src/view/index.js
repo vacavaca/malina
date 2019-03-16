@@ -1,1 +1,1 @@
-export { mount, view } from './view'
+export { mount, attach, view } from './view'

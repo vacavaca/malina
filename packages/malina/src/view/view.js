@@ -86,6 +86,55 @@ class View {
     this.runBehavior()
   }
 
+  attach(container, index) {
+    let top = false
+    if (this.destroyed)
+      return
+
+    if (!this.context.store.mountLock) {
+      this.context = this.context
+        .update({ store: { ...this.context.store, mountLock: true } })
+        .setMounting(true)
+      top = true
+    }
+
+    const next = this.renderTemplate()
+    if (Array.isArray(next))
+      throw new Error('View can only have one root element')
+
+    if (isElementNode(next)) {
+      const element = this.attachNodeElement(container, index, next, [], this.context)
+      this.element = element
+    } else if (isViewNode(next)) {
+      const view = this.instantiateInnerView(next, [], this.context)
+      view.attach(container, index)
+      this.element = view.element
+    } else if (isTextNode(next))
+      this.element = container.childNodes[index] || null
+    else throw new Error('Invalid template type')
+
+    this.node = next
+    this.mounted = true
+
+    this.mounted = true
+    for (const [action, args] of this.scheduledActions)
+      this.callAction(action, ...args)
+    this.scheduledActions = []
+
+    if (top) {
+      const queue = this.context.store.mountHookQueue
+      this.context = this.context
+        .update({ store: { ...this.context.store, mountLock: false, mountHookQueue: [] } })
+        .setMounting(false)
+
+      for (const hook of queue)
+        hook()
+
+      this.dispatcher.notify('mount', [this.element])
+    } else
+      this.context.store.mountHookQueue.push(() => this.dispatcher.notify('mount', [this.element]))
+  }
+
   mount(container, index) {
     let top = false
     const document = container.ownerDocument
@@ -93,8 +142,9 @@ class View {
       return
 
     if (!this.context.store.mountLock) {
-      // no need to copy context here
-      this.context.store.mountLock = true
+      this.context = this.context
+        .update({ store: { ...this.context.store, mountLock: true } })
+        .setMounting(true)
       top = true
     }
 
@@ -126,8 +176,9 @@ class View {
 
     if (top) {
       const queue = this.context.store.mountHookQueue
-      this.context.store.mountHookQueue = []
-      this.context.store.mountLock = false
+      this.context = this.context
+        .update({ store: { ...this.context.store, mountLock: false, mountHookQueue: [] } })
+        .setMounting(false)
 
       for (const hook of queue)
         hook()
@@ -529,12 +580,18 @@ class View {
   }
 
   /** @private */
+  attachNodeElement(container, index, node, path, context) {
+    const element = container.childNodes[index]
+    this.attachChildren(element, node, path, context)
+    return element
+  }
+
+  /** @private */
   mountNodeElement(container, index, node, path, context) {
     const document = container.ownerDocument
     let element
     context = context
       .setSvg(context.svg || node.tag === 'svg')
-      .setMounting(true)
 
     if (context.svg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
@@ -741,6 +798,20 @@ class View {
   }
 
   /** @private */
+  attachChildren(element, node, path, context) {
+    if (!requireValidChildren(node))
+      throw new Error("Every view node in an array must have an unique 'key' attribute")
+
+    if (!('innerHtml' in node.attrs)) {
+      for (const ndx in node.children) {
+        const child = node.children[ndx]
+        const nextPath = path.concat([ndx])
+        this.attachChild(element, child, ndx, nextPath, context)
+      }
+    }
+  }
+
+  /** @private */
   refreshChildren(element, node, path, context) {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
@@ -753,6 +824,16 @@ class View {
         const nextPath = path.concat([ndx])
         this.addChildren(element, child, ndx, nextPath, context)
       }
+    }
+  }
+
+  /** @private */
+  attachChild(element, child, ndx, path, context) {
+    if (isElementNode(child))
+      this.attachNodeElement(element, ndx, child, path, context)
+    else if (isViewNode(child)) {
+      const view = this.instantiateInnerView(child, path, context)
+      view.attach(element, ndx)
     }
   }
 
@@ -869,9 +950,9 @@ class View {
   }
 }
 
-export const mount = (container, node, index = 0, {
-  insideSvg = false
-} = {}) => {
+const mountOrAttach = (container, node, index, {
+  insideSvg, attach
+}) => {
   let viewNode = node
   if (isElementNode(node))
     viewNode = h(view(node))
@@ -893,9 +974,18 @@ export const mount = (container, node, index = 0, {
     throw new Error('View can only be instantiated from view-nodes')
   const viewInstance = new View(viewNode, context)
   const returnInstance = new OuterFacade(viewInstance)
-  returnInstance.mount(container, index)
+  if (attach) viewInstance.attach(container, index)
+  else viewInstance.mount(container, index)
   return returnInstance
 }
+
+export const mount = (container, node, index = 0, {
+  insideSvg = false
+} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: false })
+
+export const attach = (container, node, index = 0, {
+  insideSvg = false
+} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: true })
 
 export const view = (template, behavior, actions) =>
   new Declaration(template instanceof Function ? template : () => template, behavior, actions)
