@@ -1,8 +1,6 @@
 export const toggleClass = classes =>
   Object.keys(classes).filter(key => classes[key]).join(' ') || null
 
-export const branch = (condition, left, right = null) => condition ? left : right
-
 export const uuid = () => {
   let uuid = ''
 

@@ -1,21 +1,14 @@
-import { h, view } from 'malina'
+import { h, view, branch } from 'malina'
 
 import { default as Filter } from './filter'
 import * as filter from './filter'
-import { branch } from './util'
 
 const countActive = todos =>
   todos.filter(({ completed }) => !completed).length
 
 const itemsLeft = left => `item${left != 1 ? 's' : ''} left`
 
-const actions = {}
-
-actions.onDestroyCompleted = () => state => {
-  state.actions.onDestroyCompleted()
-}
-
-export default view((state, actions) => {
+export default view(({ state }) => {
   const left = countActive(state.todos)
   const completed = state.todos.length - left
 
@@ -39,6 +32,6 @@ export default view((state, actions) => {
         link="#/completed">Completed</Filter>
     </ul>
     {branch(completed > 0,
-      <button class="clear-completed" onClick={actions.onDestroyCompleted}>Clear completed</button>)}
+      <button class="clear-completed" onClick={state.actions.onDestroyCompleted}>Clear completed</button>)}
   </footer>
-}, {}, actions)
+})

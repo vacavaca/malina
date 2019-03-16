@@ -18,7 +18,7 @@ export const filterToPath = filter => Object.keys(filterPaths).find(key => filte
 const filterClass = (filter, selected) =>
   toggleClass({ selected: filter === selected })
 
-export default view(({ key: filter }, _, children) =>
+export default view(({ state: { key: filter }, children }) =>
   <Route hash path="#/:filter?">
     {params => (
       <li>

@@ -1,8 +1,7 @@
 import { h, view } from 'malina'
+import { withActions } from 'malina-decorator'
 
-const actions = {}
-
-actions.onCreate = e => state => {
+const onCreate = e => ({ state }) => {
   const title = e.currentTarget.value.trim()
   if (title.length > 0) {
     state.actions.onCreate(e.currentTarget.value)
@@ -11,7 +10,7 @@ actions.onCreate = e => state => {
   e.currentTarget.value = ""
 }
 
-export default view((_, actions) =>
+export default view(({ actions }) =>
   <header class="header">
     <h1>todos</h1>
     <input
@@ -20,4 +19,5 @@ export default view((_, actions) =>
       autofocus
       onChange={actions.onCreate}
     />
-  </header>, {}, actions)
+  </header>)
+  .decorate(withActions({ onCreate }))

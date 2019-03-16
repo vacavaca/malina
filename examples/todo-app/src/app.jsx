@@ -1,35 +1,13 @@
-import { h, view } from 'malina'
+import { h, view, branch } from 'malina'
 import { connectRouter, Route } from 'malina-router'
+import { withState, withActions, withBehavior } from 'malina-decorator'
 
 import Main from './main'
 import Header from './header'
 import Footer from './footer'
 import { all, pathToFilter } from './filter'
-import { branch, uuid } from './util'
-
-const storageKey = 'todos-malina'
-
-const loadTodosFromStorage = () => {
-  const item = localStorage.getItem(storageKey)
-  try {
-    return JSON.parse(item) || []
-  } catch (ignore) {
-    return []
-  }
-}
-
-const saveTodosToStorage = todos =>
-  localStorage.setItem(storageKey, JSON.stringify(todos))
-
-const todosPeristence = () => {
-  let prev = null
-  return todos => {
-    if (todos !== prev) {
-      prev = todos
-      saveTodosToStorage(todos)
-    }
-  }
-}
+import { loadTodosFromStorage, todosPeristence } from './persistence'
+import { uuid } from './util'
 
 // function to load initial state from the localstorage
 const state = () => ({
@@ -38,54 +16,60 @@ const state = () => ({
 
 const actions = {}
 
-actions.onAllComplete = (completed, filter) => ({ todos }) => ({
+actions.onAllComplete = (completed, filter) => ({ state: { todos } }) => ({
   todos: todos.map(todo => filter(todo) ? ({ ...todo, completed }) : todo)
 })
 
-actions.onComplete = (requestedTodo, completed) => ({ todos }) => ({
+actions.onComplete = (requestedTodo, completed) => ({ state: { todos } }) => ({
   todos: todos.map(todo => todo === requestedTodo ? ({ ...todo, completed }) : todo)
 })
 
-actions.onEdit = (requestedTodo, title) => ({ todos }) => ({
+actions.onEdit = (requestedTodo, title) => ({ state: { todos } }) => ({
   todos: todos.map(todo => todo === requestedTodo ? ({ ...todo, title }) : todo)
 })
 
-actions.onDestroy = (requestedTodo, title) => ({ todos }) => ({
+actions.onDestroy = (requestedTodo, title) => ({ state: { todos } }) => ({
   todos: todos.filter(todo => todo !== requestedTodo)
 })
 
-actions.onCreate = title => ({ todos }) => ({
+actions.onCreate = title => ({ state: { todos } }) => ({
   todos: todos.concat([{ title, completed: false, key: todos.length, id: uuid() }])
 })
 
-actions.onDestroyCompleted = () => ({ todos }) => ({
+actions.onDestroyCompleted = () => ({ state: { todos } }) => ({
   todos: todos.filter(({ completed }) => !completed)
 })
 
-const hooks = () => {
+const behavior = view => {
   const persistTodos = todosPeristence()
 
-  const create = (_, { router, location }) => {
-    if (!location.hash)
-      router.replace('/#/')
-  }
+  const { location, router } = view.state
+  if (!location.hash)
+    router.replace('/#/')
 
-  const update = (_, { todos }) => persistTodos(todos)
-
-  return { create, update }
+  view.onUpdate(({ state: { todos } }) => persistTodos(todos))
 }
 
-export default connectRouter(view(({ todos }, actions) =>
-  <Route hash path="#/:filter?">{urlParams => {
-    const filter = pathToFilter(urlParams.filter)
+const template = ({ state: { todos }, actions }) =>
+  <Route hash path="#/:filter?">{
+    urlParams => {
+      const filter = pathToFilter(urlParams.filter)
 
-    return <section class="todoapp">
-      <Header actions={actions} />
-      {branch(todos.length > 0,
-        <Main todos={todos.filter(filter)} actions={actions} filter={filter} />)}
-      {branch(todos.length > 0,
-        <Footer filter={filter} todos={todos} actions={actions} />)}
+      return (
+        <section class="todoapp">
+          <Header actions={actions} />
+          {branch(todos.length > 0,
+            <Main todos={todos.filter(filter)} actions={actions} filter={filter} />)}
+          {branch(todos.length > 0,
+            <Footer filter={filter} todos={todos} actions={actions} />)}
+        </section>
+      )
+    }}
+  </Route>
 
-    </section>
-  }}</Route>,
-  state, actions, hooks))
+export default view(template).decorate(
+  withState(state),
+  withActions(actions),
+  connectRouter,
+  withBehavior(behavior)
+)

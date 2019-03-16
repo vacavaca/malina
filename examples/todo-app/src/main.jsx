@@ -1,17 +1,16 @@
 import { h, view, List } from 'malina'
+import { withActions } from 'malina-decorator'
 
 import Todo from './todo'
 
 const isAllCompleted = ({ todos }) =>
   todos.every(({ completed }) => completed)
 
-const actions = {}
-
-actions.onAllComplete = e => state => {
+const onAllComplete = e => ({ state }) => {
   state.actions.onAllComplete(e.currentTarget.checked, state.filter)
 }
 
-export default view((state, actions) =>
+export default view(({ state, actions }) =>
   <section class="main">
     <input
       id="toggle-all"
@@ -26,4 +25,5 @@ export default view((state, actions) =>
         <Todo todo={todo} actions={state.actions} />
       }</List>
     </ul>
-  </section>, {}, actions)
+  </section>)
+  .decorate(withActions({ onAllComplete }))
