@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
+labels: 'bug'
 assignees: ''
 
 ---
@@ -17,11 +17,11 @@ A clear and concise description of what you expected to happen.
 Code snippet or text description that shows how to reproduce your problem
 It'd be great if you provide a working test for your problem
 
-**Desktop**
- - Device: [e.g. desktop, iPhone6]
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Environment**
+ - Device: [e.g. Desktop, iPhone6]
+ - OS: [e.g. Debian, iOS]
+ - Browser [e.g. Chrome, Safari]
+ - Browser Version [e.g. 22]
  - NodeJS Version [e.g. 10]
 
 **Additional context**
