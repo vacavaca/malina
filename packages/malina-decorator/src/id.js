@@ -44,10 +44,13 @@ const mapTemplate = (length, realKey, ctx) => node => {
 export const withUniqIds = (length = 4, realKey = 'realId') =>
   compose(
     getContext(ctx => key in ctx ? { [key]: ctx[key] } : {}),
-    withContext(state => {
-      if (!(key in state)) return { [key]: { ids: {}, id: 0 } }
-      else return {}
+    withContext(({ state }) => {
+      if (!(key in state)) {
+        const context = { ids: {}, id: 0 }
+        state[key] = context
+        return { [key]: context }
+      } else return {}
     }),
-    withTemplate(original => (state, actions, children) =>
-      mapTemplate(length, realKey, state[key])(original(state, actions, children)))
+    withTemplate(original => view =>
+      mapTemplate(length, realKey, view.state[key])(original()))
   )

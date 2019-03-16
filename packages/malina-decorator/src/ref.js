@@ -1,6 +1,6 @@
 import { h, isElementNode, isViewNode, isDevelopment, warn } from 'malina'
 import { compose, omit } from 'malina-util'
-import { withTemplate, withHooks } from './common'
+import { withTemplate, withLifecycle } from './common'
 
 const accessElement = (root, path) => {
   let next = root
@@ -114,38 +114,34 @@ const publishUnmount = refs => {
 }
 
 export const withRefs = (attrKey = 'ref') => compose(
-  withTemplate(original => (state, actions, children) => {
-    const node = original(state, actions, children)
+  withTemplate(original => view => {
+    const node = original()
     const { refs, node: nextNode } = collectRefs(attrKey, node)
-    state[key].next = refs
+    view.state[key].next = refs
     return nextNode
   }),
 
-  withHooks({
-    create: original => (_, state) => {
-      original()
-      state[key] = {
+  withLifecycle({
+    create: view => {
+      view.state[key] = {
         prev: null,
         next: null
       }
     },
 
-    mount: original => (element, state) => {
-      publishRefs(element, state[key].prev, state[key].next)
-      state[key].prev = state[key].next
-      original()
+    mount: view => {
+      publishRefs(view.element, view.state[key].prev, view.state[key].next)
+      view.state[key].prev = view.state[key].next
     },
 
-    update: original => (element, state) => {
-      publishRefs(element, state[key].prev, state[key].next)
-      state[key].prev = state[key].next
-      original()
+    update: view => {
+      publishRefs(view.element, view.state[key].prev, view.state[key].next)
+      view.state[key].prev = view.state[key].next
     },
 
-    unmount: original => (_, state) => {
-      publishUnmount(state[key].next)
-      state[key].prev = null
-      original()
+    unmount: view => {
+      publishUnmount(view.state[key].next)
+      view.state[key].prev = null
     }
   })
 )

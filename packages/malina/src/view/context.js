@@ -1,4 +1,3 @@
-
 export default class Context {
   constructor(options) {
     this.options = options

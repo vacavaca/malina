@@ -46,7 +46,7 @@
 eg. `npm run publish patch`
 
 
-Inside package directories the following npm commands are usualy available:
+Inside the packages directory the following npm commands are usualy available:
 
 * `test` run unit tests
 * `build` build package for development
@@ -56,7 +56,7 @@ To lint the code inside a package make a `lint`:
 
 `make lint`
 
-Projects in the examples directory may differ in configuration, please refer to the corresponding package.json
+Example projects and the project site may differ in configuration, please refer to the corresponding package.json
 
 ## Publishing
 

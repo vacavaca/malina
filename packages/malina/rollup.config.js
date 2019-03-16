@@ -1,4 +1,5 @@
 import babel from 'rollup-plugin-babel'
+import resolve from 'rollup-plugin-node-resolve'
 
 module.exports = {
   input: 'index.js',
@@ -9,6 +10,7 @@ module.exports = {
   external: ['malina-util', 'diff'],
   context: 'this',
   plugins: [
+    resolve(),
     babel()
   ]
 }

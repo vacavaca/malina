@@ -55,14 +55,14 @@ export const match = (location, path, options = {}) => {
 
 const routeKey = Symbol.for('__malina_route')
 
-const RouteView = view((state, _, children = []) => {
+const RouteView = view(({ state, children = [] }) => {
   const render = children[0]
   if (children.length > 1)
     throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
 
   const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
   return render instanceof Function ? render(params) : render
-}, { [routeKey]: true })
+})
 
 export const Route = compose(
   withState({ [routeKey]: true }),
@@ -112,7 +112,7 @@ const filterSwitchRoutes = (location, isRoot = false) => node => {
   } else return node
 }
 
-export const Switch = connectRouter(view((state, _, children) => {
+export const Switch = connectRouter(view(({ state, children }) => {
   if (children.length === 0)
     return null
 

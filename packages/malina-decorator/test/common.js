@@ -9,7 +9,7 @@ describe('common', () => {
     it('should map state passed from the outer views', () => {
       const dom = new JSDOM('<body></body>')
 
-      const Test = view(state => h('p', {}, `${state.test}`))
+      const Test = view(({ state }) => h('p', {}, `${state.test}`))
         .decorate(mapState(state => ({
           test: state.test + 1
         })))

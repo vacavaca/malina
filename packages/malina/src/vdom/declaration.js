@@ -1,11 +1,10 @@
 import { compose, genRandomId } from 'malina-util'
 
-class Declaration {
-  constructor(template, state, actions, hooks) {
+export default class Declaration {
+  constructor(template, behavior, actions) {
     this.template = template
-    this.state = state
-    this.actions = actions
-    this.hooks = hooks
+    this.behavior = behavior || (() => {})
+    this.actions = actions || {}
     this.id = genRandomId(8)
     this.originalId = null
   }
@@ -23,8 +22,3 @@ class Declaration {
     return compose(...fns)(this)
   }
 }
-
-export const view = (template, state = null, actions = null, hooks = null) =>
-  new Declaration(template instanceof Function ? template : () => template, state, actions, hooks)
-
-export const ViewDeclaration = Declaration

@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { asyncTest } = require('./util')
+const { asyncTest, withState, withActions } = require('./util')
 const { h, view, mount } = require('..')
 
 describe('view', () => {
@@ -9,11 +9,13 @@ describe('view', () => {
     it('should add new children while updating', () => {
       const dom = new JSDOM('<body></body>')
 
-      const increment = () => ({ childCount }) => ({
+      const increment = () => ({ state: { childCount } }) => ({
         childCount: childCount + 1
       })
 
-      const Test = view(({ childCount }) => {
+      const Test = view(view => {
+        const { childCount } = view.state
+
         const children = []
         for (let i = 1; i <= childCount; i++) {
           children.push(h('div', {}, [
@@ -22,11 +24,14 @@ describe('view', () => {
         }
 
         return h('div', {}, children)
-      }, { childCount: 1 }, { increment })
+      }).decorate(
+        withState({ childCount: 1 }),
+        withActions({ increment })
+      )
 
       const instance = mount(dom.window.document.body, h(Test))
       assert.strictEqual(dom.window.document.body.innerHTML, '<div><div><p class="test">Hello 1</p></div></div>')
-      instance.actions.increment()
+      instance.actions.increment(42)
       assert.strictEqual(dom.window.document.body.innerHTML, '<div><div><p class="test">Hello 1</p></div><div><p class="test">Hello 2</p></div></div>')
     })
 
@@ -89,7 +94,7 @@ describe('view', () => {
           ({ bothAsyncAction: true })
       }
 
-      const Test = view(null, state, actions)
+      const Test = view(null).decorate(withState(state), withActions(actions))
       const instance = mount(dom.window.document.body, h(Test))
 
       instance.actions.simpleEffect()

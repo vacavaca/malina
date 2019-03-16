@@ -2,7 +2,7 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('malina')
-const { cssModules } = require('..')
+const { cssModules, withState, withActions } = require('..')
 
 describe('cssModules', () => {
   it('should add classes', () => {
@@ -28,7 +28,7 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Test = view(
-      state => h('div', { styleName: state.style })
+      ({ state }) => h('div', { styleName: state.style })
     ).decorate(
       cssModules({
         test: 'test-class'
@@ -159,8 +159,8 @@ describe('cssModules', () => {
     const Test = view(
       h('div', {}, [
         h(Inner3)
-      ]), state, actions
-    ).decorate(cssModules({}))
+      ])
+    ).decorate(withState(state), withActions(actions), cssModules({}))
 
     const instance = mount(dom.window.document.body, h(Test))
 
@@ -176,7 +176,7 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Inner = view(
-      (s, a, children) => h('div', {},
+      ({ children }) => h('div', {},
         children
       )
     )
@@ -205,7 +205,7 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Inner = view(
-      (s, a, children) => h('div', { styleName: 'abc' },
+      ({ children }) => h('div', { styleName: 'abc' },
         children
       )
     ).decorate(cssModules({

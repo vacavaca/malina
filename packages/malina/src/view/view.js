@@ -1,9 +1,9 @@
-import { shallowEqual, keys, compose } from 'malina-util'
-import { h, isElementNode, isViewNode, isTextNode } from './node'
-import { view } from './declaration'
+import { shallowEqual, compose, keys } from 'malina-util'
+import { h, isElementNode, isViewNode, isTextNode, Declaration } from '../vdom'
+import { Dispatcher } from '../concurrent'
+import { InnerFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { toOnEventName, normalizeEventName } from './event'
 import { defaultContext } from './context'
-import { isDevelopment } from './env'
 
 const isParametrizedAction = value =>
   Array.isArray(value) && value.length === 2 && value[0] instanceof Function
@@ -60,51 +60,38 @@ const requireValidChildren = compose(
   requireNoInnerHtmlOverlap
 )
 
-class ViewInt {
+class View {
   constructor(node, context) {
     const { tag: declaration, attrs: state, children } = node
-    const initialState = declaration.state instanceof Function
-      ? { ...state, ...(declaration.state(state) || {}) }
-      : { ...(declaration.state || {}), ...state }
-    const declaredActions = declaration.actions instanceof Function
-      ? declaration.actions(state)
-      : declaration.actions
-    const declaredHooks = declaration.hooks instanceof Function
-      ? declaration.hooks(state)
-      : declaration.hooks
 
     this.template = declaration.template
-    this.state = initialState
-    this.actions = this.bindActions(declaredActions || {})
+    this.state = state
+    this.actions = this.bindActions(declaration.actions)
+    this.behavior = declaration.behavior
+    this.dispatcher = new Dispatcher()
+    this.innerFacade = new InnerFacade(this)
     this.children = children
-    this.hooks = declaredHooks || {}
+    this.mounted = false
+    this.destroyed = false
 
     this.context = context.setMounting(false)
     this.templateLock = false
-    this.updateLock = false
     this.element = null
     this.node = null
     this.innerViews = new Map()
     this.parametrizedEventListeners = new Map()
     this.scheduledActions = []
-    this.mounted = false
-    this.destroyed = false
     this.trackedActionUpdate = false
-    this.callHook('create')
-  }
 
-  static instantiate(node, context) {
-    if (!isViewNode(node))
-      throw new Error('View can only be instantiated from view-nodes')
-    return new View(node, context)
+    this.runBehavior()
   }
 
   mount(container, index) {
+    let top = false
     const document = container.ownerDocument
     if (this.destroyed)
       return
 
-    let top = false
     if (!this.context.store.mountLock) {
       // no need to copy context here
       this.context.store.mountLock = true
@@ -131,6 +118,8 @@ class ViewInt {
 
     this.node = next
     this.mounted = true
+
+    this.mounted = true
     for (const [action, args] of this.scheduledActions)
       this.callAction(action, ...args)
     this.scheduledActions = []
@@ -143,9 +132,9 @@ class ViewInt {
       for (const hook of queue)
         hook()
 
-      this.callHook('mount')
+      this.dispatcher.notify('mount', [this.element])
     } else
-      this.context.store.mountHookQueue.push(() => this.callHook('mount'))
+      this.context.store.mountHookQueue.push(() => this.dispatcher.notify('mount', [this.element]))
   }
 
   move(container, index) {
@@ -156,21 +145,23 @@ class ViewInt {
   }
 
   update(state = null, children = null) {
+    let update = false
     if (this.destroyed)
       throw new Error('View has been destroyed')
 
     const nextState = this.updateState(state)
     const nextChildren = this.updateChildrenState(children)
 
-    const update = this.state !== nextState || this.children !== nextChildren
+    update = this.state !== nextState || this.children !== nextChildren
 
     this.state = nextState
     this.children = nextChildren
 
-    if (this.mounted && update) {
+    if (this.mounted && update)
       this.refresh()
-      this.callHook('update')
-    }
+
+    if (this.mounted && update)
+      this.dispatcher.notify('update', [this.state])
 
     return update
   }
@@ -192,14 +183,14 @@ class ViewInt {
     if (removeElement)
       this.element.remove()
 
-    this.callHook('unmount')
     this.element = null
+    this.dispatcher.notify('unmount')
   }
 
   destroy(removeElement = true) {
     this.unmount(removeElement)
-    this.callHook('destroy')
     this.destroyed = true
+    this.dispatcher.notify('destroy')
   }
 
   /** @private */
@@ -213,10 +204,16 @@ class ViewInt {
   }
 
   /** @private */
+  runBehavior() {
+    if (this.behavior instanceof Function)
+      this.behavior(new ConcurrentFacade(this))
+  }
+
+  /** @private */
   renderTemplate() {
     this.templateLock = true
     try {
-      let next = this.template(this.state, this.actions, this.children)
+      let next = this.template(this.innerFacade)
       if (Array.isArray(next)) {
         if (next.length !== 1)
           throw new Error('Only one root element must be rendered for a view')
@@ -253,13 +250,13 @@ class ViewInt {
     this.updateLock = true
     let result = action(...args)
     if (result instanceof Function)
-      result = result(this.state, this.actions)
+      result = result(this.innerFacade)
     else if (result instanceof Promise) {
       return (async () => {
         this.finishAction(update)
         result = await result
         if (result instanceof Function)
-          result = result(this.state, this.actions)
+          result = result(this.innerFacade)
 
         if (result instanceof Promise) {
           this.finishAction(update)
@@ -291,13 +288,17 @@ class ViewInt {
     this.updateLock = false
     if (update) {
       if (!this.destroyed && this.mounted) {
+        let notify = false
         const updated = this.update(result)
         if (!updated && this.trackedActionUpdate) {
           this.trackedActionUpdate = false
           this.refresh()
-          this.callHook('update')
+          notify = true
         } else
           this.trackedActionUpdate = false
+
+        if (notify)
+          this.dispatcher.notify('update', this.state)
       } else if (!this.destroyed)
         this.state = this.updateState(result)
     } else {
@@ -327,12 +328,6 @@ class ViewInt {
     if (selfEmpty !== nextEmpty)
       return children
     else return !shallowEqual(this.children, children) ? children : this.children
-  }
-
-  /** @private */
-  callHook(hook) {
-    if (hook in this.hooks)
-      this.hooks[hook](this.element, this.state, this.actions)
   }
 
   /** @private */
@@ -499,13 +494,6 @@ class ViewInt {
       if (isRoot(path))
         this.element = view.element
     }
-  }
-
-  /** @private */
-  unmountPatch() {
-    this.mounted = false
-    this.callHook('unmount')
-    this.element = null
   }
 
   /** @private */
@@ -821,7 +809,7 @@ class ViewInt {
   /** @private */
   instantiateInnerView(node, path, context) {
     const key = View.getPathKey(path)
-    const view = View.instantiate(node, context)
+    const view = new View(node, context)
     this.innerViews.set(key, { view, path: path.slice() })
     return view
   }
@@ -881,33 +869,6 @@ class ViewInt {
   }
 }
 
-if (isDevelopment) {
-  let catchLock = false
-  for (const method of Object.getOwnPropertyNames(ViewInt.prototype)) {
-    if (ViewInt.prototype[method] instanceof Function) {
-      const buff = ViewInt.prototype[method]
-      ViewInt.prototype[method] = function(...args) {
-        const catchError = !catchLock
-        catchLock = true
-        try {
-          return buff.apply(this, args)
-        } catch (error) {
-          if (catchError) {
-            if (this.node != null)
-              error.message = `${error.message}\n\tThis error has occurred in view:\n${this.node}`
-          }
-          throw error
-        } finally {
-          if (catchError)
-            catchLock = false
-        }
-      }
-    }
-  }
-}
-
-export const View = ViewInt
-
 export const mount = (container, node, index = 0, {
   insideSvg = false
 } = {}) => {
@@ -928,7 +889,13 @@ export const mount = (container, node, index = 0, {
     context = context.setSvg(container instanceof global.SVGElement)
   }
 
-  const instance = View.instantiate(viewNode, context)
-  instance.mount(container, index)
-  return instance
+  if (!isViewNode(viewNode))
+    throw new Error('View can only be instantiated from view-nodes')
+  const viewInstance = new View(viewNode, context)
+  const returnInstance = new OuterFacade(viewInstance)
+  returnInstance.mount(container, index)
+  return returnInstance
 }
+
+export const view = (template, behavior, actions) =>
+  new Declaration(template instanceof Function ? template : () => template, behavior, actions)

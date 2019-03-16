@@ -1,5 +1,5 @@
 import { h, isElementNode, isViewNode } from 'malina'
-import { withTemplate, withHooks } from './common'
+import { withTemplate, withLifecycle } from './common'
 import { compose } from 'malina-util'
 import { memoizedDecorator } from './memoized'
 
@@ -42,21 +42,20 @@ const decorateTemplate = (styles, styleAttribute) => node => {
 
 const decorateView = memoizedDecorator(compose(
   withTemplate(original =>
-    state => {
+    ({ state }) => {
       const { styles: originalStyles, styleAttribute: originalStyleAttribute } = state[key] || {}
       const { styles: updatedStyles, styleAttribute: updatedStyleAttribute } = state[updateKey] || {}
       const styles = updateStyles(originalStyles, updatedStyles)
       const styleAttribute = updateStyleAttribute(originalStyleAttribute, updatedStyleAttribute)
-      const node = original(state)
+      const node = original()
       return decorateTemplate(styles, styleAttribute)(node)
     })
 ), true)
 
 export const cssModules = (styles, styleAttribute = 'styleName') => compose(
   decorateView,
-  withHooks({
-    create: original => (_, state) => {
-      original()
+  withLifecycle({
+    create: ({ state }) => {
       if (key in state)
         state[key] = { styles: { ...state[key].styles, ...styles }, styleAttribute }
       else

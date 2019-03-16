@@ -1,5 +1,5 @@
 import { flatten } from 'malina-util'
-import { ViewDeclaration } from './declaration'
+import Declaration from './declaration'
 
 export class Node {
   constructor(tag, attrs = {}, children = []) {
@@ -47,9 +47,9 @@ export class Node {
 }
 
 export const isViewNode = node =>
-  Node.isNode(node) && ViewDeclaration.isViewDeclaration(node.tag)
+  Node.isNode(node) && Declaration.isViewDeclaration(node.tag)
 
-export const isElementNode = node => Node.isNode(node) && !ViewDeclaration.isViewDeclaration(node.tag)
+export const isElementNode = node => Node.isNode(node) && !Declaration.isViewDeclaration(node.tag)
 
 export const isTextNode = node => !(node instanceof Object) && typeof node !== 'object'
 

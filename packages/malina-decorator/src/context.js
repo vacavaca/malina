@@ -1,7 +1,7 @@
 import { h, isViewNode, isElementNode } from 'malina'
 import { compose, shallowEqual } from 'malina-util'
 import { memoizedDecorator } from './memoized'
-import { withHooks, withActions, withTemplate } from './common'
+import { withLifecycle, withTemplate } from './common'
 import EventEmitter from './event-emitter'
 
 const contextKey = Symbol.for('__malina_context')
@@ -32,9 +32,9 @@ class Context {
 }
 
 const provideContext = memoizedDecorator(withTemplate(original =>
-  (state, actions, children) => {
+  ({ state }) => {
     const context = state[contextKey]
-    const node = original(state, actions, children)
+    const node = original()
     if (context != null) return decorateTemplate(context)(node)
     else return node
   }), true)
@@ -53,73 +53,55 @@ const decorateTemplate = context => node => {
 const defaultContextProvider = state => state
 
 export const withContext = (provider = defaultContextProvider) => {
-  const normalizedProvider = (state, actions) => {
-    const context = provider(state, actions)
-    if (typeof context !== 'object')
-      throw new Error("Context must be an object derived from view's state and actions")
+  const normalizedProvider = state => {
+    const context = provider(state)
+    const typeOfContext = typeof context
+    if (typeOfContext !== 'object')
+      throw new Error(`Context must be an object, got ${typeOfContext}`)
 
     return context
   }
 
   return compose(
     provideContext,
-    withHooks({
-      create: original => (mount, state, actions) => {
-        original()
-        if (!(contextKey in state)) {
-          const context = new Context(normalizedProvider(state, actions))
-          state[contextKey] = context
+    withLifecycle({
+      create: view => {
+        if (!(contextKey in view.state)) {
+          const context = new Context(normalizedProvider(view))
+          view.state[contextKey] = context
         } else {
-          const context = state[contextKey]
-          context.update(normalizedProvider(state, actions))
+          const context = view.state[contextKey]
+          context.update(normalizedProvider(view))
         }
       },
-      update: original => (mount, state, actions) => {
-        original()
-
-        const context = state[contextKey]
-        context.update(normalizedProvider(state, actions))
+      update: view => {
+        const context = view.state[contextKey]
+        context.update(normalizedProvider(view))
       }
     })
   )
 }
 
-const updateKey = Symbol.for('__malina_context_update')
 const subscriptionKey = Symbol.for('__malina_context_subscription')
 const defaultContextGetter = context => ({ context })
 
 export const getContext = (getter = defaultContextGetter) =>
   compose(
-    withHooks({
-      create: original => (mount, state, actions) => {
-        let context = state[contextKey]
-        let prevContextValue = null
+    withLifecycle({
+      create: view => {
+        let context = view.state[contextKey]
+
         if (context != null) {
-          prevContextValue = context.value
-          Object.assign(state, getter(context.value))
+          view.state = { ...view.state, ...(getter(context.value) || {}) }
+          view.state[subscriptionKey] = context.subscribe(value => {
+            view.update({ ...getter(value) })
+          })
         }
-
-        original()
-
-        // becaue previous hook might be 'withContext'
-        const wasNull = context == null
-        context = state[contextKey]
-
-        if (context != null && (wasNull || prevContextValue !== context.value))
-          Object.assign(state, getter(context.value))
-
-        if (context != null)
-          state[subscriptionKey] = context.subscribe(actions[updateKey])
       },
 
-      destroy: original => (mount, state, actions) => {
+      destroy: ({ state }) => {
         if (subscriptionKey in state)
           state[subscriptionKey]()
-
-        original()
       }
-    }),
-    withActions({
-      [updateKey]: value => () => ({ ...getter(value) })
     })
   )

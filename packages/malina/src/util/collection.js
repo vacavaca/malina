@@ -1,8 +1,7 @@
 import { diffArrays } from 'diff'
 import { keys } from 'malina-util'
-import { h, isElementNode } from './node'
-import { view } from './declaration'
-import { mount } from './view'
+import { h, isElementNode } from '../vdom'
+import { mount, view } from '../view'
 
 const index = index => {
   if (index == null)
@@ -26,7 +25,7 @@ const state = state => ({
   prevData: []
 })
 
-const ItemRenderer = view(({ render }) => render)
+const ItemRenderer = view(({ state: { render } }) => render)
 
 const actions = {}
 
@@ -68,7 +67,7 @@ const normalizeDiffPatches = patches => {
   return result
 }
 
-actions.initialize = () => state => {
+const initialize = ({ state }) => {
   const [container, mountIndex] = state.mountPoint
   if (state.path.length === 0)
     container.childNodes[mountIndex].remove()
@@ -102,7 +101,7 @@ const requireUniqueIndex = index => {
   return index
 }
 
-actions.diffUpdate = () => state => {
+const diffUpdate = ({ state }) => {
   const [container, mountIndex] = state.mountPoint
 
   const index = state.data.map(state.accessor)
@@ -157,17 +156,15 @@ actions.diffUpdate = () => state => {
   state.prevData = state.data
 }
 
-actions.update = () => (state, actions) => {
-  if (state.mountPoint == null)
+const update = view => {
+  if (view.state.mountPoint == null)
     return
 
-  if (state.initialized) actions.diffUpdate()
-  else actions.initialize()
+  if (view.state.initialized) diffUpdate(view)
+  else initialize(view)
 }
 
-const hooks = {}
-
-hooks.mount = (mount, state, actions) => {
+const handleMount = view => {
   if (state.path.length > 0) {
     let container = mount
     for (const index of state.path.slice(0, -1))
@@ -179,19 +176,23 @@ hooks.mount = (mount, state, actions) => {
   actions.update()
 }
 
-hooks.update = (m, s, actions) => {
-  actions.update()
+const handleUnmount = view => {
+  view.state.mountPoint = null
+  view.state.initialized = false
+  view.state.views = {}
+  view.state.index = []
+  view.state.prevData = []
 }
 
-hooks.unmount = (_, state) => {
-  state.mountPoint = null
-  state.initialized = false
-  state.views = {}
-  state.index = []
-  state.prevData = []
+const behavior = async view => {
+  view.state = { ...view.state, ...state }
+
+  view.onMount(handleMount)
+  view.onUpdate(update)
+  view.onUnmount(handleUnmount)
 }
 
-const ListRenderer = view((s, a, children) => children, state, actions, hooks)
+const ListRenderer = view(({ children }) => children, behavior)
 
 const findRenderer = (node, path = []) => {
   if (node instanceof Function)

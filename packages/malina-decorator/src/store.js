@@ -1,16 +1,17 @@
 import { h, view, decorator } from 'malina'
 import { shallowEqual, keys, compose } from 'malina-util'
+import { withState, withActions } from './common'
 import { getContext, withContext } from './context'
 
 const actions = {}
 
-actions.finishUpdate = update => state => {
+actions.finishUpdate = update => ({ state }) => {
   const next = { ...state.store, ...update }
   if (!shallowEqual(state.store, next))
     return { store: next }
 }
 
-actions.update = updater => async (state, actions) => {
+actions.update = updater => async ({ state, actions }) => {
   let next = { ...state.store }
   let result = updater
   if (updater instanceof Function)
@@ -31,17 +32,19 @@ const wrapUpdate = update => async (...args) => {
 const key = Symbol.for('__malina_store')
 
 const passToContext = compose(
-  getContext(ctx => key in ctx ? { store: ctx[key].state } : {}),
-  withContext((state, actions) =>
+  withContext(({ state, actions }) =>
     ({ [key]: { state: state.store, update: wrapUpdate(actions.update) } }))
 )
 
-const StoreView = view((state, a, children) => h(state.view, state.passed, children), { store: null }, actions)
-  .decorate(passToContext)
+const StoreView = view(({ state, children }) => h(state.view, state.passed, children))
+  .decorate(
+    withState({ store: null }),
+    withActions(actions),
+    passToContext
+  )
 
-export const withStore = initial => decorator(Inner => {
-  return (state, _, children) => h(StoreView, { store: initial, passed: state, view: Inner }, children)
-})
+export const withStore = initial => decorator(Inner =>
+  ({ state, children }) => h(StoreView, { store: initial, passed: state, view: Inner }, children))
 
 const empty = (...a) => ({})
 
