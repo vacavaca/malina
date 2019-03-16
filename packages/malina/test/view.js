@@ -2,7 +2,7 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { asyncTest, withState, withActions } = require('./util')
-const { h, view, mount, attach } = require('..')
+const { h, view, mount, attach, Debug } = require('..')
 
 describe('view', () => {
   describe('update', () => {
@@ -149,6 +149,64 @@ describe('view', () => {
       instance.actions.update()
 
       assert.strictEqual(dom.window.document.body.innerHTML, '<div class="test"><span>Updated</span></div>')
+    })
+  })
+
+  describe('Debug', () => {
+    it('should log component lifecycle', () => {
+      const dom = new JSDOM(`<body></body>`)
+
+      const logs = []
+      const logger = (...args) => logs.push(args)
+
+      const Inner = view(({ state }) =>
+        h('span', {}, [
+          h(
+            Debug,
+            {
+              logger,
+              info: 'test-component',
+              data: state.text
+            }
+          ),
+          state.text
+        ]))
+
+      const behavior = view => {
+        view.state = { text: 'Lorem ipsum' }
+      }
+
+      const actions = {
+        update: () => ({ text: 'Updated' })
+      }
+
+      const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+      const instance = mount(dom.window.document.body, h(View))
+
+      const debugParent = dom.window.document.body.childNodes[0].childNodes[0]
+
+      instance.actions.update()
+      instance.destroy()
+
+      const [createMsg, createData] = logs[0]
+      const [mountMsg, mountData, mountElement] = logs[1]
+      const [updateMsg, updateData, updateElement] = logs[2]
+      const [unmountMsg, unmountData] = logs[3]
+      const [destroyMsg] = logs[4]
+
+      assert.strictEqual(createMsg, 'DEBUG: created "test-component"')
+      assert.strictEqual(mountMsg, 'DEBUG: mounted "test-component"')
+      assert.strictEqual(updateMsg, 'DEBUG: updated "test-component"')
+      assert.strictEqual(unmountMsg, 'DEBUG: unmounted "test-component"')
+      assert.strictEqual(destroyMsg, 'DEBUG: destroyed "test-component"')
+
+      assert.deepStrictEqual(createData, { info: 'test-component', data: 'Lorem ipsum' })
+      assert.deepStrictEqual(mountData, { info: 'test-component', data: 'Lorem ipsum' })
+      assert.deepStrictEqual(updateData, { info: 'test-component', data: 'Updated' })
+      assert.deepStrictEqual(unmountData, { info: 'test-component', data: 'Updated' })
+
+      assert.deepStrictEqual(mountElement, { parent: debugParent, index: 0 })
+      assert.deepStrictEqual(updateElement, { parent: debugParent, index: 0 })
     })
   })
 })

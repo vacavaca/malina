@@ -16,8 +16,14 @@ const _global = (typeof self === 'object' && self.self === self && self) ||
 
 const consoleAvailable = 'console' in _global
 const warnAvailable = consoleAvailable && 'warn' in _global.console
+const logAvailable = consoleAvailable && 'log' in _global.console
 
 export const warn = msg => {
   if (isDevelopment && warnAvailable)
     _global.console.warn(msg)
+}
+
+export const log = (...args) => {
+  if (isDevelopment && logAvailable)
+    _global.console.log(...args)
 }
