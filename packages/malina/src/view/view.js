@@ -131,6 +131,58 @@ class View {
     return this.element
   }
 
+  hydrate(element) {
+    if (this.destroyed)
+      throw new Error('View is destroyed')
+
+    if (this.mounted)
+      throw new Error('View is already hydrated')
+
+    if (this.rendered)
+      return this.attach(element)
+
+    const top = !this.context.store.topLock
+
+    if (top) {
+      this.context.store.topLock = true
+      this.context.store.phase = 'attach'
+      this.context.store.mountHookQueue = []
+    }
+
+    if (element == null)
+      throw new Error('Hydrate called without element')
+
+    const next = this.renderTemplate()
+    if (Array.isArray(next))
+      throw new Error('View can only have one root element')
+    this.node = next
+    this.rendered = true
+
+    if (isElementNode(this.node))
+      this.hydrateNodeElement(element, this.node, [], this.context)
+    else if (isViewNode(this.node)) {
+      const view = this.getInstantiatedView([])
+      view.hydrate(element)
+    } else if (!isTextNode(this.node))
+      throw new Error('Invalid template type')
+
+    this.element = element
+    this.mounted = true
+
+    if (top) {
+      const queue = this.context.store.mountHookQueue
+      this.context.store.topLock = false
+      this.context.store.phase = null
+      this.context.store.mountHookQueue = []
+
+      for (const hook of queue)
+        hook()
+
+      this.dispatcher.notify('mount', [this.element])
+    } else
+      this.context.store.mountHookQueue.push(() => this.dispatcher.notify('mount', [this.element]))
+  }
+
   attach(element = null) {
     if (this.destroyed)
       throw new Error('View is destroyed')
@@ -148,13 +200,8 @@ class View {
 
     element = element != null ? element : this.element
 
-    if (!this.rendered) {
-      const next = this.renderTemplate()
-      if (Array.isArray(next))
-        throw new Error('View can only have one root element')
-      this.node = next
-      this.rendered = true
-    }
+    if (!this.rendered)
+      throw new Error('Attach called before render')
 
     if (isElementNode(this.node))
       this.attachNodeElement(element, this.node, [], this.context)
@@ -669,9 +716,33 @@ class View {
   }
 
   /** @private */
+  hydrateNodeElement(element, node, path, context) {
+    if (node.tag === 'svg' && !context.options.svg)
+      context = context.update({ svg: true })
+
+    this.hydrateAttributes(element, node, path, context)
+    this.hydrateChildren(element, node, path, context)
+    return element
+  }
+
+  /** @private */
   attachNodeElement(element, node, path, context) {
     this.attachChildren(element, node, path, context)
     return element
+  }
+
+  /** @private */
+  hydrateAttributes(element, node, path, context) {
+    if (!('style' in node.attrs))
+      element.removeAttribute('style')
+
+    for (const name in node.attrs) {
+      if (name === 'innerHtml')
+        continue
+
+      const value = node.attrs[name]
+      this.hydrateAttribute(element, name, value, path, context)
+    }
   }
 
   /** @private */
@@ -711,6 +782,27 @@ class View {
   }
 
   /** @private */
+  hydrateAttribute(element, name, value, path, context) {
+    if (name === 'style') {
+      element.removeAttribute('style')
+      for (const prop in value)
+        this.setStyleProp(element, prop, value[prop] || '')
+    } else if (value instanceof Function)
+      this.addEventListener(element, normalizeEventName(name), value)
+    else if (isParametrizedAction(value)) {
+      const listener = this.createParametrizedListener(value[0], value.slice(1), path, name)
+      const event = normalizeEventName(name)
+      this.addEventListener(element, event, listener)
+    } else if (name === 'data' && value != null && typeof value === 'object') {
+      for (const key in value)
+        element.dataset[key] = value[key]
+    } else if (typeof value === 'boolean' && name === 'focus' && element.focus && element.blur) {
+      if (value) element.focus()
+      else element.blur()
+    }
+  }
+
+  /** @private */
   addAttribute(element, name, value, path, context) {
     if (name === 'style') {
       for (const prop in value)
@@ -718,7 +810,7 @@ class View {
     } else if (value instanceof Function)
       this.addEventListener(element, normalizeEventName(name), value)
     else if (isParametrizedAction(value)) {
-      const listener = this.createParametrizedListener(value[0], value[1], path, name)
+      const listener = this.createParametrizedListener(value[0], value.slice(1), path, name)
       const event = normalizeEventName(name)
       this.addEventListener(element, event, listener)
     } else if (name === 'data' && value != null && typeof value === 'object') {
@@ -756,8 +848,10 @@ class View {
       this.removeAttribute(element, name, prev, path)
       this.addAttribute(element, name, next, path)
     } else if (isParametrizedAction(next)) {
-      this.removeAttribute(element, name, prev, path)
-      this.addAttribute(element, name, next, path)
+      if (!next.every((v, i) => v === prev[i])) {
+        this.removeAttribute(element, name, prev, path)
+        this.addAttribute(element, name, next, path)
+      }
     } else if (name === 'data') {
       const prevObject = prev != null && typeof prev === 'object'
       const nextObject = next != null && typeof next === 'object'
@@ -796,7 +890,8 @@ class View {
 
   /** @private */
   removeAttribute(element, name, prev, path, context) {
-    if (name === 'style') element.style.cssText = ''
+    if (name === 'style')
+      element.removeAttribute('style')
     else if (prev instanceof Function) {
       const event = normalizeEventName(name)
       this.removeEventListener(element, event, prev)
@@ -869,6 +964,26 @@ class View {
   }
 
   /** @private */
+  hydrateChildren(element, node, path, context) {
+    if (!requireValidChildren(node))
+      throw new Error("Every view node in an array must have an unique 'key' attribute")
+
+    let shift = 0
+    if (!('innerHtml' in node.attrs)) {
+      for (const ndx in node.children) {
+        const child = node.children[ndx]
+        if (context.options.isProduction && child.isDevOnly) {
+          shift += 1
+          continue
+        }
+
+        const nextPath = path.concat([ndx - shift])
+        this.hydrateChild(element, child, ndx - shift, nextPath, context)
+      }
+    }
+  }
+
+  /** @private */
   attachChildren(element, node, path, context) {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
@@ -907,6 +1022,22 @@ class View {
         const nextPath = path.concat([ndx - shift])
         this.addChildren(element, child, ndx - shift, nextPath, context)
       }
+    }
+  }
+
+  /** @private */
+  hydrateChild(element, child, ndx, path, context) {
+    const fragment = isTemplateElement(element) ? element.content : element
+    const childNode = fragment.childNodes[ndx]
+
+    if (isElementNode(child))
+      this.hydrateNodeElement(childNode, child, path, context)
+    else if (isViewNode(child)) {
+      let view
+      if (this.hasInstantiatedView(path)) view = this.getInstantiatedView(path)
+      else view = this.instantiateInnerView(child, path, context)
+
+      view.hydrate(childNode)
     }
   }
 
@@ -1061,7 +1192,7 @@ class View {
   }
 }
 
-const mountOrAttach = (container, node, index, {
+const mountOrHydrate = (container, node, index, {
   insideSvg, attach, isProduction
 }) => {
   let viewNode = node
@@ -1086,18 +1217,18 @@ const mountOrAttach = (container, node, index, {
   if (!isViewNode(viewNode))
     throw new Error('View can only be instantiated from view-nodes')
   const viewInstance = new View(viewNode, context)
-  if (attach) viewInstance.attach(fragment.childNodes[index])
+  if (attach) viewInstance.hydrate(fragment.childNodes[index])
   else viewInstance.mount(fragment, index)
   return new OuterFacade(viewInstance)
 }
 
 export const mount = (container, node, index = 0, {
   insideSvg = false, env = isProduction ? 'production' : 'development'
-} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: false, isProduction: !testDevelopment(env) })
+} = {}) => mountOrHydrate(container, node, index, { insideSvg, attach: false, isProduction: !testDevelopment(env) })
 
-export const attach = (container, node, index = 0, {
+export const hydrate = (container, node, index = 0, {
   insideSvg = false, env = isProduction ? 'production' : 'development'
-} = {}) => mountOrAttach(container, node, index, { insideSvg, attach: true, isProduction: !testDevelopment(env) })
+} = {}) => mountOrHydrate(container, node, index, { insideSvg, attach: true, isProduction: !testDevelopment(env) })
 
 export const render = (document, node, {
   insideSvg = false,

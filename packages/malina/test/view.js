@@ -2,7 +2,7 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { asyncTest, withState, withActions } = require('./util')
-const { h, view, mount, attach } = require('..')
+const { h, view, mount, hydrate } = require('..')
 
 describe('view', () => {
   describe('update', () => {
@@ -23,16 +23,21 @@ describe('view', () => {
           ]))
         }
 
-        return h('div', {}, children)
+        return h('div', {
+          style: {
+            top: '5px'
+          }
+
+        }, children)
       }).decorate(
         withState({ childCount: 1 }),
         withActions({ increment })
       )
 
       const instance = mount(dom.window.document.body, h(Test))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div><p class="test">Hello 1</p></div></div>')
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div style="top: 5px;"><div><p class="test">Hello 1</p></div></div>')
       instance.actions.increment(42)
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div><p class="test">Hello 1</p></div><div><p class="test">Hello 2</p></div></div>')
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div style="top: 5px;"><div><p class="test">Hello 1</p></div><div><p class="test">Hello 2</p></div></div>')
 
       instance.destroy()
       assert.strictEqual(dom.window.document.body.childNodes.length, 0)
@@ -135,8 +140,8 @@ describe('view', () => {
     }))
   })
 
-  describe('attach', () => {
-    it('should attach to the prerendered dom', () => {
+  describe('hydrate', () => {
+    it('should hydrate the prerendered dom', () => {
       const dom = new JSDOM(`<body><div class="test"><span>Lorem ipsum</span></div></body>`)
 
       const Inner = view(({ state }) => h('span', {}, state.text))
@@ -150,7 +155,7 @@ describe('view', () => {
       }
 
       const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
-      const instance = attach(dom.window.document.body, h(View))
+      const instance = hydrate(dom.window.document.body, h(View))
 
       instance.actions.update()
 
@@ -161,7 +166,7 @@ describe('view', () => {
     })
 
     it('should call inner vies mount handles', () => {
-      const dom = new JSDOM(`<body><div class="test"><span>Lorem ipsum</span></div></body>`)
+      const dom = new JSDOM(`<body><div> </div></body>`)
 
       let called = 0
 
@@ -170,9 +175,55 @@ describe('view', () => {
       })
 
       const View = view(h('div', {}, h(Inner)))
-      attach(dom.window.document.body, h(View))
+      hydrate(dom.window.document.body, h(View))
 
       assert.strictEqual(called, 1)
+    })
+
+    it('should add event listeners', () => {
+      const dom = new JSDOM(`<body><div style="top: 5px;">0</div></body>`)
+
+      const Inner = view(({ state }) => state.counter)
+
+      const behavior = view => {
+        view.state = { ...view.state, counter: 0 }
+      }
+
+      const actions = {
+        update: () => ({ state }) => ({ counter: state.counter + 1 })
+      }
+
+      const View = view(({ state, actions }) => h('div', { onClick: actions.update }, h(Inner, state)), behavior, actions)
+      hydrate(dom.window.document.body, h(View))
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div>0</div>')
+
+      dom.window.document.body.childNodes[0].click()
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div>1</div>')
+    })
+
+    it('should add parametrized event listeners', () => {
+      const dom = new JSDOM(`<body><div style="top: 5px;">0</div></body>`)
+
+      const Inner = view(({ state }) => state.counter)
+
+      const behavior = view => {
+        view.state = { ...view.state, counter: 0 }
+      }
+
+      const actions = {
+        update: n => ({ state }) => ({ counter: state.counter + n })
+      }
+
+      const View = view(({ state, actions }) => h('div', { onClick: [actions.update, 42] }, h(Inner, state)), behavior, actions)
+      hydrate(dom.window.document.body, h(View))
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div>0</div>')
+
+      dom.window.document.body.childNodes[0].click()
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div>42</div>')
     })
   })
 })
