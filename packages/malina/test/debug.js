@@ -62,7 +62,7 @@ describe('Debug', () => {
     assert.strictEqual(unmountMsg, 'DEBUG: unmounted "test-component"')
     assert.strictEqual(destroyMsg, 'DEBUG: destroyed "test-component"')
 
-    assert.deepStrictEqual(unmountData, { state: { info: 'test-component', data: 'Updated' } })
+    assert.deepStrictEqual(unmountData, { state: { info: 'test-component', data: 'Updated' }, element: { parent: debugParent, index: 0 } })
 
     assert.strictEqual(dom.window.document.body.childNodes.length, 0)
   })

@@ -92,7 +92,8 @@ const onUpdate = (logger, prevStorage) => view => {
 const onUnmount = logger => view => {
   const msg = 'DEBUG: unmounted ' + (view.state.info ? `"${view.state.info}"` : '')
   const data = {
-    state: view.state
+    state: view.state,
+    element: getElementData(view)
   }
 
   logger(msg, data)

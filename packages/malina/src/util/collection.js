@@ -175,7 +175,11 @@ const handleMount = view => {
   update(view)
 }
 
-const handleUnmount = ({ state }) => {
+const handleDestroy = ({ state }) => {
+  const [container, index] = state.mountPoint
+  for (let i = 0; i < state.data.length; i++)
+    container.childNodes[index].remove()
+
   state.mountPoint = null
   state.initialized = false
   state.views = {}
@@ -188,7 +192,7 @@ const behavior = async view => {
 
   view.onMount(handleMount)
   view.onUpdate(update)
-  view.onUnmount(handleUnmount)
+  view.onDestroy(handleDestroy)
 }
 
 const ListRenderer = view(({ children }) => children, behavior)

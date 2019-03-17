@@ -1,4 +1,4 @@
 export { h, isElementNode, isViewNode, isTextNode, Node } from './vdom'
-export { mount, attach, view } from './view'
-export { isDevelopment, isProduction, warn } from './env'
+export { render, attach, mount, view } from './view'
+export { isDevelopment, isProduction, getGlobal, warn } from './env'
 export { Debug, Id, Show, Hide, List, Map, branch, decorator } from './util'

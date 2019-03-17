@@ -159,5 +159,20 @@ describe('view', () => {
       instance.destroy()
       assert.strictEqual(dom.window.document.body.childNodes.length, 0)
     })
+
+    it('should call inner vies mount handles', () => {
+      const dom = new JSDOM(`<body><div class="test"><span>Lorem ipsum</span></div></body>`)
+
+      let called = 0
+
+      const Inner = view(null, view => {
+        view.onMount(() => { called += 1 })
+      })
+
+      const View = view(h('div', {}, h(Inner)))
+      attach(dom.window.document.body, h(View))
+
+      assert.strictEqual(called, 1)
+    })
   })
 })

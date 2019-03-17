@@ -1,33 +1,12 @@
 export default class Context {
-  constructor(options) {
+  constructor(options, store) {
     this.options = options
-  }
-
-  get svg() {
-    return this.options.isSvg
-  }
-
-  get mounting() {
-    return this.options.mounting
-  }
-
-  get store() {
-    return this.options.store
-  }
-
-  setSvg(isSvg) {
-    return this.update({ isSvg })
-  }
-
-  setMounting(mounting) {
-    return this.update({ mounting })
+    this.store = {}
   }
 
   update(options) {
-    return new Context({ ...this.options, ...options })
+    return new Context({ ...this.options }, this.store)
   }
 }
 
 export const defaultContext = options => new Context(options)
-
-export const svgContext = options => new Context(options)

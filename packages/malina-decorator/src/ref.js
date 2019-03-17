@@ -108,7 +108,7 @@ const publishRefs = (root, prev, next) => {
   }
 }
 
-const publishUnmount = refs => {
+const publishDestroy = refs => {
   for (const { consumer } of refs.values())
     consumer(null)
 }
@@ -139,8 +139,8 @@ export const withRefs = (attrKey = 'ref') => compose(
       view.state[key].prev = view.state[key].next
     },
 
-    unmount: view => {
-      publishUnmount(view.state[key].next)
+    destroy: view => {
+      publishDestroy(view.state[key].next)
       view.state[key].prev = null
     }
   })
