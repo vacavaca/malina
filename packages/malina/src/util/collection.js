@@ -176,6 +176,10 @@ const handleMount = view => {
 }
 
 const handleUnmount = ({ state }) => {
+  const [container, index] = state.mountPoint
+  for (let i = 0; i < state.data.length; i++)
+    container.childNodes[index].remove()
+
   state.mountPoint = null
   state.initialized = false
   state.views = {}

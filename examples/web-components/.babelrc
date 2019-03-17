@@ -1,0 +1,14 @@
+{
+  "plugins": [
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
+        "pragma": "h",
+        "throwIfNamespace": false
+      }
+    ],
+    ["@babel/plugin-proposal-object-rest-spread", {}, "1"],
+    ["@babel/plugin-transform-spread", {}, "2"],
+    ["@babel/plugin-syntax-object-rest-spread", {}, "3"]
+  ]
+}

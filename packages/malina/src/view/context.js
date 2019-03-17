@@ -19,10 +19,6 @@ export default class Context {
     return this.update({ isSvg })
   }
 
-  setMounting(mounting) {
-    return this.update({ mounting })
-  }
-
   update(options) {
     return new Context({ ...this.options, ...options })
   }

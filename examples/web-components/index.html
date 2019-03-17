@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Malina Web Components Example</title>
+	<style>
+		html, body {
+			height: 100%;
+		}
+		
+		body {
+			padding: 0;
+			margin: 0;
+		}
+	</style>
+</head>
+
+<body>
+	<x-app>
+		<x-header slot="header"></x-header>
+		<x-content slot="content" start-counting-with="42">
+			Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor dolore autem sequi in quisquam nisi veritatis
+			tenetur minima accusantium officiis.
+		</x-content>
+		<x-footer slot="footer"></x-footer>
+	</x-app>
+	<script src="./src/index.jsx"></script>
+</body>
+
+</html>

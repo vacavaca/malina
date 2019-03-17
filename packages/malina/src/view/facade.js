@@ -16,7 +16,7 @@ export class InnerFacade {
   }
 
   get children() {
-    return this.view.children
+    return this.view.children || []
   }
 }
 
@@ -116,13 +116,21 @@ export class OuterFacade extends InnerFacade {
     return this.view.element
   }
 
-  mount(...args) {
-    return this.view.mount(...args)
+  render(document) {
+    return this.view.render(document)
+  }
+
+  attach(element = null) {
+    this.view.attach(element)
   }
 
   update(updater) {
     if (!this.isDestroyed) return this.view.update(updater)
     else return this.state
+  }
+
+  move(container, index) {
+    return this.view.move(container, index)
   }
 
   destroy() {

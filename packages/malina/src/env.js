@@ -4,7 +4,7 @@ try {
   env = process.env.NODE_ENV
 } catch (ignore) { }
 
-export const testDevelopmnet = env => env === 'development' || env === 'testing'
+export const testDevelopment = env => env === 'development' || env === 'testing'
 
 // this must stay static
 export const isDevelopment = env === 'development' || env === 'testing'
@@ -30,3 +30,5 @@ export const log = (...args) => {
   if (isDevelopment && logAvailable)
     _global.console.log(...args)
 }
+
+export const getGlobal = () => _global
