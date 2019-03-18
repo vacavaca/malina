@@ -42,10 +42,12 @@ const provideContext = memoizedDecorator(withTemplate(original =>
 const decorateTemplate = context => node => {
   if (!Array.isArray(node)) {
     if (isViewNode(node)) {
-      const attrs = { ...(node.attrs != null ? node.attrs : {}), [contextKey]: context }
-      return h(provideContext(node.tag), attrs, node.children)
+      const attrs = { [contextKey]: context, ...(node.attrs != null ? node.attrs : {}) }
+      return h(provideContext(node.tag), attrs, node.children.map(decorateTemplate(context)))
     } else if (isElementNode(node))
       return h(node.tag, node.attrs, node.children.map(decorateTemplate(context)))
+    else if (node instanceof Function)
+      return (...args) => decorateTemplate(context)(node(...args))
     else return node
   } else return node.map(decorateTemplate(context))
 }

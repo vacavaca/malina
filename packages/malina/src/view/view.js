@@ -89,6 +89,8 @@ class View {
     this.parametrizedEventListeners = new Map()
     this.trackedActionUpdate = false
 
+    this.elementUpdateListener = null
+
     this.runBehavior()
   }
 
@@ -115,6 +117,7 @@ class View {
     else if (isViewNode(next)) {
       const view = this.instantiateInnerView(next, [], this.context)
       element = view.render(document)
+      view.onElementUpdate(this.elementUpdateCallback.bind(this))
     } else if (isTextNode(next))
       element = document.createTextNode(`${next != null ? next : ''}`)
     else throw new Error('Invalid template type')
@@ -161,8 +164,9 @@ class View {
     if (isElementNode(this.node))
       this.hydrateNodeElement(element, this.node, [], this.context)
     else if (isViewNode(this.node)) {
-      const view = this.getInstantiatedView([])
+      const view = this.instantiateInnerView(next, [], this.context)
       view.hydrate(element)
+      view.onElementUpdate(this.elementUpdateCallback.bind(this))
     } else if (!isTextNode(this.node))
       throw new Error('Invalid template type')
 
@@ -290,8 +294,11 @@ class View {
 
     if (isElementNode(this.node))
       this.destroyUnmountedInnerViews(this.node, [])
-    else if (isViewNode(this.node))
+    else if (isViewNode(this.node)) {
+      const view = this.getInstantiatedView([])
+      view.offElementUpdate()
       this.destroyUnmountedInnerView([])
+    }
 
     element.remove()
 
@@ -313,19 +320,37 @@ class View {
   }
 
   /** @private */
+  onElementUpdate(cb) {
+    this.elementUpdateListener = cb
+  }
+
+  /** @private */
+  offElementUpdate() {
+    this.elementUpdateListener = null
+  }
+
+  /** @private */
+  elementUpdateCallback(element) {
+    if (this.element !== element)
+      this.element = element
+  }
+
+  /** @private */
   refresh() {
     const next = this.renderTemplate()
     const prev = this.node
     this.node = next
     this.patch(this.element, prev, next, [], this.context)
+    if (this.elementUpdateListener != null)
+      this.elementUpdateListener(this.element)
   }
 
   /** @private */
   destroyUnmounted() {
     if (isElementNode(this.node))
-      this.destroyInnerViews(this.node, [])
+      this.destroyUnmountedInnerViews(this.node, [])
     else if (isViewNode(this.node))
-      this.destroyInnerView([])
+      this.destroyUnmountedInnerView([])
 
     this.node = null
     this.element = null
@@ -525,8 +550,10 @@ class View {
     element.remove()
     view.mount(parent, index)
 
-    if (isRoot(path))
+    if (isRoot(path)) {
       this.element = view.element
+      view.onElementUpdate(this.elementUpdateCallback.bind(this))
+    }
   }
 
   /** @private */
@@ -577,35 +604,52 @@ class View {
     const parent = element.parentNode
     element.remove()
     view.mount(parent, index)
-    if (isRoot(path))
+    if (isRoot(path)) {
       this.element = view.element
+      view.onElementUpdate(this.elementUpdateCallback.bind(this))
+    }
   }
 
   /** @private */
   patchFromViewToNone(element, prev, path) {
     if (isRoot(path))
       throw new Error('Root element deleted during patch')
-    this.destroyInnerView(path)
+    this.unmountInnerView(path)
+    this.destroyUnmountedInnerView(path)
     element.remove()
   }
 
   /** @private */
   patchFromViewToText(element, prev, next, path) {
-    this.destroyInnerView(path)
+    const isPathRoot = isRoot(path)
+    if (isPathRoot) {
+      const view = this.getInstantiatedView(path)
+      view.offElementUpdate()
+    }
+
+    this.unmountInnerView(path)
+    this.destroyUnmountedInnerView(path)
     const newElement = element.ownerDocument.createTextNode(`${next}`)
     element.replaceWith(newElement)
 
-    if (isRoot(path))
+    if (isPathRoot)
       this.element = newElement
   }
 
   /** @private */
   patchFromViewToNode(element, prev, next, path, context) {
-    this.destroyInnerView(path)
+    const isPathRoot = isRoot(path)
+    if (isPathRoot) {
+      const view = this.getInstantiatedView(path)
+      view.offElementUpdate()
+    }
+
+    this.unmountInnerView(path)
+    this.destroyUnmountedInnerView(path)
     const newElement = this.createNodeElement(element.ownerDocument, next, path, context)
     element.replaceWith(newElement)
 
-    if (isRoot(path))
+    if (isPathRoot)
       this.element = newElement
   }
 
@@ -618,15 +662,24 @@ class View {
       const view = this.getInstantiatedView(path)
       view.update(next.attrs, next.children)
     } else {
+      const isPathRoot = isRoot(path)
+      if (isPathRoot) {
+        const view = this.getInstantiatedView(path)
+        view.offElementUpdate()
+      }
+
+      const parent = element.parentNode
+      const index = Array.from(parent.childNodes).findIndex(n => n === element)
+
       this.destroyInnerView(path)
       const view = this.instantiateInnerView(next, path, context)
-      const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
-      const parent = element.parentNode
-      element.remove()
+
       view.mount(parent, index)
 
-      if (isRoot(path))
+      if (isPathRoot) {
         this.element = view.element
+        view.onElementUpdate(this.elementUpdateCallback.bind(this))
+      }
     }
   }
 
@@ -1033,10 +1086,7 @@ class View {
     if (isElementNode(child))
       this.hydrateNodeElement(childNode, child, path, context)
     else if (isViewNode(child)) {
-      let view
-      if (this.hasInstantiatedView(path)) view = this.getInstantiatedView(path)
-      else view = this.instantiateInnerView(child, path, context)
-
+      const view = this.instantiateInnerView(child, path, context)
       view.hydrate(childNode)
     }
   }

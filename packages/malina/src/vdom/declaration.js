@@ -27,4 +27,8 @@ export default class Declaration {
   decorate(...fns) {
     return compose(...fns)(this)
   }
+
+  is(declaration) {
+    return this === declaration || this.id === declaration.id || this.originalId === declaration.originalId
+  }
 }

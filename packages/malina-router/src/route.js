@@ -1,6 +1,6 @@
 import { h, view, isViewNode, isElementNode } from 'malina'
-import { compose, flatten } from 'malina-util'
-import { withState } from 'malina-decorator'
+import { flatten } from 'malina-util'
+import { withActions } from 'malina-decorator'
 import pathToRegexp from 'path-to-regexp'
 import { connectRouter } from './router'
 
@@ -55,29 +55,25 @@ export const match = (location, path, options = {}) => {
 
 const routeKey = Symbol.for('__malina_route')
 
-const RouteView = view(({ state, children = [] }) => {
+export const Route = view(({ state, children = [] }) => {
   const render = children[0]
   if (children.length > 1)
     throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
 
   const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
   return render instanceof Function ? render(params) : render
-})
-
-export const Route = compose(
-  withState({ [routeKey]: true }),
+}).decorate(
+  withActions({
+    [routeKey]: () => ({ [routeKey]: true })
+  }),
   connectRouter
-)(RouteView)
+)
+
+const isRouteNode = node =>
+  isViewNode(node) && node.tag.is(Route)
 
 const filterSwitchRoutes = (location, isRoot = false) => node => {
-  const viewNode = isViewNode(node)
-  let isRoute = viewNode && node.tag.state != null
-  let routeInitialState = null
-  if (isRoute) {
-    const declaredState = node.tag.state
-    routeInitialState = declaredState instanceof Function ? declaredState(node.attrs) : declaredState
-    isRoute = routeInitialState[routeKey]
-  }
+  let isRoute = isRouteNode(node)
 
   if (isRoute) {
     const { attrs: state } = node
