@@ -6,13 +6,6 @@ import { InnerFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { toOnEventName, normalizeEventName } from './event'
 import { defaultContext } from './context'
 
-const isParametrizedAction = value =>
-  Array.isArray(value) && value.length === 2 && value[0] instanceof Function
-
-const isSameParametrizedAction = (a, b) =>
-  isParametrizedAction(a) && isParametrizedAction(b) &&
-  a[0] === b[0] && a[1] === b[1]
-
 const isRoot = path => path.length === 0
 
 const isSameViewNode = (a, b) => a.tag.id === b.tag.id
@@ -86,7 +79,8 @@ class View {
     this.node = null
     this.rendered = false
     this.innerViews = new Map()
-    this.parametrizedEventListeners = new Map()
+    this.eventListeners = new Map()
+    this.eventListenerDelegates = new Map()
     this.trackedActionUpdate = false
 
     this.elementUpdateListener = null
@@ -763,8 +757,8 @@ class View {
     if (context.options.svg) element = document.createElementNS('http://www.w3.org/2000/svg', node.tag)
     else element = document.createElement(node.tag)
 
-    this.refreshAttributes(element, node, path, context)
-    this.refreshChildren(element, node, path, context)
+    this.addAttributes(element, node, path, context)
+    this.addChildren(element, node, path, context)
     return element
   }
 
@@ -799,7 +793,7 @@ class View {
   }
 
   /** @private */
-  refreshAttributes(element, node, path, context) {
+  addAttributes(element, node, path, context) {
     for (const name in node.attrs) {
       if (name === 'innerHtml')
         continue
@@ -841,12 +835,8 @@ class View {
       for (const prop in value)
         this.setStyleProp(element, prop, value[prop] || '')
     } else if (value instanceof Function)
-      this.addEventListener(element, normalizeEventName(name), value)
-    else if (isParametrizedAction(value)) {
-      const listener = this.createParametrizedListener(value[0], value.slice(1), path, name)
-      const event = normalizeEventName(name)
-      this.addEventListener(element, event, listener)
-    } else if (name === 'data' && value != null && typeof value === 'object') {
+      this.addEventListener(element, path, normalizeEventName(name), value)
+    else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
     } else if (typeof value === 'boolean' && name === 'focus' && element.focus && element.blur) {
@@ -861,12 +851,8 @@ class View {
       for (const prop in value)
         this.setStyleProp(element, prop, value[prop] || '')
     } else if (value instanceof Function)
-      this.addEventListener(element, normalizeEventName(name), value)
-    else if (isParametrizedAction(value)) {
-      const listener = this.createParametrizedListener(value[0], value.slice(1), path, name)
-      const event = normalizeEventName(name)
-      this.addEventListener(element, event, listener)
-    } else if (name === 'data' && value != null && typeof value === 'object') {
+      this.addEventListener(element, path, normalizeEventName(name), value)
+    else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
     } else if (name !== 'focus' && name in element && !context.options.svg && value != null)
@@ -884,9 +870,8 @@ class View {
     if (prev === next)
       return
 
-    if (isSameParametrizedAction(prev, next))
-      return
-
+    const nextFunction = next instanceof Function
+    const prevFunction = prev instanceof Function
     if (name === 'style') {
       for (const prop in prev) {
         if (!(prop in next))
@@ -897,13 +882,16 @@ class View {
         const style = next[prop] || ''
         this.setStyleProp(element, prop, style)
       }
-    } else if (next instanceof Function) {
-      this.removeAttribute(element, name, prev, path)
-      this.addAttribute(element, name, next, path)
-    } else if (isParametrizedAction(next)) {
-      if (!next.every((v, i) => v === prev[i])) {
-        this.removeAttribute(element, name, prev, path)
-        this.addAttribute(element, name, next, path)
+    } else if (nextFunction || prevFunction) {
+      if (nextFunction && prevFunction) {
+        if (next !== prev)
+          this.updateEventListener(path, normalizeEventName(name), next)
+      } else if (nextFunction) {
+        this.removeAttribute(element, name, prev, path, context)
+        this.addEventListener(element, path, normalizeEventName(name), next)
+      } else if (prevFunction) {
+        this.removeEventListener(element, path, normalizeEventName(name))
+        this.addAttribute(element, name, next, path, context)
       }
     } else if (name === 'data') {
       const prevObject = prev != null && typeof prev === 'object'
@@ -947,11 +935,7 @@ class View {
       element.removeAttribute('style')
     else if (prev instanceof Function) {
       const event = normalizeEventName(name)
-      this.removeEventListener(element, event, prev)
-    } else if (isParametrizedAction(prev)) {
-      const listener = this.getParametrizedListener(path, name)
-      const event = normalizeEventName(name)
-      this.removeEventListener(element, event, listener)
+      this.removeEventListener(element, path, event)
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
@@ -985,34 +969,44 @@ class View {
   }
 
   /** @private */
-  addEventListener(element, event, listener) {
+  addEventListener(element, path, event, listener) {
+    const delegate = this.createEventListenerDelegate(listener, path, event)
+
     if (element.addEventListener)
-      element.addEventListener(event, listener)
+      element.addEventListener(event, delegate)
     else if (element.attachEvent)
-      element.attachEvent(toOnEventName(event), listener)
+      element.attachEvent(toOnEventName(event), delegate)
     else {
       const listeners = (element[event] && element[event].listeners) || []
 
       if (element[event] != null)
-        element[event].listeners = listeners.concat(listener)
+        element[event].listeners = listeners.concat([delegate])
       else {
         const handler = (...args) =>
           element[event].listeners.map(f => f(...args))
-        handler.listeners = listeners.concat(listener)
+        handler.listeners = listeners.concat([delegate])
         element[event] = handler
       }
     }
   }
 
   /** @private */
-  removeEventListener(element, event, listener) {
+  updateEventListener(path, event, listener) {
+    this.updateEventListenerDelegate(listener, path, event)
+  }
+
+  /** @private */
+  removeEventListener(element, path, event) {
+    const delegate = this.getEventListenerDelegate(path, event)
+    this.removeEventListenerDelegate(path, event)
+
     if (element.removeEventListener)
-      element.removeEventListener(event, listener)
+      element.removeEventListener(event, delegate)
     else if (element.detachEvent)
-      element.detachEvent(toOnEventName(event), listener)
+      element.detachEvent(toOnEventName(event), delegate)
     else {
       if (element[event] != null && element[event].listeners != null)
-        element[event].listeners = element[event].listener.filter(l => l !== listener)
+        element[event].listeners = element[event].listener.filter(l => l !== delegate)
     }
   }
 
@@ -1057,7 +1051,7 @@ class View {
   }
 
   /** @private */
-  refreshChildren(element, node, path, context) {
+  addChildren(element, node, path, context) {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
@@ -1073,7 +1067,7 @@ class View {
         }
 
         const nextPath = path.concat([ndx - shift])
-        this.addChildren(element, child, ndx - shift, nextPath, context)
+        this.addChild(element, child, ndx - shift, nextPath, context)
       }
     }
   }
@@ -1108,7 +1102,7 @@ class View {
   }
 
   /** @private */
-  addChildren(element, child, ndx = null, path, context) {
+  addChild(element, child, ndx = null, path, context) {
     const fragment = isTemplateElement(element) ? element.content : element
     const before = fragment.childNodes[ndx]
     if (isElementNode(child)) {
@@ -1162,7 +1156,7 @@ class View {
           if (nextChild == null)
             nodeIndexShift += 1
         } else {
-          this.addChildren(element, nextChild, ndx, nextPath, context)
+          this.addChild(element, nextChild, ndx, nextPath, context)
           nodeIndexShift -= 1
         }
       }
@@ -1196,49 +1190,44 @@ class View {
   }
 
   /** @private */
-  getParametrizedListener(path, name) {
+  getEventListenerDelegate(path, name) {
     const key = View.getAttrKey(path, name)
-    return this.parametrizedEventListeners.get(key)
+    return this.eventListenerDelegates.get(key)
   }
 
   /** @private */
-  hasParametrizedListener(path, name) {
+  hasEventListenerDelegate(path, name) {
     const key = View.getAttrKey(path, name)
-    return this.parametrizedEventListeners.has(key)
+    return this.eventListenerDelegates.has(key)
   }
 
   /** @private */
-  createParametrizedListener(action, params, path, name) {
-    const listener = (...args) => action(...params, ...args)
+  createEventListenerDelegate(action, path, name) {
     const key = View.getAttrKey(path, name)
-    this.parametrizedEventListeners.set(key, listener)
-    return listener
-  }
+    this.eventListeners.set(key, action)
 
-  /** @private */
-  removeParametrizedListeners(node, path) {
-    for (const name in node.attrs) {
-      if (this.hasParametrizedListener(path, name))
-        this.removeParametrizedListener(path, name)
+    const delegate = (...args) => {
+      const listener = this.eventListeners.get(key)
+      if (listener == null)
+        throw new Error('Event listener not found')
+
+      listener(...args)
     }
-
-    let shift = 0
-    for (const ndx in node.children) {
-      const child = node.children[ndx]
-      if (this.context.options.isProduction && child.isDevOnly) {
-        shift += 1
-        continue
-      }
-      const nextPath = path.concat([ndx - shift])
-      if (isElementNode(child))
-        this.removeParametrizedListeners(child, nextPath)
-    }
+    this.eventListenerDelegates.set(key, delegate)
+    return delegate
   }
 
   /** @private */
-  removeParametrizedListener(path, name) {
+  updateEventListenerDelegate(action, path, name) {
     const key = View.getAttrKey(path, name)
-    this.parametrizedEventListeners.delete(key)
+    this.eventListeners.set(key, action)
+  }
+
+  /** @private */
+  removeEventListenerDelegate(path, name) {
+    const key = View.getAttrKey(path, name)
+    this.eventListenerDelegates.delete(key)
+    this.eventListeners.delete(key)
   }
 }
 

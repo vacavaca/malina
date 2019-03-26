@@ -202,28 +202,5 @@ describe('view', () => {
 
       assert.strictEqual(dom.window.document.body.innerHTML, '<div>1</div>')
     })
-
-    it('should add parametrized event listeners', () => {
-      const dom = new JSDOM(`<body><div style="top: 5px;">0</div></body>`)
-
-      const Inner = view(({ state }) => state.counter)
-
-      const behavior = view => {
-        view.state = { ...view.state, counter: 0 }
-      }
-
-      const actions = {
-        update: n => ({ state }) => ({ counter: state.counter + n })
-      }
-
-      const View = view(({ state, actions }) => h('div', { onClick: [actions.update, 42] }, h(Inner, state)), behavior, actions)
-      hydrate(dom.window.document.body, h(View))
-
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div>0</div>')
-
-      dom.window.document.body.childNodes[0].click()
-
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div>42</div>')
-    })
   })
 })
