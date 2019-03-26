@@ -11,13 +11,19 @@
 
 * [npm](https://docs.npmjs.com/about-npm/) managing packages and dependencies 
 * [make](https://www.gnu.org/software/make/) task runner, development tools
+
+Installed via npm:
+
 * [lerna](https://lernajs.io/) managing multiple packages in one repo
 * [eslint](https://eslint.org/) linting
 * [rollup](https://rollupjs.org/) bundler
-
 * [commitizen](https://npmjs.com/package/commitizen) and [generate-changelog](https://npmjs.com/package/generate-changelog) are configured to simplify publishing
 
 ## Commands
+
+### Boostrap project, link dependencies
+
+`npm run bootstrap`
 
 ### Run tests
 
@@ -30,6 +36,10 @@
 ### Clean build directories
 
 `npm run clean`
+
+### Clean dist directories
+
+`npm run clean-dist`
 
 ### Build packages for development
 
@@ -44,6 +54,10 @@
 `npm run publish BUMP`
 
 eg. `npm run publish patch`
+
+### Commit changes
+
+`npm run commit`
 
 
 Inside the packages directory the following npm commands are usualy available:

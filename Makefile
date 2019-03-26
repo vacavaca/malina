@@ -13,8 +13,8 @@ clean:
 clean-dist:
 	lerna run --stream clean
 
-.PHONY: prepare
-prepare: clean
+.PHONY: bootstrap
+bootstrap: clean
 ifeq ($(RUNNER_ENV),ci)
 	lerna bootstrap
 else
@@ -34,7 +34,7 @@ test: build
 	lerna exec --no-private 'make test'
 
 .PHONY: release
-release: prepare clean-dist
+release: bootstrap clean-dist
 	lerna run --bail --stream release
 
 .PHONY: publish

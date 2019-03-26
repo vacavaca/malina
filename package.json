@@ -3,11 +3,12 @@
   "version": "0.0.18",
   "private": true,
   "scripts": {
-    "prepare": "make prepare",
+    "bootstrap": "make bootstrap",
     "test": "make test",
     "check": "make check",
     "commit": "git-cz",
     "clean": "make clean",
+    "clean-dist": "make clean-dist",
     "release": "make release",
     "build": "make build",
     "publish": "run () { make bump=$1 publish; }; run"
