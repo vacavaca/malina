@@ -58,8 +58,8 @@ const collectRefsInt = (key, node, path, refs) => {
   const elementNode = isElementNode(node)
   if (elementNode && key in node.attrs) {
     const consumer = node.attrs[key]
-    if (!(consumer instanceof Function))
-      throw new Error('Ref consumer must be a function')
+    if (!(consumer instanceof Function) && typeof consumer !== 'string')
+      throw new Error('Ref consumer must be a function or a string')
     refs.set(pathKey(path), { path, consumer })
     const children = mapNodeChildRefs(key, node, path, refs)
     const nextNode = h(node.tag, omit([key], node.attrs), children)
@@ -87,30 +87,33 @@ const collectRefs = (key, node) => {
   } else return collectRefsInt(key, node, [], refs)
 }
 
-const publishRef = (root, { path, consumer }) => {
-  const element = accessElement(root, path)
+const publishRef = (view, { path, consumer }) => {
+  const element = accessElement(view.element, path)
   if (element == null)
     throw new Error('Internal error: element not found by ref')
 
-  consumer(element)
+  if (consumer instanceof Function) consumer(element)
+  else view.state[consumer] = element
 }
 
-const publishRefs = (root, prev, next) => {
+const publishRefs = (view, prev, next) => {
   for (const key of next.keys()) {
     if (prev == null || !prev.has(key))
-      publishRef(root, next.get(key))
+      publishRef(view, next.get(key))
     else {
       const prevRef = prev.get(key)
       const nextRef = next.get(key)
       if (prevRef.consumer !== nextRef.consumer)
-        publishRef(root, nextRef)
+        publishRef(view, nextRef)
     }
   }
 }
 
-const publishDestroy = refs => {
-  for (const { consumer } of refs.values())
-    consumer(null)
+const publishDestroy = (view, refs) => {
+  for (const { consumer } of refs.values()) {
+    if (consumer instanceof Function) consumer(null)
+    else view.state[consumer] = null
+  }
 }
 
 export const withRefs = (attrKey = 'ref') => compose(
@@ -130,17 +133,17 @@ export const withRefs = (attrKey = 'ref') => compose(
     },
 
     mount: view => {
-      publishRefs(view.element, view.state[key].prev, view.state[key].next)
+      publishRefs(view, view.state[key].prev, view.state[key].next)
       view.state[key].prev = view.state[key].next
     },
 
     update: view => {
-      publishRefs(view.element, view.state[key].prev, view.state[key].next)
+      publishRefs(view, view.state[key].prev, view.state[key].next)
       view.state[key].prev = view.state[key].next
     },
 
-    destroy: view => {
-      publishDestroy(view.state[key].next)
+    unmount: view => {
+      publishDestroy(view, view.state[key].next)
       view.state[key].prev = null
     }
   })
