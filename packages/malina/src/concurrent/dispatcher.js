@@ -8,7 +8,7 @@ export default class Dispatcher {
     if (key in this.listeners) {
       const listeners = this.listeners[key]
       for (const handler of listeners)
-        handler()
+        handler(...args)
     }
 
     if (key in this.resolvers) {

@@ -32,3 +32,10 @@ export const log = (...args) => {
 }
 
 export const getGlobal = () => _global
+
+export const assert = (condition, msg = null) => {
+  if (isDevelopment && warnAvailable) {
+    if (!condition())
+      throw new Error(`Condition failed${msg != null ? `: ${msg}` : ''}`)
+  }
+}

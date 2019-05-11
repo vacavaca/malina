@@ -138,6 +138,45 @@ describe('view', () => {
 
       done()
     }))
+
+    it('should add and delete the same views', () => {
+      const dom = new JSDOM('<body></body>')
+
+      const deleteFirst = () => ({ state }) => ({
+        items: state.items.slice(1)
+      })
+
+      const insertMiddle = () => ({ state }) => ({
+        items: [...state.items.slice(0, 1), { id: 42, text: 'new' }, ...state.items.slice(1)]
+      })
+
+      const Item = view(({ state }) => h('div', { data: { index: state.index } }, state.text))
+
+      const List = view(({ state }) => h('div', {}, state.items.map((item, index) => h(Item, { ...item, key: item.id, index }))))
+        .decorate(
+          withState({
+            items: [
+              { id: 1, text: 'first' },
+              { id: 2, text: 'second' },
+              { id: 3, text: 'third' }
+            ]
+          }),
+          withActions({
+            deleteFirst,
+            insertMiddle
+          })
+        )
+
+      const instance = mount(dom.window.document.body, h(List))
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div data-index="0">first</div><div data-index="1">second</div><div data-index="2">third</div></div>')
+      instance.actions.deleteFirst()
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div data-index="0">second</div><div data-index="1">third</div></div>')
+      instance.actions.insertMiddle()
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div><div data-index="0">second</div><div data-index="1">new</div><div data-index="2">third</div></div>')
+
+      instance.destroy()
+      assert.strictEqual(dom.window.document.body.childNodes.length, 0)
+    })
   })
 
   describe('hydrate', () => {
@@ -165,7 +204,7 @@ describe('view', () => {
       assert.strictEqual(dom.window.document.body.childNodes.length, 0)
     })
 
-    it('should call inner vies mount handles', () => {
+    it('should call inner views mount handles', () => {
       const dom = new JSDOM(`<body><div> </div></body>`)
 
       let called = 0

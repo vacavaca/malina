@@ -1,6 +1,6 @@
 import { h, view, List } from 'malina'
 import cn from 'classnames'
-import { cssModules, withRefs } from 'malina-decorator'
+import { cssModules, withRefs, withState, withActions, withLifecycle } from 'malina-decorator'
 import { default as state, gridLengthToScreen } from './state'
 import actions from './action'
 import hooks from './hook'
@@ -50,7 +50,7 @@ const renderSnakeCell = (state, pos, index) =>
 const renderFocusHook = (state, actions) =>
   <a
     href="#"
-    ref={actions.handleFocusHook}
+    ref="focusHook"
     tabindex={0}
     onKeyDown={actions.handleKeyDown}
     onBlur={actions.handleBlur} />
@@ -91,11 +91,16 @@ const renderInfo = state =>
   })}>{getInfoText(state)}</div>
 
 
-export default view((state, actions) =>
+export default view(({ state, actions }) =>
   <div styleName="level">
     {renderFocusHook(state, actions)}
     {renderInfo(state)}
     {renderField(state, actions)}
-  </div>,
-  state, actions, hooks)
-  .decorate(cssModules(styles), withRefs())
+  </div>)
+  .decorate(
+    withState(state),
+    withRefs(),
+    withActions(actions),
+    withLifecycle(hooks),
+    cssModules(styles),
+  )

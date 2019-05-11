@@ -21,8 +21,8 @@ export default view(({ state, actions }) =>
     />
     <label for="toggle-all">Mark all as complete</label>
     <ul class="todo-list">
-      <List data={state.todos} indexBy="id">{todo =>
-        <Todo todo={todo} actions={state.actions} />
+      <List data={state.todos} indexBy="id">{
+        todo => <Todo todo={todo} actions={state.actions} />
       }</List>
     </ul>
   </section>)

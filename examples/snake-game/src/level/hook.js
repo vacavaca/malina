@@ -1,9 +1,9 @@
 const hooks = {}
 
-hooks.mount = (element, state, actions) =>
+hooks.mount = ({ actions }) =>
   actions.focus()
 
-hooks.unmount = (e, s, actions) =>
+hooks.unmount = ({ actions }) =>
   actions.pause()
 
 export default hooks

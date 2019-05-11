@@ -1,12 +1,12 @@
 import { h, view } from 'malina'
-import { cssModules } from 'malina-decorator'
+import { cssModules, withState, withActions } from 'malina-decorator'
 import state from './state'
 import actions from './action'
 import Level from '../level'
 
 import styles from './style.scss'
 
-export default view(({ score, best }, actions) =>
+export default view(({ state: { score, best }, actions }) =>
   <div styleName="app">
     <div styleName="app-score">
       <span styleName="app-currentScore">Score: {score}</span>
@@ -18,6 +18,8 @@ export default view(({ score, best }, actions) =>
       speed={6}
       onScore={actions.handleScore}
     />
-  </div>,
-  state, actions
-).decorate(cssModules(styles))
+  </div>).decorate(
+  withState(state),
+  withActions(actions),
+  cssModules(styles)
+)

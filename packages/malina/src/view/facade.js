@@ -55,7 +55,7 @@ export class ConcurrentFacade extends InnerFacade {
   }
 
   unmount() {
-    return this.view.dispatcher.wait('unmount')
+    return this.view.dispatcher.wait('unmount', true)
   }
 
   onUnmount(handler) {
@@ -63,7 +63,7 @@ export class ConcurrentFacade extends InnerFacade {
   }
 
   destroy() {
-    return this.view.dispatcher.wait('destroy')
+    return this.view.dispatcher.wait('destroy', true)
   }
 
   onDestroy(handler) {
