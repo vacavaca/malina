@@ -587,9 +587,6 @@ class Renderer {
 
   /** @private */
   attachAttributes(element, node, path, context) {
-    if (!('style' in node.attrs))
-      element.removeAttribute('style')
-
     for (const name in node.attrs) {
       if (name === 'innerHtml')
         continue
@@ -601,9 +598,6 @@ class Renderer {
 
   /** @private */
   detachAttributes(element, node, path, context) {
-    if (!('style' in node.attrs))
-      element.removeAttribute('style')
-
     for (const name in node.attrs) {
       if (name === 'innerHtml')
         continue

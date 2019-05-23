@@ -450,7 +450,7 @@ export const hydrate = (container, node, index = 0, {
   insideSvg = false, env = isProduction ? 'production' : 'development'
 } = {}) => mountOrHydrate(container, node, index, { insideSvg, hydrate: true, isProduction: !testDevelopment(env) })
 
-export const render = (document, node, {
+export const instantiate = (document, node, {
   insideSvg = false,
   env = isProduction ? 'production' : 'development'
 } = {}) => {
@@ -465,8 +465,16 @@ export const render = (document, node, {
 
   if (!isViewNode(viewNode))
     throw new Error('View can only be instantiated from view-nodes')
-  const viewInstance = new View(viewNode, context)
-  viewInstance.render(document)
+  const viewInstance = new View(context, viewNode)
+  return new OuterFacade(viewInstance)
+}
+
+export const render = (document, node, {
+  insideSvg = false,
+  env = isProduction ? 'production' : 'development'
+} = {}) => {
+  const viewInstance = instantiate(document, node, { insideSvg, env })
+  viewInstance.render()
   return new OuterFacade(viewInstance)
 }
 

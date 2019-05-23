@@ -116,6 +116,10 @@ export class OuterFacade extends InnerFacade {
     return this.view.element
   }
 
+  render() {
+    return this.view.render()
+  }
+
   attach(element = null) {
     this.view.attach(element)
   }

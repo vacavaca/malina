@@ -1,8 +1,6 @@
 import { keys } from 'malina-util'
-import { render, decorator, getGlobal, h, view } from 'malina'
+import { instantiate, decorator, getGlobal, h, view } from 'malina'
 import { withTemplate, withLifecycle, withState } from './common'
-
-const componentKey = Symbol.for('__malina_component')
 
 const isValidName = name =>
   name.split('-').length >= 2
@@ -71,14 +69,10 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
         for (const attr of this.attributes)
           attrs[attr.name] = attr.value
 
-        if (!('component' in attrs))
-          attrs.component = this
-        else attrs[componentKey] = this
-
         const children = [h(NodeListRenderer, { children: this.childNodes })]
 
-        this.view = render(window.document, h(declaration, attrs, children))
-        const template = this.view.element
+        this.view = instantiate(window.document, h(declaration, attrs, children))
+        const template = this.view.render()
         shadowRoot.appendChild(template.content)
       }
 
@@ -144,6 +138,3 @@ export const webComponent = (...args) => {
       return normalizedWebComponent(args[0], args[1])
   } else return normalizedWebComponent(args[0], args[1], args[2])
 }
-
-export const withCustomElement = (getter = component => ({ component })) =>
-  withState(state => getter(state[componentKey]))
