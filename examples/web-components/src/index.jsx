@@ -83,16 +83,31 @@ const Footer = view(
   </template>
 ).decorate(webComponent('x-footer'))
 
+const Text = view(({ state, children }) =>
+  <template>
+    <style>{`
+  p {
+    color: red;
+  }
+  `}</style>
+    <Debug info="content" />
+    <p>{children}</p>
+    <b>One more counter: {state['data-counter']}</b>
+  </template>
+).decorate(webComponent('x-text', { observe: ['data-counter'] }))
 
 const Content = view(({ state, actions, children }) =>
   <template>
-    <Debug info="content" />
     <h1>Web Components</h1>
     <p>This is a basic example of Web Components in <b>malina</b>!</p>
     <p>Counter: {state.count}</p>
     <button onClick={actions.increment}>Click me!</button>
     <br />
-    <p>{children}</p>
+    <x-text data-counter={state.count}>
+      <div>
+        {children}
+      </div>
+    </x-text>
   </template>
 ).decorate(
   webComponent('x-content'),

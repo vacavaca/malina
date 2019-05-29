@@ -12,7 +12,29 @@ export const keys = obj =>
   Object.getOwnPropertyNames(obj)
     .concat(Object.getOwnPropertySymbols(obj))
 
-export const shallowEqual = (a, b) => {
+const shallowEqualArray = (a, b) => {
+  if (a === b)
+    return true
+
+  if ((a == null) !== (b == null))
+    return false
+
+  if (a == null)
+    return true
+
+  const len = a.length
+  if (len !== b.length)
+    return false
+
+  for (let i = 0; i < len; i++) {
+    if (a[i] !== b[i])
+      return false
+  }
+
+  return true
+}
+
+const shallowEqualObject = (a, b) => {
   if (a === b)
     return true
 
@@ -33,6 +55,14 @@ export const shallowEqual = (a, b) => {
   }
 
   return true
+}
+
+export const shallowEqual = (a, b) => {
+  const aIsArray = Array.isArray(a)
+  if (aIsArray !== Array.isArray(b))
+    return false
+
+  return aIsArray ? shallowEqualArray(a, b) : shallowEqualObject(a, b)
 }
 
 export const omit = (names, obj) => {

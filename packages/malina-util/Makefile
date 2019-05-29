@@ -35,6 +35,10 @@ check: lint
 test:
 	echo "Nothing to test yet"
 
+.PHONY: benchmark
+benchmark:
+	echo "Nothing to benchmark yet"
+
 .PHONY: build
 build:  						 \
 	clean			 				 \

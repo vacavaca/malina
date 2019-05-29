@@ -3,7 +3,7 @@ import { Dispatcher } from '../concurrent'
 import { InnerFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { assert, isProduction, testDevelopment } from '../env'
 import Context from './context'
-import { Declaration, isElementNode, isViewNode, h } from '../vdom'
+import { Declaration, isElementNode, isViewNode, h, template as createTemplate } from '../vdom'
 import { isTemplateElement } from './util'
 import ViewTree from './view-tree'
 import Renderer from './renderer'
@@ -12,7 +12,7 @@ class View {
   constructor(context, node) {
     const { tag: declaration, attrs: state, children } = node
 
-    this.template = declaration.template
+    this.template = createTemplate(declaration.template)
     this.state = state
     this.actions = this.bindActions(declaration.actions)
     this.behavior = declaration.behavior
@@ -218,7 +218,7 @@ class View {
     if (top)
       this.context.lock()
 
-    this.destroyInnerViews([])
+    this.destroyInnerViews([], false)
     if (removeElement && element != null)
       element.remove()
 
@@ -262,18 +262,18 @@ class View {
     return this.tree.getView(path)
   }
 
-  destroyInnerViews(path) {
+  destroyInnerViews(path, removeElement = true) {
     for (const treeNode of this.tree.iterateViews(path)) {
       const view = treeNode.view
-      view.destroy(false)
+      view.destroy(removeElement)
       treeNode.delete()
     }
   }
 
-  destroyInnerView(path) {
+  destroyInnerView(path, removeElement = true) {
     const view = this.tree.getView(path)
     this.tree.removeView(path)
-    view.destroy()
+    view.destroy(removeElement)
   }
 
   /** @private */

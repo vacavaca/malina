@@ -29,6 +29,10 @@ Installed via npm:
 
 `npm run test`
 
+### Run benchmarks
+
+`npm run benchmark`
+
 ### Run linter and tests
 
 `npm run check`

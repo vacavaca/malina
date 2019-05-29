@@ -63,6 +63,29 @@ const removeElement = (container, element) => {
   fragment.removeChild(element)
 }
 
+const customElementNameRe = /^[a-z][a-z0-9.-_]*-[a-z0-9.-_]*$/
+
+const forbiddenCustomElementNames = [
+  'annotation-xml',
+  'color-profile',
+  'font-face',
+  'font-face-src',
+  'font-face-uri',
+  'font-face-format',
+  'font-face-name',
+  'missing-glyph'
+]
+
+const isNodeCustomElement = node =>
+  isElementNode(node) &&
+  (!forbiddenCustomElementNames.includes(node.tag) &&
+    (customElementNameRe.test(node.tag) ||
+      ('is' in node.attrs && customElementNameRe.test(node.attrs.is))))
+
+const isDomElement = (context, node) =>
+  node instanceof context.getDocument().defaultView.Element ||
+  node instanceof context.getDocument().defaultView.Text
+
 class Renderer {
   constructor(view, context) {
     this.view = view
@@ -147,20 +170,109 @@ class Renderer {
       else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path, context)
       else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path, context)
       else if (isTextNode(next)) this.patchFromNodeToText(element, prev, next, path)
+      else if (isDomElement(context, next)) this.patchFromElementNodeToDom(element, next, path)
       else throw new Error('Invalid template type')
     } else if (isViewNode(prev)) {
       if (next == null) this.patchFromViewToNone(element, prev, path)
       else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path, context)
       else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path, context)
       else if (isTextNode(next)) this.patchFromViewToText(element, prev, next, path)
+      else if (isDomElement(context, next)) this.patchFromViewToDom(element, next, path)
+      else throw new Error('Invalid template type')
+    } else if (isDomElement(context, prev)) {
+      if (next == null) this.patchFromDomToNone(element, path)
+      else if (isElementNode(next)) this.patchFromDomToNode(element, next, path, context)
+      else if (isViewNode(next)) this.patchFromDomToView(element, next, path, context)
+      else if (isTextNode(next)) this.patchFromDomToText(element, next, path)
+      else if (isDomElement(context, next)) this.patchFromDomToDom(element, next, path)
       else throw new Error('Invalid template type')
     } else {
       if (next == null) this.patchFromTextToNone(element, path)
       else if (isElementNode(next)) this.patchFromTextToNode(element, next, path, context)
       else if (isViewNode(next)) this.patchFromTextToView(element, next, path, context)
       else if (isTextNode(next)) this.patchTextNodes(element, prev, next, path)
+      else if (isDomElement(context, next)) this.patchFromTextToDom(element, next, path)
       else throw new Error('Invalid template type')
     }
+  }
+
+  /** @private */
+  patchFromElementNodeToDom(element, next, path) {
+    if (element !== next) {
+      element.replaceWith(next)
+
+      if (isRoot(path))
+        this.element = next
+    }
+  }
+
+  /** @private */
+  patchFromViewToDom(element, next, path) {
+    this.view.destroyInnerView(path, false)
+    element.replaceWith(next)
+
+    if (isRoot(path))
+      this.element = next
+  }
+
+  /** @private */
+  patchFromDomToNone(element, path) {
+    if (isRoot(path))
+      throw new Error('Root element deleted during patch')
+
+    removeElement(element.parentNode, element)
+  }
+
+  /** @private */
+  patchFromDomToNode(element, next, path, context) {
+    const newElement = this.createElementNode(next, path, context)
+    element.replaceWith(newElement)
+
+    if (isRoot(path))
+      this.element = newElement
+  }
+
+  /** @private */
+  patchFromDomToView(element, next, path, context) {
+    const view = this.view.instantiateInnerView(next, path, context)
+
+    let index
+    if (path.length > 0) index = path[path.length - 1]
+    else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
+
+    const parent = element.parentNode
+    element.remove()
+    view.mount(parent, index)
+
+    if (isRoot(path))
+      this.element = view.element
+  }
+
+  /** @private */
+  patchFromDomToText(element, next, path) {
+    const newElement = this.context.getDocument().createTextNode(`${next}`)
+    element.replaceWith(newElement)
+
+    if (isRoot(path))
+      this.element = newElement
+  }
+
+  /** @private */
+  patchFromDomToDom(element, next, path) {
+    if (element !== next) {
+      element.replaceWith(next)
+
+      if (isRoot(path))
+        this.element = next
+    }
+  }
+
+  /** @private */
+  patchFromTextToDom(element, next, path) {
+    element.replaceWith(next)
+
+    if (isRoot(path))
+      this.element = next
   }
 
   /** @private */
@@ -194,7 +306,9 @@ class Renderer {
   /** @private */
   patchFromTextToView(element, next, path, context) {
     const view = this.view.instantiateInnerView(next, path, context)
-    const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
+    let index
+    if (path.length > 0) index = path[path.length - 1]
+    else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
     const parent = element.parentNode
 
     element.remove()
@@ -209,13 +323,11 @@ class Renderer {
     if (isRoot(path))
       throw new Error('Root element deleted during patch')
 
-    this.view.destroyInnerViews(path)
     element.remove()
   }
 
   /** @private */
   patchFromNodeToText(element, prev, next, path) {
-    this.view.destroyInnerViews(path)
     const newElement = this.context.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
 
@@ -228,11 +340,25 @@ class Renderer {
     if (prev === next)
       return
 
+    const prevCustom = isNodeCustomElement(prev)
+    const nextCustom = isNodeCustomElement(next)
+
     if (prev.tag === next.tag) {
-      this.updateAttributes(element, prev, next, path, context)
-      this.updateChildren(element, prev, next, path, context)
+      if (prevCustom && nextCustom) {
+        this.updateAttributes(element, prev, next, path, context)
+        element.innerHTML = ''
+        this.createChildren(element, next, path, context)
+      } else if (prevCustom || nextCustom) {
+        const newElement = this.createNodeElement(next, path, context)
+        element.replaceWith(newElement)
+
+        if (isRoot(path))
+          this.element = newElement
+      } else {
+        this.updateAttributes(element, prev, next, path, context)
+        this.updateChildren(element, prev, next, path, context)
+      }
     } else {
-      this.view.destroyInnerViews(path)
       const newElement = this.createNodeElement(next, path, context)
       element.replaceWith(newElement)
 
@@ -243,9 +369,12 @@ class Renderer {
 
   /** @private */
   patchFromNodeToView(element, prev, next, path, context) {
-    this.view.destroyInnerViews(path)
     const view = this.view.instantiateInnerView(next, path, context)
-    const index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
+
+    let index
+    if (path.length > 0) index = path[path.length - 1]
+    else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
+
     const parent = element.parentNode
     element.remove()
     view.mount(parent, index)
@@ -264,7 +393,7 @@ class Renderer {
 
   /** @private */
   patchFromViewToText(element, prev, next, path) {
-    this.view.destroyInnerView(path)
+    this.view.destroyInnerView(path, false)
 
     const newElement = this.context.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
@@ -275,7 +404,7 @@ class Renderer {
 
   /** @private */
   patchFromViewToNode(element, prev, next, path, context) {
-    this.view.destroyInnerView(path)
+    this.view.destroyInnerView(path, false)
 
     const newElement = this.createNodeElement(next, path, context)
     element.replaceWith(newElement)
@@ -294,7 +423,10 @@ class Renderer {
       view.update(next.attrs, next.children)
     } else {
       const parent = element.parentNode
-      const index = Array.from(parent.childNodes).findIndex(n => n === element)
+
+      let index
+      if (path.length > 0) index = path[path.length - 1]
+      else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
 
       this.view.destroyInnerView(path)
       const view = this.view.instantiateInnerView(next, path, context)
@@ -310,6 +442,7 @@ class Renderer {
   createNode(node, path, context) {
     if (isElementNode(node)) return this.createElementNode(node, path, context)
     else if (isViewNode(node)) return this.createViewNode(node, path, context)
+    else if (isDomElement(context, node)) return node
     else if (node === null || isTextNode(node)) return this.createTextNode(node)
   }
 
@@ -432,6 +565,8 @@ class Renderer {
     if ('innerHtml' in node.attrs)
       element.innerHTML = node.attrs.innerHtml
     else {
+      // first create an entire child-tree and then append it to the container element
+      const fragment = context.getDocument().createDocumentFragment()
       let shift = 0
       for (const ndx in node.children) {
         const child = node.children[ndx]
@@ -442,9 +577,12 @@ class Renderer {
 
         const nextPath = path.concat([ndx - shift])
         const childElement = this.createNode(child, nextPath, context)
-        const fragment = isTemplateElement(element) ? element.content : element
-        const before = fragment.childNodes[ndx]
-        fragment.insertBefore(childElement, before)
+        fragment.appendChild(childElement)
+      }
+
+      if (node.children.length > 0) {
+        const container = isTemplateElement(element) ? element.content : element
+        container.appendChild(fragment)
       }
     }
   }
@@ -453,6 +591,9 @@ class Renderer {
   hydrateChildren(element, node, path, context) {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
+
+    if (isNodeCustomElement(node))
+      return
 
     const fragment = isTemplateElement(element) ? element.content : element
     let shift = 0
@@ -463,6 +604,9 @@ class Renderer {
           shift += 1
           continue
         }
+
+        if (isNodeCustomElement(child))
+          continue
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]
@@ -476,6 +620,9 @@ class Renderer {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
+    if (isNodeCustomElement(node))
+      return
+
     const fragment = isTemplateElement(element) ? element.content : element
     let shift = 0
     if (!('innerHtml' in node.attrs)) {
@@ -485,6 +632,9 @@ class Renderer {
           shift += 1
           continue
         }
+
+        if (isNodeCustomElement(child))
+          continue
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]
@@ -498,6 +648,9 @@ class Renderer {
     if (!requireValidChildren(node))
       throw new Error("Every view node in an array must have an unique 'key' attribute")
 
+    if (isNodeCustomElement(node))
+      return
+
     const fragment = isTemplateElement(element) ? element.content : element
     let shift = 0
     if (!('innerHtml' in node.attrs)) {
@@ -507,6 +660,9 @@ class Renderer {
           shift += 1
           continue
         }
+
+        if (isNodeCustomElement(child))
+          continue
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]

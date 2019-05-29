@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "test": "echo \"Nothing to test yet\"",
+    "benchmark": "echo \"Nothing to benchmark yet\"",
     "build": "make build",
     "check": "make clean check",
     "clean": "make clean",

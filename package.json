@@ -5,6 +5,7 @@
   "scripts": {
     "bootstrap": "make bootstrap",
     "test": "make test",
+    "benchmark": "make benchmark",
     "check": "make check",
     "commit": "git-cz",
     "clean": "make clean",

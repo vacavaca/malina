@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "test": "make clean test",
+    "benchmark": "make clean benchmark",
     "build": "make build",
     "check": "make clean check",
     "clean": "make clean",
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
+    "benchmark": "^2.1.4",
     "eslint": "^5.9.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",

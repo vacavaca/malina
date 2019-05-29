@@ -33,6 +33,10 @@ check: build
 test: build
 	lerna exec --no-private 'make test'
 
+.PHONY: benchmark
+benchmark: build
+	lerna exec --no-private 'make benchmark'
+
 .PHONY: release
 release: bootstrap clean-dist
 	lerna run --bail --stream release

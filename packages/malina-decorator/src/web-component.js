@@ -1,6 +1,6 @@
 import { keys } from 'malina-util'
-import { instantiate, decorator, getGlobal, h, view } from 'malina'
-import { withTemplate, withLifecycle, withState } from './common'
+import { instantiate, decorator, getGlobal, h } from 'malina'
+import { withTemplate } from './common'
 
 const isValidName = name =>
   name.split('-').length >= 2
@@ -10,55 +10,19 @@ const requireValidName = name => {
     throw new Error(`"${name}" is not valid custom element name`)
 }
 
-const NodeListRenderer = view(null)
-  .decorate(
-    withState({
-      children: [],
-      parent: null,
-      index: null,
-      count: null
-    }),
-    withLifecycle({
-      mount: view => {
-        const parent = view.element.parentNode
-        const index = Array.prototype.indexOf.call(parent.childNodes, view.element)
-        view.state.index = index
-        view.state.parent = parent
-
-        parent.childNodes[index].remove()
-        const before = parent.childNodes[index]
-        for (const node of view.state.children)
-          parent.insertBefore(node, before)
-        view.state.count = view.state.children.length
-      },
-      update: view => {
-        for (let i = 0; i < view.state.count; i++)
-          view.state.parent.childNodes[view.state.index].remove()
-        const before = view.state.parent.childNodes[view.state.index]
-        for (const node of view.state.children)
-          view.state.parent.insertBefore(node, before)
-        view.state.count = view.state.children.length
-      },
-      destroy: view => {
-        for (let i = 0; i < view.state.count; i++)
-          view.state.parent.childNodes[view.state.index].remove()
-
-        view.state.parent = null
-        view.state.index = null
-        view.state.count = null
-      }
-    }))
-
 const getCustomElementClass = (window, declaration, name, { shadow = 'open', observe = [] }) =>
   class extends window.HTMLElement {
     constructor(...args) {
       const self = super(...args)
       this.view = null
+      this.childObserver = new window.MutationObserver(this.handleChildMutations.bind(this))
+      this.expectedRemove = []
+      this.waitingChildren = true
       return self
     }
 
     static get observedAttributes() {
-      return observe
+      return observe || []
     }
 
     connectedCallback() {
@@ -69,7 +33,7 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
         for (const attr of this.attributes)
           attrs[attr.name] = attr.value
 
-        const children = [h(NodeListRenderer, { children: this.childNodes })]
+        const children = Array.from(this.childNodes)
 
         this.view = instantiate(window.document, h(declaration, attrs, children))
         const template = this.view.render()
@@ -77,20 +41,64 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
       }
 
       this.view.attach(this.shadowRoot)
+      this.childObserver.observe(this, { childList: true })
     }
 
     disconnectedCallback() {
+      this.childObserver.disconnect()
       this.view.unmount()
     }
 
     attributeChangedCallback(name, prevValue, nextValue) {
-      this.view.update({
-        [name]: nextValue
-      })
+      if (this.view != null) {
+        this.view.update({
+          [name]: nextValue
+        })
+      }
     }
 
     destroy() {
       this.view.destroy()
+    }
+
+    /** @private */
+    handleChildMutations(mutations) {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          this.updateChildren(mutation)
+          break
+        }
+      }
+    }
+
+    /** @private */
+    updateChildren(mutation) {
+      if (this.waitingChildren) {
+        this.waitingChildren = false
+        const children = Array.from(this.childNodes)
+        this.expectedRemove = children
+        this.view.update(null, children)
+      } else {
+        const len = this.expectedRemove.length
+        if (len !== mutation.removedNodes.length) {
+          this.waitingChildren = true
+          this.updateChildren(mutation)
+          return
+        }
+
+        for (let i = 0; i < len; i++) {
+          const expected = this.expectedRemove[i]
+          const actual = mutation.removedNodes[i]
+          if (expected !== actual) {
+            this.waitingChildren = true
+            this.updateChildren(mutation)
+            return
+          }
+        }
+
+        this.waitingChildren = true
+        this.expectedRemove = null
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import { flatten } from 'malina-util'
+import { flatten, shallowEqual } from 'malina-util'
 import Declaration from './declaration'
 
 export class Node {
@@ -19,6 +19,25 @@ export class Node {
 
   isNode() {
     return true // because instanceof can be inreliable on some build configurations
+  }
+
+  isEqual(other, compareChildren = true) {
+    if (this === other)
+      return true
+
+    if (this.tag !== other.tag)
+      return false
+
+    if (this.isDevOnly !== other.isDevOnly)
+      return false
+
+    if (!shallowEqual(this.attrs, other.attrs))
+      return false
+
+    if (compareChildren && !shallowEqual(this.children, other.children))
+      return false
+
+    return true
   }
 
   /**

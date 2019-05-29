@@ -124,8 +124,8 @@ export class OuterFacade extends InnerFacade {
     this.view.attach(element)
   }
 
-  update(updater) {
-    if (!this.isDestroyed) return this.view.update(updater)
+  update(updater = null, children = null) {
+    if (!this.isDestroyed) return this.view.update(updater, children)
     else return this.state
   }
 

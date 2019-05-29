@@ -32,6 +32,10 @@ endif
 test: $(node_release)
 	NODE_ENV=testing mocha test
 
+.PHONY: benchmark
+benchmark: $(node_release)
+	NODE_ENV=testing node benchmark
+
 .PHONY: check
 check: lint test
 
