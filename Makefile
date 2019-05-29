@@ -21,6 +21,10 @@ else
 	lerna bootstrap --hoist
 endif
 
+.PHONY: bootstrap-ci
+bootstrap-ci: clean
+	lerna bootstrap --ci
+
 .PHONY: build
 build:
 	lerna run --bail --stream --no-private build
@@ -38,7 +42,7 @@ benchmark: build
 	lerna exec --no-private 'make benchmark'
 
 .PHONY: release
-release: bootstrap clean-dist
+release: bootstrap-ci clean-dist
 	lerna run --bail --stream release
 
 .PHONY: publish
