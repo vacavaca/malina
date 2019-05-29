@@ -16,7 +16,7 @@ clean-dist:
 .PHONY: bootstrap
 bootstrap: clean
 ifeq ($(RUNNER_ENV),ci)
-	lerna bootstrap
+	lerna bootstrap --ci
 else
 	lerna bootstrap --hoist
 endif
