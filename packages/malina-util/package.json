@@ -40,5 +40,8 @@
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "uglify-es": "^3.3.9"
+  },
+  "dependencies": {
+    "seedrandom": "^3.0.1"
   }
 }

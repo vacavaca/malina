@@ -1,11 +1,23 @@
-import { compose, genRandomId } from 'malina-util'
+import { compose, Random } from 'malina-util'
+import { getGlobal } from '../env'
+
+const global_ = getGlobal()
+const randomKey = Symbol.for('__malina.declaration.random')
+
+let random
+if (global_ != null && randomKey in global_) random = global_[randomKey]
+else {
+  random = new Random('malina.view-id-seed')
+  if (global_ != null)
+    global_[randomKey] = random
+}
 
 export default class Declaration {
   constructor(template, behavior, actions) {
     this.template = template
-    this.behavior = behavior || (() => {})
+    this.behavior = behavior || (() => { })
     this.actions = actions || {}
-    this.id = genRandomId(8)
+    this.id = random.id(8)
     this.originalId = null
     this.isDevOnly = false
   }

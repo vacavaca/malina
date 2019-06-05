@@ -1,9 +1,19 @@
-import { isElementNode, h, isDevelopment } from 'malina'
-import { compose, genRandomId } from 'malina-util'
+import { isElementNode, h, isDevelopment, getGlobal } from 'malina'
+import { compose, Random } from 'malina-util'
 import { withContext, getContext } from './context'
 import { withTemplate } from './common'
 
 const key = Symbol.for('__malina_ids')
+const randomKey = Symbol.for('__malina-decorator.id.random')
+
+const global_ = getGlobal()
+let random
+if (global_ != null && randomKey in global_) random = global_[randomKey]
+else {
+  random = new Random('malina-decorator.id-seed')
+  if (global_ != null)
+    global_[randomKey] = random
+}
 
 const mapTemplate = (length, realKey, ctx) => node => {
   if (ctx == null)
@@ -23,15 +33,15 @@ const mapTemplate = (length, realKey, ctx) => node => {
       if (passed in ctx.ids)
         nextAttrs['id'] = ctx.ids[passed]
       else {
-        let random
+        let randomId
         if (isDevelopment) {
           let id = ++ctx.id
-          random = `${id}`
-          while (random.length < length)
-            random = `0${random}`
-        } else random = genRandomId(length)
+          randomId = `${id}`
+          while (randomId.length < length)
+            randomId = `0${randomId}`
+        } else randomId = random.id(length)
 
-        const generated = `${passed}_${random}`
+        const generated = `${passed}_${randomId}`
         ctx.ids[passed] = generated
         nextAttrs['id'] = generated
       }

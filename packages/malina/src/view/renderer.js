@@ -242,7 +242,14 @@ class Renderer {
 
     const parent = element.parentNode
     element.remove()
-    view.mount(parent, index)
+
+    if (context.isUpdating()) {
+      context.setUpdating(false)
+      const newElement = view.render()
+      context.setUpdating(true)
+      insertElement(parent, index, newElement)
+      view.attach(newElement)
+    } else throw new Error('Unreachable')
 
     if (isRoot(path))
       this.element = view.element
@@ -312,7 +319,13 @@ class Renderer {
     const parent = element.parentNode
 
     element.remove()
-    view.mount(parent, index)
+    if (context.isUpdating()) {
+      context.setUpdating(false)
+      const newElement = view.render()
+      context.setUpdating(true)
+      insertElement(parent, index, newElement)
+      view.attach(newElement)
+    } else throw new Error('Unreachable')
 
     if (isRoot(path))
       this.element = view.element
@@ -377,7 +390,13 @@ class Renderer {
 
     const parent = element.parentNode
     element.remove()
-    view.mount(parent, index)
+    if (context.isUpdating()) {
+      context.setUpdating(false)
+      const newElement = view.render()
+      context.setUpdating(true)
+      insertElement(parent, index, newElement)
+      view.attach(newElement)
+    } else throw new Error('Unreachable')
 
     if (isRoot(path))
       this.element = view.element
@@ -527,8 +546,7 @@ class Renderer {
       context = context.setUpdating(false)
       element = view.render(this.document)
       context = context.setUpdating(true)
-      if (context.isUpdating())
-        view.attach(element)
+      view.attach(element)
     } else element = view.render(this.document)
 
     return element

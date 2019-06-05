@@ -1,4 +1,4 @@
-import { withContext, getContext, withLifecycle, withActions, withBehavior } from 'malina-decorator'
+import { withContext, getContext, withLifecycle, withActions } from 'malina-decorator'
 import { compose } from 'malina-util'
 
 const getRouterControl = history => ({
@@ -44,20 +44,33 @@ const enableRouting = compose(
   })
 )
 
-const provideLocationState = withBehavior(view => {
-  view.state = {
-    ...(view.state || {}),
-    ...{
+const provideLocationState = withLifecycle({
+  create: view => {
+    view.state = {
+      ...(view.state || {}),
+      router: view.state.router.control,
+      location: view.state.location || view.state.router.history.location
+    }
+  },
+  update: view => {
+    view.state = {
+      ...(view.state || {}),
       router: view.state.router.control,
       location: view.state.location || view.state.router.history.location
     }
   }
 })
 
-const provideRouterState = withBehavior(view => {
-  view.state = {
-    ...(view.state || {}),
-    ...{
+const provideRouterState = withLifecycle({
+  create: view => {
+    view.state = {
+      ...(view.state || {}),
+      router: view.state.router.control
+    }
+  },
+  update: view => {
+    view.state = {
+      ...(view.state || {}),
       router: view.state.router.control
     }
   }

@@ -101,6 +101,13 @@ export const getContext = (getter = defaultContextGetter) =>
         }
       },
 
+      update: view => {
+        let context = view.state[contextKey]
+
+        if (context != null)
+          view.state = { ...view.state, ...(getter(context.value) || {}) }
+      },
+
       destroy: ({ state }) => {
         if (subscriptionKey in state)
           state[subscriptionKey]()
