@@ -1,6 +1,6 @@
 import { h, view, branch } from 'malina'
 import { connectRouter, Route } from 'malina-router'
-import { withState, withActions, withBehavior } from 'malina-decorator'
+import { withTemplate, withState, withActions, withBehavior } from 'malina-decorator'
 
 import Main from './main'
 import Header from './header'
@@ -67,9 +67,10 @@ const template = ({ state: { todos }, actions }) =>
     }}
   </Route>
 
-export default view(template).decorate(
+export default view(
+  withTemplate(template),
   withState(state),
   withActions(actions),
   connectRouter,
-  withBehavior(behavior)
+  withBehavior(behavior),
 )

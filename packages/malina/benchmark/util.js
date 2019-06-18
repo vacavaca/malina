@@ -1,5 +1,5 @@
 const Benchmark = require('benchmark')
-const { decorator, view } = require('..')
+const { decorator, Declaration } = require('..')
 
 class Suite {
   constructor() {
@@ -27,8 +27,11 @@ const createInitializer = value => state => {
   else return value || {}
 }
 
+const withTemplate = template => decorator(Inner =>
+  new Declaration(template, Inner.behavior, Inner.actions))
+
 const withBehavior = (...handlers) => decorator(Inner =>
-  view(Inner.template, view => {
+  new Declaration(Inner.template, view => {
     Inner.behavior(view)
     for (const handler of handlers)
       handler(view)
@@ -36,7 +39,7 @@ const withBehavior = (...handlers) => decorator(Inner =>
 )
 
 const withActions = actions => decorator(Inner =>
-  view(Inner.template, Inner.behavior, {
+  new Declaration(Inner.template, Inner.behavior, {
     ...(Inner.actions || {}),
     ...(actions || {})
   }))
@@ -49,6 +52,7 @@ const withState = state => withBehavior(
 
 module.exports = {
   Suite,
+  withTemplate,
   withBehavior,
   withActions,
   withState

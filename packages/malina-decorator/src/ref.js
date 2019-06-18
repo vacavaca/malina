@@ -1,6 +1,6 @@
 import { h, isElementNode, isViewNode, isDevelopment, warn } from 'malina'
 import { compose, omit } from 'malina-util'
-import { withTemplate, withLifecycle } from './common'
+import { mapTemplate, withLifecycle } from './common'
 
 const accessElement = (root, path) => {
   let next = root
@@ -117,7 +117,7 @@ const publishDestroy = (view, refs) => {
 }
 
 export const withRefs = (attrKey = 'ref') => compose(
-  withTemplate(original => view => {
+  mapTemplate(original => view => {
     const node = original()
     const { refs, node: nextNode } = collectRefs(attrKey, node)
     view.state[key].next = refs

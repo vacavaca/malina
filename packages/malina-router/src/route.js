@@ -1,6 +1,6 @@
 import { h, view, isViewNode, isElementNode } from 'malina'
 import { flatten } from 'malina-util'
-import { withActions } from 'malina-decorator'
+import { withActions, withTemplate } from 'malina-decorator'
 import pathToRegexp from 'path-to-regexp'
 import { connectRouter } from './router'
 
@@ -55,14 +55,15 @@ export const match = (location, path, options = {}) => {
 
 const routeKey = Symbol.for('__malina_route')
 
-export const Route = view(({ state, children = [] }) => {
-  const render = children[0]
-  if (children.length > 1)
-    throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
+export const Route = view(
+  withTemplate(({ state, children = [] }) => {
+    const render = children[0]
+    if (children.length > 1)
+      throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
 
-  const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
-  return render instanceof Function ? render(params) : render
-}).decorate(
+    const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
+    return render instanceof Function ? render(params) : render
+  }),
   withActions({
     [routeKey]: () => ({ [routeKey]: true })
   }),
@@ -108,19 +109,22 @@ const filterSwitchRoutes = (location, isRoot = false) => node => {
   } else return node
 }
 
-export const Switch = connectRouter(view(({ state, children }) => {
-  if (children.length === 0)
-    return null
+export const Switch = view(
+  withTemplate(({ state, children }) => {
+    if (children.length === 0)
+      return null
 
-  const filtered = children
-    .map(filterSwitchRoutes(state.location, true))
-    .filter(node => node != null)
+    const filtered = children
+      .map(filterSwitchRoutes(state.location, true))
+      .filter(node => node != null)
 
-  if (filtered.length === 0)
-    return null
+    if (filtered.length === 0)
+      return null
 
-  if (filtered.length > 1)
-    throw new Error('Only one root node is allowed inside Switch')
+    if (filtered.length > 1)
+      throw new Error('Only one root node is allowed inside Switch')
 
-  return filtered[0]
-}))
+    return filtered[0]
+  }),
+  connectRouter
+)

@@ -1,5 +1,5 @@
 import { h, view } from 'malina'
-import { withState, withActions } from 'malina-decorator'
+import { withState, withActions, withTemplate } from 'malina-decorator'
 import { omit } from 'malina-util'
 import { withRouter } from './router'
 
@@ -24,14 +24,14 @@ const handleClick = e => ({ state: { router, to, target, replace, state } }) => 
   }
 }
 
-export default view(({ state: { to, ...rest }, actions, children }) =>
-  h('a', {
-    href: to,
-    onClick: actions.handleClick,
-    ...omit(['router', 'replace', 'state'], rest)
-  }, children))
-  .decorate(
-    withState(state),
-    withActions({ handleClick }),
-    withRouter
-  )
+export default view(
+  withTemplate(({ state: { to, ...rest }, actions, children }) =>
+    h('a', {
+      href: to,
+      onClick: actions.handleClick,
+      ...omit(['router', 'replace', 'state'], rest)
+    }, children)),
+  withState(state),
+  withActions({ handleClick }),
+  withRouter
+)

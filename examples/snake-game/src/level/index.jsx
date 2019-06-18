@@ -1,9 +1,9 @@
 import { h, view, List } from 'malina'
 import cn from 'classnames'
-import { cssModules, withRefs, withState, withActions, withLifecycle } from 'malina-decorator'
+import { withTemplate, cssModules, withRefs, withState, withActions, withLifecycle } from 'malina-decorator'
 import { default as state, gridLengthToScreen } from './state'
-import actions from './action'
-import hooks from './hook'
+import * as actions from './action'
+import * as hooks from './hook'
 import Cell from '../cell'
 
 import styles from './style.scss'
@@ -91,16 +91,16 @@ const renderInfo = state =>
   })}>{getInfoText(state)}</div>
 
 
-export default view(({ state, actions }) =>
-  <div styleName="level">
-    {renderFocusHook(state, actions)}
-    {renderInfo(state)}
-    {renderField(state, actions)}
-  </div>)
-  .decorate(
-    withState(state),
-    withRefs(),
-    withActions(actions),
-    withLifecycle(hooks),
-    cssModules(styles),
-  )
+export default view(
+  withTemplate(({ state, actions }) =>
+    <div styleName="level">
+      {renderFocusHook(state, actions)}
+      {renderInfo(state)}
+      {renderField(state, actions)}
+    </div>),
+  withState(state),
+  withRefs(),
+  withActions(actions),
+  withLifecycle(hooks),
+  cssModules(styles),
+)

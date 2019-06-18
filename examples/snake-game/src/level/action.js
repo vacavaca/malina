@@ -1,8 +1,6 @@
-import { posEqual, posAdd, constrainPos, getNewApplePos, reset } from './state'
+import { posEqual, posAdd, constrainPos, getNewApplePos, reset as resetState } from './state'
 
-const actions = {}
-
-actions.move = (x, y) => ({ state: { snake, prevDirection } }) => {
+export const move = (x, y) => ({ state: { snake, prevDirection } }) => {
   const direction = { x, y }
   if (prevDirection != null && posEqual(direction, prevDirection))
     return
@@ -18,7 +16,7 @@ actions.move = (x, y) => ({ state: { snake, prevDirection } }) => {
   return { direction }
 }
 
-actions.tick = () => ({ state, actions }) => {
+export const tick = () => ({ state, actions }) => {
   if (state.gameOver || state.direction == null)
     return
 
@@ -49,12 +47,12 @@ actions.tick = () => ({ state, actions }) => {
   return { snake, apple }
 }
 
-actions.start = () => ({ state, actions }) => ({
+export const start = () => ({ state, actions }) => ({
   gameLoop: setInterval(actions.tick, 1000 / state.speed),
   paused: false
 })
 
-actions.countApple = () => ({ state }) => {
+export const countApple = () => ({ state }) => {
   const score = state.score + 1
   if (state.onScore != null)
     state.onScore(score)
@@ -62,37 +60,37 @@ actions.countApple = () => ({ state }) => {
   return { score }
 }
 
-actions.speedUp = () => ({ state }) => {
+export const speedUp = () => ({ state }) => {
   const lenPart = Math.min(1, state.snake.length / (1 * state.fieldSize))
   const max = state.fieldSize * 0.3
   return { speed: max * lenPart + state.initialSpeed * (1 - lenPart) }
 }
 
-actions.progress = () => ({ actions }) => {
+export const progress = () => ({ actions }) => {
   actions.pause()
   actions.start()
 }
 
-actions.pause = () => ({ state }) => {
+export const pause = () => ({ state }) => {
   if (state.gameLoop !== null)
     clearTimeout(state.gameLoop)
   return { gameLoop: null, paused: true }
 }
 
-actions.focus = e => ({ state: { focusHook, gameLoop }, actions }) => {
+export const focus = e => ({ state: { focusHook, gameLoop }, actions }) => {
   focusHook.focus()
   if (gameLoop == null)
     actions.start()
 }
 
-actions.reset = () => ({ state }) => {
+export const reset = () => ({ state }) => {
   if (state.onScore != null)
     state.onScore(0)
 
-  return reset(state)
+  return resetState(state)
 }
 
-actions.restart = () => ({ actions }) => {
+export const restart = () => ({ actions }) => {
   actions.pause()
   actions.reset()
   actions.focus()
@@ -104,7 +102,7 @@ const
   KEY_LEFT = 37,
   KEY_RIGHT = 39
 
-actions.handleKeyDown = e => ({ actions }) => {
+export const handleKeyDown = e => ({ actions }) => {
   e.preventDefault()
   if (e.keyCode === KEY_UP) actions.move(0, -1)
   if (e.keyCode === KEY_DOWN) actions.move(0, 1)
@@ -112,13 +110,11 @@ actions.handleKeyDown = e => ({ actions }) => {
   if (e.keyCode === KEY_RIGHT) actions.move(1, 0)
 }
 
-actions.handleClick = () => ({ state, actions }) => {
+export const handleClick = () => ({ state, actions }) => {
   if (!state.gameOver) actions.focus()
   else actions.restart()
 }
 
-actions.handleBlur = () => ({ actions }) => {
+export const handleBlur = () => ({ actions }) => {
   actions.pause()
 }
-
-export default actions

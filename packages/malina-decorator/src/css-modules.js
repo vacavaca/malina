@@ -1,5 +1,5 @@
 import { h, isElementNode, isViewNode } from 'malina'
-import { withTemplate, withLifecycle } from './common'
+import { mapTemplate, withLifecycle } from './common'
 import { compose, keys } from 'malina-util'
 import { memoizedDecorator } from './memoized'
 
@@ -44,7 +44,7 @@ const decorateTemplate = (styles, styleAttribute) => node => {
 }
 
 const decorateView = memoizedDecorator(compose(
-  withTemplate(original =>
+  mapTemplate(original =>
     ({ state }) => {
       const { [stylesKey]: originalStyles, [attributeKey]: originalStyleAttribute } = state || {}
       const { [updateStylesKey]: updatedStyles, [updateAttributeKey]: updatedStyleAttribute } = state || {}

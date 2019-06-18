@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount } = require('malina')
-const { withUniqIds } = require('..')
+const { h, view, template, mount } = require('malina')
+const { withTemplate, withUniqIds } = require('..')
 
 describe('id', () => {
   describe('withUniqIds', () => {
@@ -10,11 +10,13 @@ describe('id', () => {
       const dom = new JSDOM('<body></body>')
 
       const Test = view(
-        h('div', { id: 'test' }, [
-          h('span', { id: 'other' }, ['AAA']),
-          h('span', { id: 'test' }, ['AAA'])
-        ])
-      ).decorate(withUniqIds(4))
+        withTemplate(
+          h('div', { id: 'test' }, [
+            h('span', { id: 'other' }, ['AAA']),
+            h('span', { id: 'test' }, ['AAA'])
+          ])
+        ),
+        withUniqIds(4))
 
       mount(dom.window.document.body, h(Test))
 
@@ -27,18 +29,20 @@ describe('id', () => {
     it('should not generate ids for not decorated inner views', () => {
       const dom = new JSDOM('<body></body>')
 
-      const Inner = view(
+      const Inner = template(
         h('section', {}, [
           h('p', { id: 'test' }, ['Hello'])
         ])
       )
 
-      const Test = view(() =>
-        h('div', { id: 'test' }, [
-          h('span', { id: 'other' }, ['AAA']),
-          h(Inner)
-        ])
-      ).decorate(withUniqIds(4))
+      const Test = view(
+        withTemplate(() =>
+          h('div', { id: 'test' }, [
+            h('span', { id: 'other' }, ['AAA']),
+            h(Inner)
+          ])
+        ),
+        withUniqIds(4))
 
       mount(dom.window.document.body, h(Test))
 
@@ -52,18 +56,22 @@ describe('id', () => {
       const dom = new JSDOM('<body></body>')
 
       const Inner = view(
-        h('section', {}, [
-          h('p', { id: 'test' }, ['Hello']),
-          h('p', { id: 'test_2' }, ['Hello'])
-        ])
-      ).decorate(withUniqIds(5))
+        withTemplate(
+          h('section', {}, [
+            h('p', { id: 'test' }, ['Hello']),
+            h('p', { id: 'test_2' }, ['Hello'])
+          ])
+        ),
+        withUniqIds(5))
 
-      const Test = view(() =>
-        h('div', { id: 'test' }, [
-          h('span', { id: 'other' }, ['AAA']),
-          h(Inner)
-        ])
-      ).decorate(withUniqIds(4))
+      const Test = view(
+        withTemplate(() =>
+          h('div', { id: 'test' }, [
+            h('span', { id: 'other' }, ['AAA']),
+            h(Inner)
+          ])
+        ),
+        withUniqIds(4))
 
       mount(dom.window.document.body, h(Test))
 

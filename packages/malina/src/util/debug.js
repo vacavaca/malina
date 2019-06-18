@@ -1,6 +1,5 @@
 import { omit, keys } from 'malina-util'
-import { h } from '../vdom'
-import { view } from '../view'
+import { h, Declaration } from '../vdom'
 import { log as consoleLog } from '../env'
 
 const wrapLogger = logger => {
@@ -121,7 +120,7 @@ const maxCached = 10000
 const getDebugView = (logger = null) => {
   if (cachedViews.has(logger)) return cachedViews.get(logger)
   else {
-    const View = view(null, behavior(wrapLogger(logger)))
+    const View = new Declaration(null, behavior(wrapLogger(logger)))
 
     if (cachedViews.size < maxCached)
       cachedViews.set(logger, View)
@@ -130,6 +129,6 @@ const getDebugView = (logger = null) => {
   }
 }
 
-export default view(({ state, children }) =>
+export default new Declaration(({ state, children }) =>
   h(getDebugView(state.logger), omit(['logger'], state), children)
 ).setDevelopmentOnly(true)

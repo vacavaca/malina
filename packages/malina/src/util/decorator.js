@@ -1,5 +1,4 @@
 import { Declaration, Node, h } from '../vdom'
-import { view } from '../view'
 
 const isValidToWrapView = value =>
   value === null ||
@@ -9,14 +8,14 @@ const isValidToWrapView = value =>
 export default fn => Inner => {
   let innerView
   if (Declaration.isViewDeclaration(Inner)) innerView = Inner
-  else if (typeof Inner === 'string') innerView = view(({ state, children }) => h(Inner, state, children))
-  else if (isValidToWrapView(Inner)) innerView = view(Inner)
+  else if (typeof Inner === 'string') innerView = new Declaration(({ state, children }) => h(Inner, state, children))
+  else if (isValidToWrapView(Inner)) innerView = new Declaration(Inner)
   else throw new Error('Nothing to decorate')
 
   let decorated = fn(innerView)
   if (!Declaration.isViewDeclaration(decorated)) {
     if (isValidToWrapView(decorated))
-      decorated = view(decorated)
+      decorated = new Declaration(decorated)
     else return decorated
   }
 

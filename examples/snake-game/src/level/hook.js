@@ -1,9 +1,5 @@
-const hooks = {}
-
-hooks.mount = ({ actions }) =>
+export const mount = ({ actions }) =>
   actions.focus()
 
-hooks.unmount = ({ actions }) =>
+export const unmount = ({ actions }) =>
   actions.pause()
-
-export default hooks

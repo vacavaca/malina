@@ -1,4 +1,4 @@
-import { h, view, branch } from 'malina'
+import { h, template, branch } from 'malina'
 
 import { default as Filter } from './filter'
 import * as filter from './filter'
@@ -8,7 +8,7 @@ const countActive = todos =>
 
 const itemsLeft = left => `item${left != 1 ? 's' : ''} left`
 
-export default view(({ state }) => {
+export default template(({ state }) => {
   const left = countActive(state.todos)
   const completed = state.todos.length - left
 

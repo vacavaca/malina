@@ -1,6 +1,6 @@
 import { h, view, decorator } from 'malina'
 import { shallowEqual, keys, compose } from 'malina-util'
-import { withState, withActions } from './common'
+import { withTemplate, withState, withActions } from './common'
 import { getContext, withContext } from './context'
 
 const actions = {}
@@ -36,12 +36,12 @@ const passToContext = compose(
     ({ [key]: { state: state.store, update: wrapUpdate(actions.update) } }))
 )
 
-const StoreView = view(({ state, children }) => h(state.view, state.passed, children))
-  .decorate(
-    withState({ store: null }),
-    withActions(actions),
-    passToContext
-  )
+const StoreView = view(
+  withTemplate(({ state, children }) => h(state.view, state.passed, children)),
+  withState({ store: null }),
+  withActions(actions),
+  passToContext
+)
 
 export const withStore = initial => decorator(Inner =>
   ({ state, children }) => h(StoreView, { store: initial, passed: state, view: Inner }, children))

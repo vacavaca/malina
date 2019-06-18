@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { asyncTest, withState, withActions } = require('./util')
-const { h, view, mount, hydrate } = require('..')
+const { asyncTest, withTemplate, withState, withActions } = require('./util')
+const { h, view, mount, hydrate, template, Declaration } = require('..')
 
 describe('view', () => {
   describe('update', () => {
@@ -13,23 +13,24 @@ describe('view', () => {
         childCount: childCount + 1
       })
 
-      const Test = view(view => {
-        const { childCount } = view.state
+      const Test = view(
+        withTemplate(view => {
+          const { childCount } = view.state
 
-        const children = []
-        for (let i = 1; i <= childCount; i++) {
-          children.push(h('div', {}, [
-            h('p', { class: 'test' }, [`Hello ${i}`])
-          ]))
-        }
-
-        return h('div', {
-          style: {
-            top: '5px'
+          const children = []
+          for (let i = 1; i <= childCount; i++) {
+            children.push(h('div', {}, [
+              h('p', { class: 'test' }, [`Hello ${i}`])
+            ]))
           }
 
-        }, children)
-      }).decorate(
+          return h('div', {
+            style: {
+              top: '5px'
+            }
+
+          }, children)
+        }),
         withState({ childCount: 1 }),
         withActions({ increment })
       )
@@ -46,7 +47,7 @@ describe('view', () => {
     it('should process innerHTML', () => {
       const dom = new JSDOM('<body></body>')
 
-      const Test = view(
+      const Test = template(
         h('div', {}, [
           h('div', { class: 'test', innerHtml: '<p>Hello world</p>' })
         ])
@@ -105,7 +106,7 @@ describe('view', () => {
           ({ bothAsyncAction: true })
       }
 
-      const Test = view(null).decorate(withState(state), withActions(actions))
+      const Test = view(withState(state), withActions(actions))
       const instance = mount(dom.window.document.body, h(Test))
 
       instance.actions.simpleEffect()
@@ -150,22 +151,22 @@ describe('view', () => {
         items: [...state.items.slice(0, 1), { id: 42, text: 'new' }, ...state.items.slice(1)]
       })
 
-      const Item = view(({ state }) => h('div', { data: { index: state.index } }, state.text))
+      const Item = template(({ state }) => h('div', { data: { index: state.index } }, state.text))
 
-      const List = view(({ state }) => h('div', {}, state.items.map((item, index) => h(Item, { ...item, key: item.id, index }))))
-        .decorate(
-          withState({
-            items: [
-              { id: 1, text: 'first' },
-              { id: 2, text: 'second' },
-              { id: 3, text: 'third' }
-            ]
-          }),
-          withActions({
-            deleteFirst,
-            insertMiddle
-          })
-        )
+      const List = view(
+        withTemplate(({ state }) => h('div', {}, state.items.map((item, index) => h(Item, { ...item, key: item.id, index })))),
+        withState({
+          items: [
+            { id: 1, text: 'first' },
+            { id: 2, text: 'second' },
+            { id: 3, text: 'third' }
+          ]
+        }),
+        withActions({
+          deleteFirst,
+          insertMiddle
+        })
+      )
 
       const instance = mount(dom.window.document.body, h(List))
       assert.strictEqual(dom.window.document.body.innerHTML, '<div><div data-index="0">first</div><div data-index="1">second</div><div data-index="2">third</div></div>')
@@ -183,7 +184,7 @@ describe('view', () => {
     it('should hydrate the prerendered dom', () => {
       const dom = new JSDOM(`<body><div class="test"><span>Lorem ipsum</span></div></body>`)
 
-      const Inner = view(({ state }) => h('span', {}, state.text))
+      const Inner = template(({ state }) => h('span', {}, state.text))
 
       const behavior = view => {
         view.state = { text: 'Lorem ipsum' }
@@ -193,7 +194,7 @@ describe('view', () => {
         update: () => ({ text: 'Updated' })
       }
 
-      const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+      const View = new Declaration(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
       const instance = hydrate(dom.window.document.body, h(View))
 
       instance.actions.update()
@@ -209,11 +210,11 @@ describe('view', () => {
 
       let called = 0
 
-      const Inner = view(null, view => {
+      const Inner = new Declaration(null, view => {
         view.onMount(() => { called += 1 })
       })
 
-      const View = view(h('div', {}, h(Inner)))
+      const View = template(h('div', {}, h(Inner)))
       hydrate(dom.window.document.body, h(View))
 
       assert.strictEqual(called, 1)
@@ -222,7 +223,7 @@ describe('view', () => {
     it('should add event listeners', () => {
       const dom = new JSDOM(`<body><div style="top: 5px;">0</div></body>`)
 
-      const Inner = view(({ state }) => state.counter)
+      const Inner = template(({ state }) => state.counter)
 
       const behavior = view => {
         view.state = { ...view.state, counter: 0 }
@@ -232,7 +233,7 @@ describe('view', () => {
         update: () => ({ state }) => ({ counter: state.counter + 1 })
       }
 
-      const View = view(({ state, actions }) => h('div', { onClick: actions.update }, h(Inner, state)), behavior, actions)
+      const View = new Declaration(({ state, actions }) => h('div', { onClick: actions.update }, h(Inner, state)), behavior, actions)
       hydrate(dom.window.document.body, h(View))
 
       assert.strictEqual(dom.window.document.body.innerHTML, '<div>0</div>')

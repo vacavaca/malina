@@ -2,14 +2,15 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('malina')
-const { withState, withActions, getContext, withContext } = require('..')
+const { withTemplate, withState, withActions, getContext, withContext } = require('..')
 
 describe('context', () => {
   it('should pass context down the tree', () => {
     const dom = new JSDOM('<body></body>')
 
-    const Inner = view(({ state }) => state.foo).decorate(getContext(ctx => ctx))
-    const Outer = view(h('div', {}, h(Inner))).decorate(
+    const Inner = view(withTemplate(({ state }) => state.foo), getContext(ctx => ctx))
+    const Outer = view(
+      withTemplate(h('div', {}, h(Inner))),
       withState({ foo: 'bar' }),
       withContext(({ state }) => state)
     )
@@ -25,15 +26,18 @@ describe('context', () => {
   it('should allow fallbacks', () => {
     const dom = new JSDOM('<body></body>')
 
-    const Inner = view(({ state }) => state.foo).decorate(getContext(ctx => ctx))
-    const Fallback = view(h(Inner)).decorate(
+    const Inner = view(withTemplate(({ state }) => state.foo), getContext(ctx => ctx))
+    const Fallback = view(
+      withTemplate(h(Inner)),
       getContext(ctx => ctx),
       withContext(({ state }) => {
         if (!('foo' in state)) return { foo: 'fallback' }
         else return {}
       })
     )
-    const Outer = view(h('div', {}, h(Fallback))).decorate(
+
+    const Outer = view(
+      withTemplate(h('div', {}, h(Fallback))),
       withContext(({ state }) => state),
       withActions({
         update: () => ({ foo: 'update', marker: 42 })

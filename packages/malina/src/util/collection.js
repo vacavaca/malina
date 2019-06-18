@@ -1,7 +1,7 @@
 import { diffArrays } from 'diff'
 import { keys } from 'malina-util'
-import { h } from '../vdom'
-import { mount, view } from '../view'
+import { h, Declaration } from '../vdom'
+import { mount } from '../view'
 
 const index = index => {
   if (index == null)
@@ -23,7 +23,7 @@ const state = state => ({
   prevData: []
 })
 
-const ItemRenderer = view(({ state: { render } }) => render)
+const ItemRenderer = new Declaration(({ state: { render } }) => render)
 
 const normalizeDiffPatches = patches => {
   let ndx = 0
@@ -185,9 +185,9 @@ const behavior = async view => {
   view.onDestroy(handleDestroy)
 }
 
-const ListRenderer = view(null, behavior)
+const ListRenderer = new Declaration(null, behavior)
 
-export const List = view(({ state, children }) => {
+export const List = new Declaration(({ state, children }) => {
   if (children.length !== 0) {
     if (children.length !== 1 || !(children[0] instanceof Function))
       throw new Error('You must provide a render function as the only children to the List')
@@ -198,7 +198,7 @@ export const List = view(({ state, children }) => {
   } else return null
 })
 
-export const Map = view(({ state, children }) => {
+export const Map = new Declaration(({ state, children }) => {
   if (children.length !== 1 || !(children[0] instanceof Function))
     throw new Error('You must provide a render function as the only children to the Map')
 

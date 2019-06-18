@@ -1,7 +1,7 @@
 import { isElementNode, h, isDevelopment, getGlobal } from 'malina'
 import { compose, Random } from 'malina-util'
 import { withContext, getContext } from './context'
-import { withTemplate } from './common'
+import { mapTemplate } from './common'
 
 const key = Symbol.for('__malina_ids')
 const randomKey = Symbol.for('__malina-decorator.id.random')
@@ -15,23 +15,37 @@ else {
     global_[randomKey] = random
 }
 
-const mapTemplate = (length, realKey, ctx) => node => {
+const mapIdTemplate = (length, realPrefix, ctx) => node => {
   if (ctx == null)
     return node
 
   if (Array.isArray(node))
-    return node.map(mapTemplate(length, realKey, ctx.ids))
+    return node.map(mapIdTemplate(length, realPrefix, ctx.ids))
   else if (isElementNode(node)) {
     let nextAttrs = node.attrs
-    if (realKey in node.attrs) {
-      const id = node.attrs[realKey]
+    const realIdName = `${realPrefix}Id`
+    const realForName = `${realPrefix}HtmlFor`
+
+    const replaceAttributes = []
+    if (realIdName in node.attrs) {
+      const id = node.attrs[realIdName]
       nextAttrs = { ...node.attrs, id }
-      delete nextAttrs[realKey]
-    } else if ('id' in node.attrs) {
-      const passed = node.attrs['id']
+      delete nextAttrs[realIdName]
+    } else if ('id' in node.attrs)
+      replaceAttributes.push('id')
+
+    if (realForName in node.attrs) {
+      const fr = node.attrs[realForName]
+      nextAttrs = { ...node.attrs, for: fr }
+      delete nextAttrs[realForName]
+    } else if ('htmlFor' in node.attrs)
+      replaceAttributes.push('htmlFor')
+
+    for (const replace of replaceAttributes) {
+      const passed = node.attrs[replace]
       nextAttrs = { ...node.attrs }
       if (passed in ctx.ids)
-        nextAttrs['id'] = ctx.ids[passed]
+        nextAttrs[replace] = ctx.ids[passed]
       else {
         let randomId
         if (isDevelopment) {
@@ -43,15 +57,15 @@ const mapTemplate = (length, realKey, ctx) => node => {
 
         const generated = `${passed}_${randomId}`
         ctx.ids[passed] = generated
-        nextAttrs['id'] = generated
+        nextAttrs[replace] = generated
       }
     }
 
-    return h(node.tag, nextAttrs, node.children.map(mapTemplate(length, realKey, ctx)))
+    return h(node.tag, nextAttrs, node.children.map(mapIdTemplate(length, realPrefix, ctx)))
   } else return node
 }
 
-export const withUniqIds = (length = 4, realKey = 'realId') =>
+export const withUniqIds = (length = 4, realPrefix = 'real') =>
   compose(
     getContext(ctx => key in ctx ? { [key]: ctx[key] } : {}),
     withContext(({ state }) => {
@@ -61,6 +75,6 @@ export const withUniqIds = (length = 4, realKey = 'realId') =>
         return { [key]: context }
       } else return {}
     }),
-    withTemplate(original => view =>
-      mapTemplate(length, realKey, view.state[key])(original()))
+    mapTemplate(original => view =>
+      mapIdTemplate(length, realPrefix, view.state[key])(original()))
   )

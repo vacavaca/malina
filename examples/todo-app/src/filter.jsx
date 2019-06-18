@@ -1,4 +1,4 @@
-import { h, view } from 'malina'
+import { h, template } from 'malina'
 import { Route, Link } from 'malina-router'
 
 import { toggleClass } from './util'
@@ -18,7 +18,7 @@ export const filterToPath = filter => Object.keys(filterPaths).find(key => filte
 const filterClass = (filter, selected) =>
   toggleClass({ selected: filter === selected })
 
-export default view(({ state: { key: filter }, children }) =>
+export default template(({ state: { key: filter }, children }) =>
   <Route hash path="#/:filter?">
     {params => (
       <li>

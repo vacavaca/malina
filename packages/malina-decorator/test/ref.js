@@ -2,18 +2,19 @@
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('malina')
-const { withRefs, withLifecycle, withActions } = require('..')
+const { withRefs, withTemplate, withLifecycle, withActions } = require('..')
 
 describe('ref', () => {
   describe('withRef', () => {
     it('should handle ref funtions', done => {
       const dom = new JSDOM('<body></body>')
 
-      const Test = view(({ actions }) =>
-        h('div', {}, [
-          h('span', { id: 'test', ref: actions.handleRef })
-        ])
-      ).decorate(
+      const Test = view(
+        withTemplate(({ actions }) =>
+          h('div', {}, [
+            h('span', { id: 'test', ref: actions.handleRef })
+          ])
+        ),
         withRefs(),
         withActions({
           handleRef: element => ({ state }) => {
@@ -45,11 +46,12 @@ describe('ref', () => {
     it('should handle ref strings', done => {
       const dom = new JSDOM('<body></body>')
 
-      const Test = view(({ actions }) =>
-        h('div', {}, [
-          h('span', { id: 'test', ref: 'ref' })
-        ])
-      ).decorate(
+      const Test = view(
+        withTemplate(({ actions }) =>
+          h('div', {}, [
+            h('span', { id: 'test', ref: 'ref' })
+          ])
+        ),
         withRefs(),
         withActions({
           handleRef: element => ({ state }) => {

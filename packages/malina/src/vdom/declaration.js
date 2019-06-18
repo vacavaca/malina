@@ -1,4 +1,4 @@
-import { compose, Random } from 'malina-util'
+import { Random } from 'malina-util'
 import { getGlobal } from '../env'
 
 const global_ = getGlobal()
@@ -14,7 +14,7 @@ else {
 
 export default class Declaration {
   constructor(template, behavior, actions) {
-    this.template = template
+    this.template = template instanceof Function ? template : () => template
     this.behavior = behavior || (() => { })
     this.actions = actions || {}
     this.id = random.id(8)
@@ -34,10 +34,6 @@ export default class Declaration {
   setDevelopmentOnly(value) {
     this.isDevOnly = value
     return this
-  }
-
-  decorate(...fns) {
-    return compose(...fns)(this)
   }
 
   is(declaration) {

@@ -362,7 +362,7 @@ class Renderer {
         element.innerHTML = ''
         this.createChildren(element, next, path, context)
       } else if (prevCustom || nextCustom) {
-        const newElement = this.createNodeElement(next, path, context)
+        const newElement = this.createElementNode(next, path, context)
         element.replaceWith(newElement)
 
         if (isRoot(path))
@@ -372,7 +372,7 @@ class Renderer {
         this.updateChildren(element, prev, next, path, context)
       }
     } else {
-      const newElement = this.createNodeElement(next, path, context)
+      const newElement = this.createElementNode(next, path, context)
       element.replaceWith(newElement)
 
       if (isRoot(path))
@@ -425,7 +425,7 @@ class Renderer {
   patchFromViewToNode(element, prev, next, path, context) {
     this.view.destroyInnerView(path, false)
 
-    const newElement = this.createNodeElement(next, path, context)
+    const newElement = this.createElementNode(next, path, context)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -445,12 +445,19 @@ class Renderer {
 
       let index
       if (path.length > 0) index = path[path.length - 1]
-      else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
+      else index = Array.from(parent.childNodes).findIndex(n => n === element)
 
       this.view.destroyInnerView(path)
       const view = this.view.instantiateInnerView(next, path, context)
 
-      view.mount(parent, index)
+      element.remove()
+      if (context.isUpdating()) {
+        context.setUpdating(false)
+        const newElement = view.render()
+        context.setUpdating(true)
+        insertElement(parent, index, newElement)
+        view.attach(newElement)
+      } else throw new Error('Unreachable')
 
       if (isRoot(path))
         this.element = view.element
@@ -795,7 +802,7 @@ class Renderer {
       element[name] = value
     else if (typeof value === 'boolean') {
       if (name !== 'focus') element.setAttribute(name, name)
-    } else if (value != null) element.setAttribute(name, value)
+    } else if (value != null) element.setAttribute(name !== 'htmlFor' ? name : 'for', value)
   }
 
   /** @private */
@@ -916,8 +923,8 @@ class Renderer {
         else element.removeAttribute(name)
       }
     } else {
-      if (next != null) element.setAttribute(name, next)
-      else if (prev != null) element.removeAttribute(name)
+      if (next != null) element.setAttribute(name !== 'htmlFor' ? name : 'for', next)
+      else if (prev != null) element.removeAttribute(name !== 'hmtlFor' ? name : 'for')
     }
   }
 
@@ -937,7 +944,7 @@ class Renderer {
       if (name === 'focus' && element.blur)
         element.blur()
       else element.removeAttribute(name)
-    } else if (prev != null) element.removeAttribute(name)
+    } else if (prev != null) element.removeAttribute(name !== 'hmtlFor' ? name : 'for')
   }
 
   /** @private */

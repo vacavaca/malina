@@ -1,15 +1,16 @@
-const { Suite, withState, withActions } = require('../util')
+const { Suite, withTemplate, withState, withActions } = require('../util')
 const { JSDOM } = require('jsdom')
 const { h, view, mount } = require('../..')
 
 module.exports = new Suite()
   .add('update simple list',
     ctx => {
-      ctx.Test = view(({ state }) => h('ul', {}, state.todos.map(todo =>
-        h('li', { class: 'todo' }, [
-          h('p', {}, [todo.name])
-        ]))
-      )).decorate(
+      ctx.Test = view(
+        withTemplate(({ state }) => h('ul', {}, state.todos.map(todo =>
+          h('li', { class: 'todo' }, [
+            h('p', {}, [todo.name])
+          ]))
+        )),
         withState({
           i: 0,
           todos: [

@@ -1,4 +1,5 @@
 export { default as Id } from './id'
+export { default as None } from './none'
 export { List, Map } from './collection'
 export { branch, branch as when, Show, Hide } from './conditional'
 export { default as decorator } from './decorator'

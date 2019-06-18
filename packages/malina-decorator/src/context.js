@@ -1,7 +1,7 @@
 import { h, isViewNode, isElementNode } from 'malina'
 import { compose, shallowEqual } from 'malina-util'
 import { memoizedDecorator } from './memoized'
-import { withLifecycle, withTemplate } from './common'
+import { withLifecycle, mapTemplate } from './common'
 import EventEmitter from './event-emitter'
 
 const contextKey = Symbol.for('__malina_context')
@@ -31,7 +31,7 @@ class Context {
   }
 }
 
-const provideContext = memoizedDecorator(withTemplate(original =>
+const provideContext = memoizedDecorator(mapTemplate(original =>
   ({ state }) => {
     const context = state[contextKey]
     const node = original()

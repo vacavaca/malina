@@ -43,8 +43,9 @@ class View {
       throw new Error('View is destroyed')
 
     this.tmpElement = null
+    this.node = this.renderTemplate()
 
-    return this.renderer.render(this.renderTemplate())
+    return this.renderer.render(this.node)
   }
 
   hydrate(element) {
@@ -56,7 +57,8 @@ class View {
 
     this.tmpElement = null
 
-    this.node = this.renderTemplate()
+    if (this.node == null)
+      this.node = this.renderTemplate()
 
     const top = !this.context.isLocked()
     if (top)
@@ -89,7 +91,8 @@ class View {
 
     this.tmpElement = null
 
-    this.node = this.renderTemplate()
+    if (this.node == null)
+      this.node = this.renderTemplate()
 
     const top = !this.context.isLocked()
     if (top)
@@ -123,7 +126,9 @@ class View {
     if (top)
       this.context.lock()
 
-    this.node = this.renderTemplate()
+    if (this.node == null)
+      this.node = this.renderTemplate()
+
     const element = this.renderer.render(this.node)
     this.renderer.attach(element, this.node)
     this.renderer.mount(container, index)
@@ -417,7 +422,7 @@ const mountOrHydrate = (container, node, index, {
 }) => {
   let viewNode = node
   if (isElementNode(node))
-    viewNode = h(view(node))
+    viewNode = h(new Declaration(node))
 
   const document = container.ownerDocument
 
@@ -456,7 +461,7 @@ export const instantiate = (document, node, {
 } = {}) => {
   let viewNode = node
   if (isElementNode(node))
-    viewNode = h(view(node))
+    viewNode = h(new Declaration(node))
 
   const context = Context.initialize(document, {
     production: isProduction,
@@ -477,6 +482,3 @@ export const render = (document, node, {
   viewInstance.render()
   return new OuterFacade(viewInstance)
 }
-
-export const view = (template, behavior, actions) =>
-  new Declaration(template instanceof Function ? template : () => template, behavior, actions)

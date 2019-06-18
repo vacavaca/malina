@@ -1,3 +1,3 @@
-import { view } from '../view'
+import { Declaration } from '../vdom'
 
-export default view(({ children }) => children)
+export default new Declaration(({ children }) => children)

@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount, Debug } = require('..')
+const { h, view, template, Declaration, mount, Debug } = require('..')
 
 describe('Debug', () => {
   it('should log component lifecycle', () => {
@@ -10,7 +10,7 @@ describe('Debug', () => {
     const logs = []
     const logger = (...args) => logs.push(args)
 
-    const Inner = view(({ state }) =>
+    const Inner = template(({ state }) =>
       h('span', {}, [
         h(
           Debug,
@@ -31,7 +31,7 @@ describe('Debug', () => {
       update: () => ({ text: 'Updated' })
     }
 
-    const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+    const View = new Declaration(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
     const instance = mount(dom.window.document.body, h(View))
 
     const debugParent = dom.window.document.body.childNodes[0].childNodes[0]
@@ -70,7 +70,7 @@ describe('Debug', () => {
   it('should disappear in production environment', () => {
     const dom = new JSDOM(`<body></body>`)
 
-    const Inner = view(({ state }) =>
+    const Inner = template(({ state }) =>
       h('span', {}, [
         h(
           Debug,
@@ -82,7 +82,7 @@ describe('Debug', () => {
         state.text
       ]))
 
-    const View = view(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })))
+    const View = template(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })))
     const instance = mount(dom.window.document.body, h(View, { text: 'Lorem ipsum' }), 0, { env: 'blah' })
 
     assert.strictEqual(dom.window.document.body.childNodes[0].childNodes[0].childNodes.length, 1)

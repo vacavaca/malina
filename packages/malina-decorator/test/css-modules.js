@@ -1,19 +1,16 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount } = require('malina')
-const { cssModules, withState, withActions } = require('..')
+const { h, view, mount, template } = require('malina')
+const { cssModules, withTemplate, withState, withActions } = require('..')
 
 describe('cssModules', () => {
   it('should add classes', () => {
     const dom = new JSDOM('<body></body>')
 
     const Test = view(
-      h('div', { styleName: 'test' })
-    ).decorate(
-      cssModules({
-        test: 'test-class'
-      })
+      withTemplate(h('div', { styleName: 'test' })),
+      cssModules({ test: 'test-class' })
     )
 
     mount(dom.window.document.body, h(Test))
@@ -28,8 +25,7 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Test = view(
-      ({ state }) => h('div', { styleName: state.style })
-    ).decorate(
+      withTemplate(({ state }) => h('div', { styleName: state.style })),
       cssModules({
         test: 'test-class'
       })
@@ -47,10 +43,11 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Test = view(
-      h('div', {}, [
-        h('p', { styleName: 'test' }, 'Hello')
-      ])
-    ).decorate(
+      withTemplate(
+        h('div', {}, [
+          h('p', { styleName: 'test' }, 'Hello')
+        ])
+      ),
       cssModules({
         test: 'test-class'
       })
@@ -73,14 +70,18 @@ describe('cssModules', () => {
     }
 
     const Inner = view(
-      () => h('p', { styleName: 'test' }, 'Hello')
-    ).decorate(cssModules())
+      withTemplate(() => h('p', { styleName: 'test' }, 'Hello')),
+      cssModules()
+    )
 
     const Test = view(
-      h('div', {}, [
-        h(Inner)
-      ])
-    ).decorate(cssModules(styles))
+      withTemplate(
+        h('div', {}, [
+          h(Inner)
+        ])
+      ),
+      cssModules(styles)
+    )
 
     mount(dom.window.document.body, h(Test))
 
@@ -99,24 +100,36 @@ describe('cssModules', () => {
     }
 
     const Inner = view(
-      function Inner() { return h('p', { styleName: 'test' }, 'Hello') }
-    ).decorate(cssModules())
+      withTemplate(
+        function Inner() { return h('p', { styleName: 'test' }, 'Hello') }
+      ),
+      cssModules()
+    )
 
     const Inner2 = view(
-      function Inner2() { return h(Inner) }
-    ).decorate(cssModules(styles))
+      withTemplate(
+        function Inner2() { return h(Inner) }
+      ),
+      cssModules(styles)
+    )
 
     const Inner3 = view(
-      function Inner3() { return h('div', { styleName: 'test2' }, h(Inner2)) }
-    ).decorate(cssModules())
+      withTemplate(
+        function Inner3() { return h('div', { styleName: 'test2' }, h(Inner2)) }
+      ),
+      cssModules()
+    )
 
     const Test = view(
-      function Test() {
-        return h('section', {}, [
-          h(Inner3)
-        ])
-      }
-    ).decorate(cssModules({}))
+      withTemplate(
+        function Test() {
+          return h('section', {}, [
+            h(Inner3)
+          ])
+        }
+      ),
+      cssModules({})
+    )
 
     mount(dom.window.document.body, h(Test))
 
@@ -135,16 +148,20 @@ describe('cssModules', () => {
     }
 
     const Inner = view(
-      () => h('p', { styleName: 'test' }, 'Hello')
-    ).decorate(cssModules(styles))
-
-    const Inner2 = view(
-      () => h(Inner)
+      withTemplate(
+        () => h('p', { styleName: 'test' }, 'Hello')
+      ),
+      cssModules(styles)
     )
 
+    const Inner2 = template(h(Inner))
+
     const Inner3 = view(
-      () => h('div', { styleName: 'test2' }, h(Inner2))
-    ).decorate(cssModules(styles))
+      withTemplate(
+        () => h('div', { styleName: 'test2' }, h(Inner2))
+      ),
+      cssModules(styles)
+    )
 
     const state = {
       i: 0
@@ -157,10 +174,15 @@ describe('cssModules', () => {
     }
 
     const Test = view(
-      h('div', {}, [
-        h(Inner3)
-      ])
-    ).decorate(withState(state), withActions(actions), cssModules({}))
+      withTemplate(
+        h('div', {}, [
+          h(Inner3)
+        ])
+      ),
+      withState(state),
+      withActions(actions),
+      cssModules({})
+    )
 
     const instance = mount(dom.window.document.body, h(Test))
 
@@ -175,19 +197,20 @@ describe('cssModules', () => {
   it('should add classes to inner views passed children', () => {
     const dom = new JSDOM('<body></body>')
 
-    const Inner = view(
+    const Inner = template(
       ({ children }) => h('div', {},
         children
       )
     )
 
     const Test = view(
-      h('div', {}, [
-        h(Inner, {}, [
-          h('p', { styleName: 'test' }, 'Hello')
+      withTemplate(
+        h('div', {}, [
+          h(Inner, {}, [
+            h('p', { styleName: 'test' }, 'Hello')
+          ])
         ])
-      ])
-    ).decorate(
+      ),
       cssModules({
         test: 'test-class'
       })
@@ -205,20 +228,24 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Inner = view(
-      ({ children }) => h('div', { styleName: 'abc' },
-        children
-      )
-    ).decorate(cssModules({
-      abc: 'abc-class'
-    }))
+      withTemplate(
+        ({ children }) => h('div', { styleName: 'abc' },
+          children
+        )
+      ),
+      cssModules({
+        abc: 'abc-class'
+      })
+    )
 
     const Test = view(
-      h('div', {}, [
-        h(Inner, {}, [
-          h('p', { styleName: 'test' }, 'Hello')
+      withTemplate(
+        h('div', {}, [
+          h(Inner, {}, [
+            h('p', { styleName: 'test' }, 'Hello')
+          ])
         ])
-      ])
-    ).decorate(
+      ),
       cssModules({
         test: 'test-class'
       })
@@ -236,14 +263,18 @@ describe('cssModules', () => {
     const dom = new JSDOM('<body></body>')
 
     const Inner = view(
-      h('p', { styleName: 'test' }, 'Hello')
-    ).decorate(cssModules({
-      test: 'inner'
-    }))
+      withTemplate(
+        h('p', { styleName: 'test' }, 'Hello')
+      ),
+      cssModules({
+        test: 'inner'
+      })
+    )
 
     const Test = view(
-      h(Inner)
-    ).decorate(
+      withTemplate(
+        h(Inner)
+      ),
       cssModules({
         test: 'outer'
       })
