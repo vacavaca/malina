@@ -1,5 +1,5 @@
 import { compose } from 'malina-util'
-import { isElementNode, isViewNode, isTextNode } from '../vdom'
+import { Node, isElementNode, isViewNode, isTextNode } from '../vdom'
 import { toOnEventName, normalizeEventName } from './event'
 import { assert } from '../env'
 import { isTemplateElement } from './util'

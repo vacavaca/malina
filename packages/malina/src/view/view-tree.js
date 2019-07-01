@@ -1,3 +1,5 @@
+import { binarySearch } from 'malina-util'
+
 /**
  * Compares two view paths
  * @param {Array} a first path
@@ -16,46 +18,6 @@ const pathCompare = (a, b) => {
   }
 
   return 0
-}
-
-/**
- * Search the specified value in the specified array using
- * binary search algorithm
- * @param {*} value search value
- * @param {array} array array to search in
- * @param {function} compare comparator to use
- * @returns {number} index of the search value
- * if it is contained in the array, otherwise
- * returns (-insert - 1) where insert is the
- * index at which value would be inserted into
- * the array or the index of the first element
- * in the array greater than provided value
- */
-
-const binarySearch = (value, array, compare) => {
-  if (array.length > 1) {
-    let min = 0
-    let max = array.length - 1
-
-    while (min <= max) {
-      const i = (min + max) >>> 1
-      const element = array[i]
-      const comp = compare(element, value)
-
-      if (comp < 0)
-        min = i + 1
-      else if (comp > 0)
-        max = i - 1
-      else return i
-    }
-
-    return -min - 1
-  } else if (array.length === 1) {
-    const cmp = compare(value, array[0])
-    if (cmp > 0) return -2
-    else if (cmp < 0) return -1
-    else return 0
-  } else return -2
 }
 
 const nextPath = (path, n = 1) => path.length ? path.slice(0, -1).concat([path[path.length - 1] + n]) : path

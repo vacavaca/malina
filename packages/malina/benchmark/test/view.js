@@ -36,4 +36,36 @@ module.exports = new Suite()
     ctx => {
       console.log('Result: ', ctx.dom.window.document.body.innerHTML)
     })
+  .add('render same markup',
+    ctx => {
+      ctx.Test = view(
+        withTemplate(() =>
+          h('ul', {}, [
+            h('li', { class: 'todo' }, [
+              h('p', {}, ['First'])
+            ]),
+            h('li', { class: 'todo' }, [
+              h('p', {}, ['Second'])
+            ]),
+            h('li', { class: 'todo' }, [
+              h('p', {}, ['Third'])
+            ])
+          ]
+          )
+        ),
+        withState({ i: 0 }),
+        withActions({
+          update: () => ({ state }) => ({ i: state.i + 1 })
+        })
+      )
+
+      ctx.dom = new JSDOM('<body></body>')
+      ctx.instance = mount(ctx.dom.window.document.body, h(ctx.Test))
+    },
+    ctx => {
+      ctx.instance.actions.update()
+    },
+    ctx => {
+      console.log('Result: ', ctx.dom.window.document.body.innerHTML)
+    })
   .tests

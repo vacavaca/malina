@@ -5,6 +5,7 @@
 * [examples](https://github.com/vacavaca/malina/tree/master/examples): Example applications
 * packages/*/src: Source code
 * packages/*/test: Tests
+* packages/*/benchmark: Benchmarks
 
 
 ## Tools

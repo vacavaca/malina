@@ -71,6 +71,6 @@ export default view(
   withTemplate(template),
   withState(state),
   withActions(actions),
-  connectRouter,
+  connectRouter(),
   withBehavior(behavior),
 )

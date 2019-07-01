@@ -78,29 +78,29 @@ const provideRouterState = withLifecycle({
 
 const routerKey = Symbol.for('__malina_router')
 
-const withRouterContext = compose(
+const withRouterContext = (historyKey = null) => compose(
   // try to get router from context
   getContext(ctx => routerKey in ctx ? { router: ctx[routerKey] } : {}),
   // create router if missing in context
   withContext(({ state }) => {
-    if (state == null || (!('history' in state) && !('router' in state)))
+    if (state == null || (!(historyKey in state) && !('router' in state)))
       throw new Error('History object must be provided to the top-level routing view')
 
-    if ('history' in state && !('router' in state)) {
-      const router = createRouter(state.history)
+    if (historyKey in state && !('router' in state)) {
+      const router = createRouter(state[historyKey])
       state.router = router
       return { [routerKey]: router }
     } else return {}
   })
 )
 
-export const withRouter = compose(
-  withRouterContext,
+export const withRouter = (historyKey = 'history') => compose(
+  withRouterContext(historyKey),
   provideRouterState
 )
 
-export const connectRouter = compose(
-  withRouterContext,
+export const connectRouter = (historyKey = 'history') => compose(
+  withRouterContext(historyKey),
   enableRouting,
   provideLocationState
 )

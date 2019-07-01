@@ -67,7 +67,7 @@ export const Route = view(
   withActions({
     [routeKey]: () => ({ [routeKey]: true })
   }),
-  connectRouter
+  connectRouter()
 )
 
 const isRouteNode = node =>
@@ -126,5 +126,5 @@ export const Switch = view(
 
     return filtered[0]
   }),
-  connectRouter
+  connectRouter()
 )

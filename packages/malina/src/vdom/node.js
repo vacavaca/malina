@@ -17,8 +17,21 @@ export class Node {
       obj.isNode instanceof Function && obj.isNode()
   }
 
+  static isEqualNodes(a, b, compareChildren = true) {
+    const isNode = Node.isNode(a)
+    if (isNode !== Node.isNode(b))
+      return false
+
+    if (isNode) return a.isEqual(b)
+    else return a === b
+  }
+
   isNode() {
     return true // because instanceof can be inreliable on some build configurations
+  }
+
+  isDevOnly() {
+    return this.isDevOnly
   }
 
   isEqual(other, compareChildren = true) {
@@ -34,8 +47,19 @@ export class Node {
     if (!shallowEqual(this.attrs, other.attrs))
       return false
 
-    if (compareChildren && !shallowEqual(this.children, other.children))
-      return false
+    if (compareChildren) {
+      if (this.children === other.children)
+        return true
+
+      const len = this.children.length
+      if (len !== other.children.length)
+        return false
+
+      for (let i = 0; i < len; i++) {
+        if (!Node.isEqualNodes(this.children[i], other.children[i]))
+          return false
+      }
+    }
 
     return true
   }

@@ -33,5 +33,5 @@ export default view(
     }, children)),
   withState(state),
   withActions({ handleClick }),
-  withRouter
+  withRouter()
 )
