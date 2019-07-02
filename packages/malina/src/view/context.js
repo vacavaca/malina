@@ -14,11 +14,11 @@ export default class Context {
   }
 
   lock() {
-    return this.updateWith({ lock: true })
+    return this.update('lock', true)
   }
 
   unlock() {
-    return this.updateWith({ lock: false })
+    return this.update('lock', false)
   }
 
   getCallbackQueue(key) {
@@ -34,7 +34,7 @@ export default class Context {
   }
 
   setInProduction(value) {
-    return this.updateWith({ production: value })
+    return this.update('production', value)
   }
 
   isInProduction() {
@@ -46,19 +46,19 @@ export default class Context {
   }
 
   setUpdating(updating) {
-    return this.updateWith({ updating })
+    return this.update('updating', updating)
   }
 
   getDocument() {
     return this.document
   }
 
-  updateWith(update) {
-    this.store = { ...this.store, ...update }
+  update(key, value) {
+    this.store[key] = value
     return this
   }
 
-  copyWith(update) {
+  copy(update) {
     return new Context(this.document, { ...this.store, ...update }, this.globalStore)
   }
 

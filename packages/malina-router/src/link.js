@@ -7,8 +7,11 @@ const state = {
   to: null,
   target: null,
   replace: false,
-  state: {}
+  state: {},
+  view: 'a'
 }
+
+const reserved = ['router', 'to', 'replace', 'state', 'view']
 
 const handleClick = e => ({ state: { router, to, target, replace, state } }) => {
   if (to == null)
@@ -25,11 +28,11 @@ const handleClick = e => ({ state: { router, to, target, replace, state } }) => 
 }
 
 export default view(
-  withTemplate(({ state: { to, ...rest }, actions, children }) =>
-    h('a', {
+  withTemplate(({ state: { to, view, ...rest }, actions, children }) =>
+    h(view, {
       href: to,
       onClick: actions.handleClick,
-      ...omit(['router', 'replace', 'state'], rest)
+      ...omit([reserved], rest)
     }, children)),
   withState(state),
   withActions({ handleClick }),

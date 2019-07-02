@@ -1,4 +1,4 @@
-import { h, view, isViewNode, isElementNode } from 'malina'
+import { h, view, isViewNode, isElementNode, Id } from 'malina'
 import { flatten } from 'malina-util'
 import { withActions, withTemplate } from 'malina-decorator'
 import pathToRegexp from 'path-to-regexp'
@@ -62,7 +62,7 @@ export const Route = view(
       throw new Error('You must provide only one child to the Route, it can be a render function or a jsx node')
 
     const params = match(state.location, state.path, { ...state.options, hash: !!state.hash })
-    return render instanceof Function ? render(params) : render
+    return h(Id, {}, render instanceof Function ? render(params) : render)
   }),
   withActions({
     [routeKey]: () => ({ [routeKey]: true })

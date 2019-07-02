@@ -1,5 +1,4 @@
 import { flatten, shallowEqual } from 'malina-util'
-import Declaration from './declaration'
 
 export class Node {
   constructor(tag, attrs = {}, children = []) {
@@ -89,13 +88,6 @@ export class Node {
     } else return `<${tagName}${attrString}/>`
   }
 }
-
-export const isViewNode = node =>
-  Node.isNode(node) && Declaration.isViewDeclaration(node.tag)
-
-export const isElementNode = node => Node.isNode(node) && !Declaration.isViewDeclaration(node.tag)
-
-export const isTextNode = node => !(node instanceof Object) && typeof node !== 'object'
 
 export const h = (tag, attrs, ...children) => {
   const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children

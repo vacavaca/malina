@@ -1,0 +1,63 @@
+{
+  "name": "malina-styled",
+  "version": "0.0.18",
+  "description": "Styled views for the malina library",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "make clean test",
+    "benchmark": "echo \"Nothing to benchmark yet\"",
+    "build": "make build",
+    "check": "make clean check",
+    "clean": "make clean",
+    "release": "NODE_ENV=production make release"
+  },
+  "keywords": [
+    "malina",
+    "ui",
+    "jsx",
+    "template",
+    "hyperscript",
+    "virtualdom",
+    "dom",
+    "vdom",
+    "state",
+    "flux",
+    "dom",
+    "html"
+  ],
+  "author": "vacavaca <vacavaca@fastmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vacavaca/malina.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vacavaca/malina/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "malina": "^0.0.18",
+    "malina-decorator": "^0.0.18",
+    "malina-util": "^0.0.18",
+    "stylis": "^3.5.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "jsdom": "^13.0.0",
+    "mocha": "^5.2.0",
+    "rollup": "^0.66.6",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "uglify-es": "^3.3.9"
+  }
+}

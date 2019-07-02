@@ -8,7 +8,7 @@ node_release := dist/index.js
 
 .PHONY: lint
 lint:
-	eslint *.js src
+	eslint *.js src test benchmark
 
 .PHONY: clean
 clean:

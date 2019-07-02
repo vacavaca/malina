@@ -4,7 +4,7 @@ import { memoizedDecorator } from './memoized'
 import { withLifecycle, mapTemplate } from './common'
 import EventEmitter from './event-emitter'
 
-const contextKey = Symbol.for('__malina_context')
+const contextKey = Symbol.for('__malina_context.context')
 
 class Context {
   constructor(value = {}) {
@@ -34,6 +34,7 @@ class Context {
 const provideContext = memoizedDecorator(mapTemplate(original =>
   ({ state }) => {
     const context = state[contextKey]
+    // const templateDecorator = state[templateKey]
     const node = original()
     if (context != null) return decorateTemplate(context)(node)
     else return node

@@ -62,10 +62,6 @@ export class ConcurrentFacade extends InnerFacade {
     return this.view.dispatcher.on('unmount', () => handler(this))
   }
 
-  destroy() {
-    return this.view.dispatcher.wait('destroy', true)
-  }
-
   onDestroy(handler) {
     return this.view.dispatcher.on('destroy', () => handler(this))
   }
@@ -137,8 +133,8 @@ export class OuterFacade extends InnerFacade {
     this.view.unmount()
   }
 
-  destroy() {
-    this.view.destroy()
+  destroy(removeElement = true) {
+    this.view.destroy(removeElement)
   }
 
   onMount(handler) {

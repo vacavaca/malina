@@ -220,6 +220,38 @@ describe('view', () => {
       assert.strictEqual(called, 1)
     })
 
+    it('should call inner views unmount handles', () => {
+      const dom = new JSDOM(`<body></body>`)
+
+      let unmount = 0
+      let destroy = 0
+
+      const Inner = new Declaration(h('div'), view => {
+        view.onUnmount(() => { unmount += 1 })
+        view.onDestroy(() => { destroy += 1 })
+      })
+
+      const Inner2 = new Declaration(h(Inner), view => {
+        view.onUnmount(() => { unmount += 1 })
+        view.onDestroy(() => { destroy += 1 })
+      })
+
+      const exclude = () => () => ({ include: false })
+
+      const View = view(
+        withTemplate(({ state }) => state.include ? h('div', {}, h(Inner2)) : h('div')),
+        withState({ include: true }),
+        withActions({ exclude })
+      )
+
+      const instance = mount(dom.window.document.body, h(View))
+
+      instance.actions.exclude()
+
+      assert.strictEqual(unmount, 2)
+      assert.strictEqual(destroy, 2)
+    })
+
     it('should add event listeners', () => {
       const dom = new JSDOM(`<body><div style="top: 5px;">0</div></body>`)
 

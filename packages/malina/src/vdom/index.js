@@ -1,3 +1,2 @@
-export { default as Declaration } from './declaration'
-export { Node, isViewNode, isElementNode, isTextNode, h } from './node'
-export { default as template } from './template'
+export { Declaration, isViewNode, isElementNode, isTextNode } from './declaration'
+export { Node, h } from './node'

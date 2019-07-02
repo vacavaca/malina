@@ -166,6 +166,9 @@ const handleMount = view => {
 }
 
 const handleDestroy = ({ state }) => {
+  for (const { view } of Object.values(state.views))
+    view.destroy(false)
+
   const [container, index] = state.mountPoint
   for (let i = 0; i < state.data.length; i++)
     container.childNodes[index].remove()
