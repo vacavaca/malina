@@ -166,7 +166,7 @@ class Renderer {
       return
 
     if (isElementNode(prev)) {
-      if (next == null) this.patchFromNodeToNone(element, prev, path)
+      if (next == null) this.patchFromNodeToNone(element, prev, path, context)
       else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path, context)
       else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path, context)
       else if (isTextNode(next)) this.patchFromNodeToText(element, prev, next, path)
@@ -332,10 +332,11 @@ class Renderer {
   }
 
   /** @private */
-  patchFromNodeToNone(element, prev, path) {
+  patchFromNodeToNone(element, prev, path, context) {
     if (isRoot(path))
       throw new Error('Root element deleted during patch')
 
+    this.detachElementNode(element, prev, path, context)
     element.remove()
   }
 
