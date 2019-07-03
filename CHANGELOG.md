@@ -1,3 +1,56 @@
+#### 0.0.19 (2019-07-03)
+
+##### Build System / Dependencies
+
+*  Fix build ([877eaa0d](https://github.com/vacavaca/malina/commit/877eaa0d73cdb15e4a4d307f38153c7117f0f168))
+*  Fix release task, include releases into git ([d7213fb9](https://github.com/vacavaca/malina/commit/d7213fb9ec4cbecd626acc68dd94a8fb649ebfb8))
+*  Fix release task a bit, update lock files ([3b6f9acf](https://github.com/vacavaca/malina/commit/3b6f9acf3340f3e92ca2715707f02fc0cc9ca804))
+*  Change make targets a bit, update contribution doc ([a6fc1a30](https://github.com/vacavaca/malina/commit/a6fc1a30b76bca8439788153521257cfce373208))
+
+##### Chores
+
+*  Update package distributions ([16c7251e](https://github.com/vacavaca/malina/commit/16c7251e058af2d1815ccbf2bba189b0d77ca525))
+*  Update lock files ([990a1498](https://github.com/vacavaca/malina/commit/990a1498a598213a514ec83a68cad771bc337ec9))
+*  Fix .gitignore ([82ef6ae7](https://github.com/vacavaca/malina/commit/82ef6ae7dc792ff60b3dd5d45bfb943ddeafeecd))
+*  Update packages, run audit fix ([489d0bf7](https://github.com/vacavaca/malina/commit/489d0bf75c1a726ad5cd90ec9f464d2ea44fac26))
+*  Update lerna ([e3df0af6](https://github.com/vacavaca/malina/commit/e3df0af67aa95aeddf8231bec5f39263d6979c48))
+*  Update github issue templates ([e86c552f](https://github.com/vacavaca/malina/commit/e86c552f4c1bfcca19d0f0548802694225ac37bc))
+*  Update todo-app example ([152c813a](https://github.com/vacavaca/malina/commit/152c813aa68c01b0dae14a3fff2b298ac8cfcf96))
+* **malina-styled:**  Update package description ([d3a2a7c5](https://github.com/vacavaca/malina/commit/d3a2a7c50af5f6acb3e17385d483f4c43acf2ecf))
+
+##### Documentation Changes
+
+* **project-site:**  Add project site sources ([32edeecc](https://github.com/vacavaca/malina/commit/32edeeccb27351215fc68288d8dd944d2de63919))
+
+##### New Features
+
+* **malina-styled:**  Styled views ([b0ba6b15](https://github.com/vacavaca/malina/commit/b0ba6b1568587316a8f52f317ab5056bd918fe7d))
+*  Simplify public interface ([75cd43f9](https://github.com/vacavaca/malina/commit/75cd43f9c0505672d9da7051f8dc863187312bce))
+* **malina-decorator:**  Allow strings in ref attribute for the withRefs decorator ([3c344d10](https://github.com/vacavaca/malina/commit/3c344d10b2034be29eccd81b8560c8818e5f4db3))
+* **malina:**
+  *  Remove parametrized actions ([1f2129cd](https://github.com/vacavaca/malina/commit/1f2129cd15a3901b6fb6858581a2283068f4cc64))
+  *  Add Web Components support ([7396fa8c](https://github.com/vacavaca/malina/commit/7396fa8c6153114844785efc1f0e0bc3478316ba))
+  *  Improve Debug view ([92ff9abd](https://github.com/vacavaca/malina/commit/92ff9abda8d551773b337c8e90b8abae46ef00f0))
+  *  Add Debug view ([6ffbb97f](https://github.com/vacavaca/malina/commit/6ffbb97f4d87fec6b393df1fa9f7edb66bf7cae7))
+  *  Attach to the prerendered DOM for SSR ([549163ea](https://github.com/vacavaca/malina/commit/549163ea7acb8b0cabf1c964318f0a1a6a25a55c))
+  *  Introduce behaviors ([45fdbcf7](https://github.com/vacavaca/malina/commit/45fdbcf748d934f87b239760da79602a5ba33d5c))
+  *  Make actions more flexible ([659d24d2](https://github.com/vacavaca/malina/commit/659d24d2f0ff8fe899ffd7965ff765638f382019))
+
+##### Bug Fixes
+
+* **malina:**
+  *  Fix element node detaching ([9587c716](https://github.com/vacavaca/malina/commit/9587c71680ecef18fa8750a1e2ce4bf5a560e11d))
+  *  Fix hydration algorithm ([02f15dd2](https://github.com/vacavaca/malina/commit/02f15dd25835fc90e93537cca7a7a2cdc3fa05ef))
+*  Several fixes and minor improvements ([4941bde0](https://github.com/vacavaca/malina/commit/4941bde064e56f998b7a8ec5f268aa2ce10fb7ad))
+*  Several fixes and improvements ([32a30231](https://github.com/vacavaca/malina/commit/32a3023155e14df6a4337724981d1a55fc7f8a06))
+*  Several fixes and minor improvements ([b6b78da1](https://github.com/vacavaca/malina/commit/b6b78da15c852864b8820f25b206f37d543a03c7))
+*  Various fixes and improvements ([8dbb2f38](https://github.com/vacavaca/malina/commit/8dbb2f38f9c218e0f112553d07b3b60804dd06cb))
+*  Fixes after refactoring ([ef2521e3](https://github.com/vacavaca/malina/commit/ef2521e3404bf70be2b0dab2345ae896c63a31bc))
+
+##### Code Style Changes
+
+* **malina:**  Code-style fix ([bd8c1cb7](https://github.com/vacavaca/malina/commit/bd8c1cb73d65c633d62149840c8801296d72e96a))
+
 #### 0.0.18 (2019-01-13)
 
 ##### Build System / Dependencies
