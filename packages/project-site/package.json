@@ -1,6 +1,6 @@
 {
   "name": "project-site",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "private": true,
   "description": "",
   "main": "src/index.jsx",
@@ -15,10 +15,10 @@
     "classnames": "^2.2.6",
     "highlight.js": "^9.13.1",
     "history": "^4.7.2",
-    "malina": "^0.0.18",
-    "malina-decorator": "^0.0.18",
-    "malina-router": "^0.0.18",
-    "malina-util": "^0.0.18",
+    "malina": "^0.0.19",
+    "malina-decorator": "^0.0.19",
+    "malina-router": "^0.0.19",
+    "malina-util": "^0.0.19",
     "marked": "^0.6.2",
     "normalize.css": "^8.0.1"
   },
