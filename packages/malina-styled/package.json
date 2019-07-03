@@ -1,7 +1,7 @@
 {
   "name": "malina-styled",
   "version": "0.0.18",
-  "description": "Styled views for the malina library",
+  "description": "CSS in JS for the malina library",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -24,9 +24,10 @@
     "dom",
     "vdom",
     "state",
-    "flux",
     "dom",
-    "html"
+    "html",
+    "styled",
+    "css"
   ],
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {
