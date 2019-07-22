@@ -68,7 +68,7 @@ export default class ViewTree {
 
     end = end != null ? Math.min(end, this.index.length) : end
 
-    for (let i = start; i < (end !== null ? end : this.index.length); i++) {
+    for (let i = start; i < (end !== null ? Math.min(this.index.length, end) : this.index.length); i++) {
       const realIndex = !reverse ? i : this.index.length - i - 1
       const { view, key } = this.index[realIndex]
       const node = new ViewTreeNode(view)

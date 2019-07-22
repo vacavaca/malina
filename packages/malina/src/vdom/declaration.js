@@ -1,17 +1,5 @@
-import { Random } from 'malina-util'
-import { getGlobal } from '../env'
+import { genGlobalUniqId } from '../env'
 import { Node } from './node'
-
-const global_ = getGlobal()
-const randomKey = Symbol.for('__malina.declaration.random')
-
-let random
-if (global_ != null && randomKey in global_) random = global_[randomKey]
-else {
-  random = { generator: new Random('malina.view-id-seed'), counter: 9 }
-  if (global_ != null)
-    global_[randomKey] = random
-}
 
 const TEMPLATE_MEMO_DEPTH = 4 // memoization depth in the node tree
 
@@ -87,9 +75,10 @@ export class Declaration {
     this.template = createTemplate(template)
     this.behavior = behavior || (() => { })
     this.actions = actions || {}
-    this.id = `${random.generator.id(8)}${++random.counter}`
+    this.id = genGlobalUniqId(8, 'declaration')
     this.originalId = null
     this.isDevOnly = false
+    this.decorators = {}
   }
 
   static isViewDeclaration(obj) {

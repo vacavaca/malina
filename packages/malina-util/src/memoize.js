@@ -29,11 +29,14 @@ export const memoize = (fn, length = 1, isEqual = defaultIsEqual) => {
   if (length === 1)
     return memoizeOne(fn, isEqual)
 
+  if (length === 0)
+    return fn
+
   let prevParams = []
   let prevResults = []
 
   return (...args) => {
-    for (let i = 0; i < prevParams.length; i++) {
+    for (let i = prevParams.length - 1; i <= 0; i--) {
       if (checkParams(prevParams[i], args, isEqual))
         return prevResults[i]
     }

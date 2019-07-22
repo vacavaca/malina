@@ -1,4 +1,3 @@
-import { compose } from 'malina-util'
 import { isElementNode, isViewNode, isTextNode } from '../vdom'
 import { toOnEventName, normalizeEventName } from './event'
 import { assert } from '../env'
@@ -8,8 +7,11 @@ const isRoot = path => path.length === 0
 
 const isSameViewNode = (a, b) => a.tag.id === b.tag.id
 
-const requireKeysSet = node => {
+const requireKeysSet = (node, options) => {
   const { children } = node
+  if (node.attrs.ignoreKeys || options.noWarnKeys)
+    return
+
   if (!children.every((node, i) =>
     i === 0 ||
     !isViewNode(node) ||
@@ -18,11 +20,14 @@ const requireKeysSet = node => {
     !isSameViewNode(node, children[i - 1])
   ))
     throw new Error("Every view node in an array must have a 'key' attribute")
-  return node
 }
 
-const requireUniqueKeys = node => {
+const requireUniqueKeys = (node, options) => {
   const { children } = node
+
+  if (node.attrs.ignoreKeys || options.noWarnKeys)
+    return
+
   let index = {}
   for (const node of children) {
     if (isViewNode(node) && node.attrs.key) {
@@ -35,22 +40,21 @@ const requireUniqueKeys = node => {
       index[node.tag.id][node.attrs.key] = true
     }
   }
-  return node
 }
 
 const requireNoInnerHtmlOverlap = node => {
   const { attrs, children } = node
   if ('innerHtml' in attrs && attrs.innerHtml != null && children != null && children.length > 0)
     throw new Error('Nodes with "innerHtml" attribute must not have children')
+}
+
+const requireValidChildren = (node, options = {}) => {
+  requireKeysSet(node, options)
+  requireUniqueKeys(node, options)
+  requireNoInnerHtmlOverlap(node)
 
   return node
 }
-
-const requireValidChildren = compose(
-  requireKeysSet,
-  requireUniqueKeys,
-  requireNoInnerHtmlOverlap
-)
 
 const insertElement = (container, index, element) => {
   const fragment = isTemplateElement(container) ? container.content : container
@@ -137,9 +141,9 @@ class Renderer {
    * Updates DOM tree
    */
   update(prev, next) {
-    const context = this.context.setUpdating(true)
-    this.patch(this.element, prev, next, [], context)
-    this.context = context.setUpdating(false)
+    this.context = this.context.setUpdating(true)
+    this.patch(this.element, prev, next, [], this.context)
+    this.context.setUpdating(false)
   }
 
   /** Removes event listeners */
@@ -199,6 +203,7 @@ class Renderer {
   /** @private */
   patchFromElementNodeToDom(element, next, path) {
     if (element !== next) {
+      this.view.destroyInnerViews(path, false)
       element.replaceWith(next)
 
       if (isRoot(path))
@@ -234,7 +239,7 @@ class Renderer {
 
   /** @private */
   patchFromDomToView(element, next, path, context) {
-    const view = this.view.instantiateInnerView(next, path, context)
+    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
 
     let index
     if (path.length > 0) index = path[path.length - 1]
@@ -244,9 +249,7 @@ class Renderer {
     element.remove()
 
     if (context.isUpdating()) {
-      context.setUpdating(false)
       const newElement = view.render()
-      context.setUpdating(true)
       insertElement(parent, index, newElement)
       view.attach(newElement)
     } else throw new Error('Unreachable')
@@ -312,7 +315,7 @@ class Renderer {
 
   /** @private */
   patchFromTextToView(element, next, path, context) {
-    const view = this.view.instantiateInnerView(next, path, context)
+    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
     let index
     if (path.length > 0) index = path[path.length - 1]
     else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
@@ -320,9 +323,7 @@ class Renderer {
 
     element.remove()
     if (context.isUpdating()) {
-      context.setUpdating(false)
       const newElement = view.render()
-      context.setUpdating(true)
       insertElement(parent, index, newElement)
       view.attach(newElement)
     } else throw new Error('Unreachable')
@@ -337,11 +338,14 @@ class Renderer {
       throw new Error('Root element deleted during patch')
 
     this.detachElementNode(element, prev, path, context)
+    this.view.destroyInnerViews(path, false)
     element.remove()
   }
 
   /** @private */
   patchFromNodeToText(element, prev, next, path) {
+    this.view.destroyInnerViews(path, false)
+
     const newElement = this.context.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
 
@@ -363,6 +367,8 @@ class Renderer {
         element.innerHTML = ''
         this.createChildren(element, next, path, context)
       } else if (prevCustom || nextCustom) {
+        this.view.destroyInnerViews(path, false)
+
         const newElement = this.createElementNode(next, path, context)
         element.replaceWith(newElement)
 
@@ -373,6 +379,8 @@ class Renderer {
         this.updateChildren(element, prev, next, path, context)
       }
     } else {
+      this.view.destroyInnerViews(path, false)
+
       const newElement = this.createElementNode(next, path, context)
       element.replaceWith(newElement)
 
@@ -383,7 +391,7 @@ class Renderer {
 
   /** @private */
   patchFromNodeToView(element, prev, next, path, context) {
-    const view = this.view.instantiateInnerView(next, path, context)
+    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
 
     let index
     if (path.length > 0) index = path[path.length - 1]
@@ -392,9 +400,7 @@ class Renderer {
     const parent = element.parentNode
     element.remove()
     if (context.isUpdating()) {
-      context.setUpdating(false)
       const newElement = view.render()
-      context.setUpdating(true)
       insertElement(parent, index, newElement)
       view.attach(newElement)
     } else throw new Error('Unreachable')
@@ -449,13 +455,11 @@ class Renderer {
       else index = Array.from(parent.childNodes).findIndex(n => n === element)
 
       this.view.destroyInnerView(path)
-      const view = this.view.instantiateInnerView(next, path, context)
+      const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
 
       element.remove()
       if (context.isUpdating()) {
-        context.setUpdating(false)
         const newElement = view.render()
-        context.setUpdating(true)
         insertElement(parent, index, newElement)
         view.attach(newElement)
       } else throw new Error('Unreachable')
@@ -546,14 +550,11 @@ class Renderer {
 
   /** @private */
   createViewNode(node, path, context) {
-    const updating = context.isUpdating()
-    const view = this.view.instantiateInnerView(node, path, context)
+    const view = this.view.instantiateInnerView(node, path, context.setUpdating(false))
 
     let element
-    if (updating) {
-      context = context.setUpdating(false)
+    if (context.isUpdating()) {
       element = view.render(this.document)
-      context = context.setUpdating(true)
       view.attach(element)
     } else element = view.render(this.document)
 
@@ -585,8 +586,7 @@ class Renderer {
 
   /** @private */
   createChildren(element, node, path, context) {
-    if (!requireValidChildren(node))
-      throw new Error("Every view node in an array must have an unique 'key' attribute")
+    requireValidChildren(node)
 
     if ('innerHtml' in node.attrs)
       element.innerHTML = node.attrs.innerHtml
@@ -615,8 +615,7 @@ class Renderer {
 
   /** @private */
   hydrateChildren(element, node, path, context) {
-    if (!requireValidChildren(node))
-      throw new Error("Every view node in an array must have an unique 'key' attribute")
+    requireValidChildren(node, { noWarnKeys: true })
 
     if (isNodeCustomElement(node))
       return
@@ -643,8 +642,7 @@ class Renderer {
 
   /** @private */
   attachChildren(element, node, path, context) {
-    if (!requireValidChildren(node))
-      throw new Error("Every view node in an array must have an unique 'key' attribute")
+    requireValidChildren(node, { noWarnKeys: true })
 
     if (isNodeCustomElement(node))
       return
@@ -671,9 +669,6 @@ class Renderer {
 
   /** @private */
   detachChildren(element, node, path, context) {
-    if (!requireValidChildren(node))
-      throw new Error("Every view node in an array must have an unique 'key' attribute")
-
     if (isNodeCustomElement(node))
       return
 
@@ -702,8 +697,7 @@ class Renderer {
     if (prev === next)
       return
 
-    if (!requireValidChildren(next))
-      throw new Error("Every view node in an array must have an unique 'key' attribute")
+    requireValidChildren(next)
 
     if ('innerHtml' in next.attrs)
       element.innerHTML = next.attrs.innerHtml
@@ -731,7 +725,7 @@ class Renderer {
           this.patch(childNode, prevChild, nextChild, nextPath, context)
           if (nextChild == null)
             nodeIndexShift += 1
-        } else {
+        } else if (nextChild != null) {
           const childElement = this.createNode(nextChild, nextPath, context)
           const fragment = isTemplateElement(element) ? element.content : element
           const before = fragment.childNodes[ndx]
@@ -745,7 +739,7 @@ class Renderer {
   /** @private */
   addAttributes(element, node, path, context) {
     for (const name in node.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
@@ -759,7 +753,7 @@ class Renderer {
       element.removeAttribute('style')
 
     for (const name in node.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
@@ -770,7 +764,7 @@ class Renderer {
   /** @private */
   attachAttributes(element, node, path, context) {
     for (const name in node.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
@@ -781,7 +775,7 @@ class Renderer {
   /** @private */
   detachAttributes(element, node, path, context) {
     for (const name in node.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
@@ -846,7 +840,7 @@ class Renderer {
       return
 
     for (const name in next.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const nextValue = next.attrs[name]
@@ -857,7 +851,7 @@ class Renderer {
     }
 
     for (const name in prev.attrs) {
-      if (name === 'innerHtml')
+      if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       if (!(name in next.attrs))

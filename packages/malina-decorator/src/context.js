@@ -34,7 +34,6 @@ class Context {
 const provideContext = memoizedDecorator(mapTemplate(original =>
   ({ state }) => {
     const context = state[contextKey]
-    // const templateDecorator = state[templateKey]
     const node = original()
     if (context != null) return decorateTemplate(context)(node)
     else return node
@@ -56,8 +55,8 @@ const decorateTemplate = context => node => {
 const defaultContextProvider = state => state
 
 export const withContext = (provider = defaultContextProvider) => {
-  const normalizedProvider = state => {
-    const context = provider(state)
+  const normalizedProvider = view => {
+    const context = provider instanceof Function ? provider(view) : provider
     const typeOfContext = typeof context
     if (typeOfContext !== 'object')
       throw new Error(`Context must be an object, got ${typeOfContext}`)

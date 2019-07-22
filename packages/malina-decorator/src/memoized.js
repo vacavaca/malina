@@ -6,9 +6,9 @@ Too many views are decorated with the same decorator, you are probably leaking v
 
 Keep in mind that due to the declarative style of this library it's recommended to declare all your views statically, in the top-level scope of your modules.`)
 
-export const memoizedDecorator = (decorate, recursive = false, limit = 10000) => {
+export const memoizedDecorator = (decorate, idempotent = false, limit = 10000) => {
   const decoratedCache = new Map()
-  const decoratedCacheLimit = recursive ? limit * 2 : limit
+  const decoratedCacheLimit = idempotent ? limit * 2 : limit
 
   return decorator(Inner => {
     const id = Inner.id
@@ -18,7 +18,7 @@ export const memoizedDecorator = (decorate, recursive = false, limit = 10000) =>
       if (decoratedCache.size < decoratedCacheLimit) {
         decoratedCache.set(id, decorated)
 
-        if (recursive)
+        if (idempotent)
           decoratedCache.set(decorated.id, decorated)
       }
 

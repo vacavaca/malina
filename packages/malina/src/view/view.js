@@ -1,6 +1,6 @@
 import { keys, shallowEqual } from 'malina-util'
 import { Dispatcher } from '../concurrent'
-import { InnerFacade, ConcurrentFacade, OuterFacade } from './facade'
+import { TemplateFacade, ActionFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { assert, isProduction, testDevelopment } from '../env'
 import Context from './context'
 import { Declaration, isElementNode, isViewNode, h } from '../vdom'
@@ -17,7 +17,8 @@ class View {
     this.actions = this.bindActions(declaration.actions)
     this.behavior = declaration.behavior
     this.dispatcher = new Dispatcher()
-    this.innerFacade = new InnerFacade(this)
+    this.templateFacade = new TemplateFacade(this)
+    this.actionFacade = new ActionFacade(this)
     this.children = children
     this.id = declaration.id
 
@@ -145,7 +146,6 @@ class View {
       this.dispatcher.notify('mount', [this.element])
     } else {
       const queue = this.context.getCallbackQueue('mount')
-      window._queues = [...(window._queues || []), queue]
       queue.push(() => this.dispatcher.notify('mount', [this.element]))
     }
   }
@@ -299,7 +299,7 @@ class View {
   renderTemplate() {
     this.templateLock = true
     try {
-      let next = this.template(this.innerFacade)
+      let next = this.template(this.templateFacade)
       if (Array.isArray(next)) {
         if (next.length !== 1)
           throw new Error('Only one root element must be rendered for a view')
@@ -336,13 +336,13 @@ class View {
     this.updateLock = true
     let result = action(...args)
     if (result instanceof Function)
-      result = result(this.innerFacade)
+      result = result(this.actionFacade)
     else if (result instanceof Promise) {
       return (async () => {
         this.finishAction(update)
         result = await result
         if (result instanceof Function)
-          result = result(this.innerFacade)
+          result = result(this.actionFacade)
 
         if (result instanceof Promise) {
           this.finishAction(update)
@@ -399,8 +399,22 @@ class View {
     if (update == null || update === this.state)
       return this.state
 
-    const nextState = update !== null ? { ...this.state, ...update } : this.state
-    return !shallowEqual(this.state, nextState) ? nextState : this.state
+    const nextState = {}
+    let updated = false
+    for (const key of keys(update)) {
+      nextState[key] = update[key]
+      updated = updated || update[key] !== this.state[key]
+    }
+
+    if (!updated)
+      return this.state
+
+    for (const key of keys(this.state)) {
+      if (!(key in nextState))
+        nextState[key] = this.state[key]
+    }
+
+    return nextState
   }
 
   /** @private */

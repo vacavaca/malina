@@ -4,7 +4,12 @@ import tagList from './tag-list'
 
 const CONSTRUCTOR_MEM_LENGTH = 100
 
-const templateToFactory = (parts, exprs) => memoize(state => {
+const staticTemplateFactory = parts => {
+  const str = parts.join('')
+  return () => str
+}
+
+const dynamicTemplateFactory = (parts, exprs) => memoize(state => {
   let css = ''
   let nextPart = true
   let i = 0
@@ -19,6 +24,9 @@ const templateToFactory = (parts, exprs) => memoize(state => {
 
   return css
 }, CONSTRUCTOR_MEM_LENGTH, shallowEqual)
+
+const templateToFactory = (parts, exprs) =>
+  exprs.length > 0 ? dynamicTemplateFactory(parts, exprs) : staticTemplateFactory(parts)
 
 const mergeFactories = (...fns) => state =>
   fns

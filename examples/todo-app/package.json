@@ -10,16 +10,16 @@
   },
   "author": "vacavaca <vacavaca@fastmail.com>",
   "devDependencies": {
-    "@babel/core": "^7.1.2",
+    "@babel/core": "^7.5.5",
     "parcel": "^1.12.3"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "history": "^4.7.2",
-    "malina": "^0.0.19",
-    "malina-decorator": "^0.0.19",
-    "malina-router": "^0.0.19",
-    "todomvc-app-css": "^2.1.2",
+    "history": "^4.9.0",
+    "malina": "0.0.19",
+    "malina-decorator": "0.0.19",
+    "malina-router": "0.0.19",
+    "todomvc-app-css": "^2.2.0",
     "todomvc-common": "^1.0.5"
   }
 }

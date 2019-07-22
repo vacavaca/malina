@@ -46,6 +46,13 @@ const shallowEqualArray = (a, b) => {
   return true
 }
 
+const isEmptyIterableObject = a => {
+  for (const k in a)
+    return false
+
+  return true
+}
+
 const shallowEqualObject = (a, b) => {
   if (a === b)
     return true
@@ -55,6 +62,9 @@ const shallowEqualObject = (a, b) => {
 
   if (a == null)
     return true
+
+  if (isEmptyIterableObject(a) !== isEmptyIterableObject(b))
+    return false
 
   const props = keys(a)
   const len = props.length

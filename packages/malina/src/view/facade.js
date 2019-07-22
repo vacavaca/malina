@@ -1,14 +1,10 @@
-export class InnerFacade {
+export class TemplateFacade {
   constructor(view) {
     this.view = view
   }
 
   get state() {
     return this.view.state
-  }
-
-  set state(val) {
-    this.view.state = val
   }
 
   get actions() {
@@ -20,7 +16,15 @@ export class InnerFacade {
   }
 }
 
-export class ConcurrentFacade extends InnerFacade {
+export class ActionFacade extends TemplateFacade {
+  get state() {
+    return this.view.state
+  }
+
+  set state(val) {
+    this.view.state = val
+  }
+
   get isMounted() {
     return this.view.mounted
   }
@@ -32,7 +36,9 @@ export class ConcurrentFacade extends InnerFacade {
   get element() {
     return this.view.element
   }
+}
 
+export class ConcurrentFacade extends ActionFacade {
   update(updater) {
     if (!this.isDestroyed) return this.view.update(updater)
     else return this.state
@@ -99,19 +105,7 @@ export class ConcurrentFacade extends InnerFacade {
   }
 }
 
-export class OuterFacade extends InnerFacade {
-  get isMounted() {
-    return this.view.mounted
-  }
-
-  get isDestroyed() {
-    return this.view.destroyed
-  }
-
-  get element() {
-    return this.view.element
-  }
-
+export class OuterFacade extends ActionFacade {
   render() {
     return this.view.render()
   }

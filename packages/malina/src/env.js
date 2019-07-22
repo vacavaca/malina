@@ -1,3 +1,5 @@
+import { Random } from 'malina-util'
+
 let env = 'production'
 
 try {
@@ -38,4 +40,18 @@ export const assert = (condition, msg = null) => {
     if (!condition())
       throw new Error(`Condition failed${msg != null ? `: ${msg}` : ''}`)
   }
+}
+
+export const genGlobalUniqId = (key, prefixLength) => {
+  const _global = getGlobal()
+  const globalKey = Symbol.for(`__malina.env.id.${key}`)
+  const seed = `malina.seed.id.${key}`
+  let random
+  if (_global != null && globalKey in _global) random = _global[globalKey]
+  else {
+    random = { generator: new Random(seed), counter: 0 }
+    _global[globalKey] = random
+  }
+
+  return `${random.generator.id(prefixLength)}.${++random.counter}`
 }

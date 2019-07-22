@@ -1,7 +1,7 @@
 export default class Context {
   constructor(docuement, store, globalStore) {
     this.document = docuement
-    this.store = { ...store }
+    this.store = store
     this.globalStore = globalStore
   }
 
@@ -10,15 +10,15 @@ export default class Context {
   }
 
   isLocked() {
-    return this.getOrCreate('lock', false)
+    return this.getOrCreate('lock', false, true)
   }
 
   lock() {
-    return this.update('lock', true)
+    return this.update('lock', true, true)
   }
 
   unlock() {
-    return this.update('lock', false)
+    return this.update('lock', false, true)
   }
 
   getCallbackQueue(key) {
@@ -46,15 +46,24 @@ export default class Context {
   }
 
   setUpdating(updating) {
-    return this.update('updating', updating)
+    const store = { }
+    for (const key in this.store) {
+      if (Object.prototype.hasOwnProperty.call(this.store, key))
+        store[key] = this.store[key]
+    }
+
+    store['updating'] = updating
+
+    return new Context(this.document, store, this.globalStore)
   }
 
   getDocument() {
     return this.document
   }
 
-  update(key, value) {
-    this.store[key] = value
+  update(key, value, useGlobal = false) {
+    const store = useGlobal ? this.globalStore : this.store
+    store[key] = value
     return this
   }
 
@@ -62,8 +71,8 @@ export default class Context {
     return new Context(this.document, { ...this.store, ...update }, this.globalStore)
   }
 
-  getOrCreate(key, defval, global = false) {
-    const store = global ? this.globalStore : this.store
+  getOrCreate(key, defval, useGlobal = false) {
+    const store = useGlobal ? this.globalStore : this.store
     if (key in store) return store[key]
     else {
       store[key] = defval
