@@ -7,17 +7,13 @@ import { binarySearch } from 'malina-util'
  * @returns {number} comparison
  */
 const pathCompare = (a, b) => {
-  const lenCmp = a.length - b.length
-  if (lenCmp !== 0)
-    return -lenCmp // reverse depth order
-
-  for (const i in a) {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
     const cmp = a[i] - b[i]
     if (cmp !== 0)
       return cmp
   }
 
-  return 0
+  return a.length - b.length
 }
 
 const nextPath = (path, n = 1) => path.length ? path.slice(0, -1).concat([path[path.length - 1] + n]) : path
@@ -63,21 +59,32 @@ export default class ViewTree {
     let end = null
     if (!isRoot(path)) {
       const search = this.searchPath(nextPath(path))
-      end = search >= 0 ? search + 1 : -search
+      end = search >= 0 ? search + 1 : -search - 1
     }
 
-    end = end != null ? Math.min(end, this.index.length) : end
+    end = end != null ? Math.min(end, this.index.length) : this.index.length
 
-    for (let i = start; i < (end !== null ? Math.min(this.index.length, end) : this.index.length); i++) {
-      const realIndex = !reverse ? i : this.index.length - i - 1
-      const { view, key } = this.index[realIndex]
-      const node = new ViewTreeNode(view)
-      yield node
-      if (node.deleted) {
-        this.index.splice(realIndex, 1)
-        if (!reverse)
+    if (!reverse) {
+      for (let i = start; i < end; i++) {
+        const { view, key } = this.index[i]
+        const node = new ViewTreeNode(view)
+        yield node
+        if (node.deleted) {
+          this.index.splice(i, 1)
           i -= 1
-        delete this.views[key]
+          end -= 1
+          delete this.views[key]
+        }
+      }
+    } else {
+      for (let i = Math.max(end - 1, 0); i >= start; i--) {
+        const { view, key } = this.index[i]
+        const node = new ViewTreeNode(view)
+        yield node
+        if (node.deleted) {
+          this.index.splice(i, 1)
+          delete this.views[key]
+        }
       }
     }
   }

@@ -391,6 +391,7 @@ class Renderer {
 
   /** @private */
   patchFromNodeToView(element, prev, next, path, context) {
+    this.view.destroyInnerViews(path, false)
     const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
 
     let index
@@ -719,18 +720,19 @@ class Renderer {
             nextChild = null
         }
 
-        const childNode = element.childNodes[ndx - nodeIndexShift]
         const nextPath = path.concat([ndx])
         if (prevChild != null) {
+          const childNode = element.childNodes[ndx - nodeIndexShift]
           this.patch(childNode, prevChild, nextChild, nextPath, context)
           if (nextChild == null)
             nodeIndexShift += 1
-        } else if (nextChild != null) {
-          const childElement = this.createNode(nextChild, nextPath, context)
-          const fragment = isTemplateElement(element) ? element.content : element
-          const before = fragment.childNodes[ndx]
-          fragment.insertBefore(childElement, before)
-          nodeIndexShift -= 1
+        } else {
+          if (nextChild != null) {
+            const childElement = this.createNode(nextChild, nextPath, context)
+            const fragment = isTemplateElement(element) ? element.content : element
+            const before = fragment.childNodes[ndx]
+            fragment.insertBefore(childElement, before)
+          } else nodeIndexShift += 1
         }
       }
     }

@@ -8,7 +8,9 @@ export const styledTemplate = (...args) => view(
   withStyledTemplate(...args)
 )
 
-export const only = (arg, style) => state => {
-  const result = arg instanceof Function ? arg(state) : state[arg]
-  return result ? style : ''
+export const only = (...args) => state => {
+  const test = args[0] instanceof Function ? args[0](state) : state[args[0]]
+  if (args.length === 2) return test ? args[1] : ''
+  else if (args.length === 3) return test === args[1] ? args[2] : ''
+  else return ''
 }

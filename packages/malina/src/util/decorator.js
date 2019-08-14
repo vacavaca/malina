@@ -16,7 +16,7 @@ const updateDecoratorsHistory = (key, prev, next) => {
 }
 
 export default fn => {
-  const key = genGlobalUniqId(8, 'decorator')
+  const key = genGlobalUniqId('decorator', 8)
 
   return Inner => {
     let innerView

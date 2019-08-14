@@ -68,7 +68,14 @@ export default class Injector {
     this.clients.set(client, new Map())
   }
 
+  isMounted(client) {
+    return this.clients.has(client)
+  }
+
   update(client, styles) {
+    if (!this.clients.has(client))
+      throw new Error('Unknown style client')
+
     const styleMap = new Map()
 
     const addedStyles = []

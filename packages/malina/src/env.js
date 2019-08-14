@@ -53,5 +53,5 @@ export const genGlobalUniqId = (key, prefixLength) => {
     _global[globalKey] = random
   }
 
-  return `${random.generator.id(prefixLength)}.${++random.counter}`
+  return `${random.generator.id(prefixLength)}${++random.counter}`
 }

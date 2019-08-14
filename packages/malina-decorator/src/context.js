@@ -1,5 +1,5 @@
 import { h, isViewNode, isElementNode } from 'malina'
-import { compose, shallowEqual } from 'malina-util'
+import { compose, shallowEqual, keys } from 'malina-util'
 import { memoizedDecorator } from './memoized'
 import { withLifecycle, mapTemplate } from './common'
 import EventEmitter from './event-emitter'
@@ -17,6 +17,12 @@ class Context {
   }
 
   update(value, silent = false) {
+    if (value == null)
+      return
+
+    if (keys(value).length === 0)
+      return
+
     const next = { ...this.value, ...value }
     if (shallowEqual(this.value, next))
       return
@@ -87,16 +93,30 @@ export const withContext = (provider = defaultContextProvider) => {
 const subscriptionKey = Symbol.for('__malina_context_subscription')
 const defaultContextGetter = context => ({ context })
 
-export const getContext = (getter = defaultContextGetter) =>
-  compose(
+export const getContext = (...args) => {
+  const normalizedGetter = ctx => {
+    if (args.length === 0) return defaultContextGetter(ctx)
+    else if (args.length === 1) {
+      const arg = args[0]
+      return arg instanceof Function ? arg(ctx) : { [arg]: ctx[arg] }
+    } else {
+      const value = {}
+      for (const key of args)
+        value[key] = ctx[key]
+
+      return value
+    }
+  }
+
+  return compose(
     withLifecycle({
       create: view => {
         let context = view.state[contextKey]
 
         if (context != null) {
-          view.state = { ...view.state, ...(getter(context.value) || {}) }
+          view.state = { ...view.state, ...(normalizedGetter(context.value) || {}) }
           view.state[subscriptionKey] = context.subscribe(value => {
-            view.update({ ...getter(value) })
+            view.update(normalizedGetter(value))
           })
         }
       },
@@ -105,7 +125,7 @@ export const getContext = (getter = defaultContextGetter) =>
         let context = view.state[contextKey]
 
         if (context != null)
-          view.state = { ...view.state, ...(getter(context.value) || {}) }
+          view.state = { ...view.state, ...(normalizedGetter(context.value) || {}) }
       },
 
       destroy: ({ state }) => {
@@ -114,3 +134,4 @@ export const getContext = (getter = defaultContextGetter) =>
       }
     })
   )
+}

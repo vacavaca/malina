@@ -82,7 +82,7 @@ const mapNode = (styleList, originalStyles) => node => {
       const attrs = attributesForElement(node.attrs)
       attrs.class = [attrs.class || '', className].filter(c => c.length > 0).join(' ')
       return h(node.tag.tag, attrs, node.children.map(mapNode(styleList, originalStyles)))
-    } else return node
+    } else return h(node.tag, node.attrs, node.children.map(mapNode(styleList, originalStyles)))
   } else if (isElementNode(node))
     return h(node.tag, node.attrs, node.children.map(mapNode(styleList, originalStyles)))
   else return node
@@ -106,11 +106,15 @@ const initializeInjector = withLifecycle({
 
   update: view => {
     const injector = view.state[injectorKey]
+    if (!injector.isMounted(view))
+      return
     injector.update(view, view.state[stylesKey])
   },
 
   destroy: view => {
     const injector = view.state[injectorKey]
+    if (!injector.isMounted(view))
+      return
     injector.destroy(view)
   }
 })

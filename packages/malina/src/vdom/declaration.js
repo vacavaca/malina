@@ -75,7 +75,7 @@ export class Declaration {
     this.template = createTemplate(template)
     this.behavior = behavior || (() => { })
     this.actions = actions || {}
-    this.id = genGlobalUniqId(8, 'declaration')
+    this.id = genGlobalUniqId('declaration', 8)
     this.originalId = null
     this.isDevOnly = false
     this.decorators = {}

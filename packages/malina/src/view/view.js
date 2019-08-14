@@ -3,7 +3,7 @@ import { Dispatcher } from '../concurrent'
 import { TemplateFacade, ActionFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { assert, isProduction, testDevelopment } from '../env'
 import Context from './context'
-import { Declaration, isElementNode, isViewNode, h } from '../vdom'
+import { h, Node } from '../vdom'
 import { isTemplateElement } from './util'
 import ViewTree from './view-tree'
 import Renderer from './renderer'
@@ -402,8 +402,11 @@ class View {
     const nextState = {}
     let updated = false
     for (const key of keys(update)) {
-      nextState[key] = update[key]
-      updated = updated || update[key] !== this.state[key]
+      if (typeof key === 'symbol') this.state[key] = update[key]
+      else {
+        nextState[key] = update[key]
+        updated = updated || update[key] !== this.state[key]
+      }
     }
 
     if (!updated)
@@ -434,10 +437,7 @@ class View {
 const mountOrHydrate = (container, node, index, {
   insideSvg, hydrate, isProduction
 }) => {
-  let viewNode = node
-  if (isElementNode(node))
-    viewNode = h(new Declaration(node))
-
+  const viewNode = Node.isNode(node) ? node : h(node)
   const document = container.ownerDocument
 
   let context = Context.initialize(document, {
@@ -450,9 +450,6 @@ const mountOrHydrate = (container, node, index, {
     if (container instanceof _window.SVGElement)
       context = context.setSvg(true)
   }
-
-  if (!isViewNode(viewNode))
-    throw new Error('View can only be instantiated from view-nodes')
 
   const viewInstance = new View(context, viewNode)
   const fragment = isTemplateElement(container) ? container.content : container
@@ -473,17 +470,13 @@ export const instantiate = (document, node, {
   insideSvg = false,
   env = isProduction ? 'production' : 'development'
 } = {}) => {
-  let viewNode = node
-  if (isElementNode(node))
-    viewNode = h(new Declaration(node))
+  const viewNode = Node.isNode(node) ? node : h(node)
 
   const context = Context.initialize(document, {
     production: isProduction,
     svg: insideSvg
   })
 
-  if (!isViewNode(viewNode))
-    throw new Error('View can only be instantiated from view-nodes')
   const viewInstance = new View(context, viewNode)
   return new OuterFacade(viewInstance)
 }

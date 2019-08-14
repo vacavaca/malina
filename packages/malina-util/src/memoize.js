@@ -18,7 +18,7 @@ const memoizeOne = (fn, isEqual) => {
   let prevResult = null
 
   return (...args) => {
-    if (prevParams !== null && checkParams(prevParams, args, isEqual))
+    if (prevParams === null || !checkParams(prevParams, args, isEqual))
       prevResult = fn(...args)
     prevParams = args
     return prevResult
@@ -36,7 +36,7 @@ export const memoize = (fn, length = 1, isEqual = defaultIsEqual) => {
   let prevResults = []
 
   return (...args) => {
-    for (let i = prevParams.length - 1; i <= 0; i--) {
+    for (let i = prevParams.length - 1; i >= 0; i--) {
       if (checkParams(prevParams[i], args, isEqual))
         return prevResults[i]
     }

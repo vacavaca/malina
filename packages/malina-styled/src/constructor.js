@@ -15,7 +15,10 @@ const dynamicTemplateFactory = (parts, exprs) => memoize(state => {
   let i = 0
   while (i < parts.length) {
     if (nextPart) css += parts[i]
-    else css += exprs[i](state)
+    else {
+      const expr = exprs[i]
+      css += expr instanceof Function ? expr(state) : `${expr}`
+    }
 
     nextPart = i >= exprs.length || !nextPart
     if (nextPart)

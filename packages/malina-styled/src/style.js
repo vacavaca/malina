@@ -1,8 +1,15 @@
 import Stylis from 'stylis'
 import parse from './parser'
 
+const numToStrPad = (max, n) => {
+  let str = ''
+  for (let i = 0; i < `${max}`.length - `${n}`.length; i++) str += '0'
+  str += `${n}`
+  return str
+}
+
 export class Style {
-  constructor(parentSelector, selector, rules, parsedRule) {
+  constructor(parentSelector, selector, rules, parsedRule, order) {
     this.parentSelector = parentSelector
     this.selector = selector.trim()
     this.rules = rules.trim()
@@ -18,7 +25,7 @@ export class Style {
       this.atRule = match[2]
     }
 
-    this.id = this.isAtRule() ? `${this.parentSelector}${this.selector}` : this.selector
+    this.id = `${order}${this.isAtRule() ? `${this.parentSelector}${this.selector}` : `${this.selector}`}`
   }
 
   static parse(className, css) {
@@ -34,7 +41,7 @@ export class Style {
     const rules = parse(preprocessed)
 
     return rules
-      .map(rule => new Style(className, rule.selector, rule.getStyle(), rule))
+      .map((rule, i) => new Style(className, rule.selector, rule.getStyle(), rule, numToStrPad(rules.length, i)))
   }
 
   isAtRule() {

@@ -1,5 +1,5 @@
 import { h, view, decorator } from 'malina'
-import { shallowEqual, keys, compose } from 'malina-util'
+import { shallowEqual, keys, compose, memoize } from 'malina-util'
 import { withTemplate, withState, withActions } from './common'
 import { getContext, withContext } from './context'
 
@@ -33,7 +33,7 @@ const key = Symbol.for('__malina_store')
 
 const passToContext = compose(
   withContext(({ state, actions }) =>
-    ({ [key]: { state: state.store, update: wrapUpdate(actions.update) } }))
+    ({ [key]: { state: state.store, update: actions.update } }))
 )
 
 const StoreView = view(
@@ -55,20 +55,21 @@ export const connect = (mapState = empty, mapUpdate = empty) =>
       const normMapState = mapState != null ? mapState : empty
       const normMapUpdate = mapUpdate != null ? mapUpdate : empty
       return {
-        ...normMapState(store.state),
-        ...normMapUpdate(store.update)
+        ...(normMapState(store.state) || {}),
+        ...(normMapUpdate(store.update) || {})
       }
     } else return {}
   })
 
-export const bindActions = actions => update => {
+export const bindActions = actions => memoize(update => {
+  const wrappedUpdate = wrapUpdate(update)
   const bound = {}
   for (const key of keys(actions)) {
     const action = actions[key]
     if (action instanceof Function)
-      bound[key] = (...args) => update(action(...args))
+      bound[key] = (...args) => wrappedUpdate(action(...args))
     else bound[key] = bindActions(action)(update)
   }
 
   return bound
-}
+})
