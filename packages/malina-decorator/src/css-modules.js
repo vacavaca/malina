@@ -1,7 +1,5 @@
-import { h, isElementNode, isViewNode } from 'malina'
-import { mapTemplate, withLifecycle } from './common'
+import { h, isElementNode, isViewNode, mapTemplate, withLifecycle } from 'malina'
 import { compose, keys } from 'malina-util'
-import { memoizedDecorator } from './memoized'
 
 const stylesKey = Symbol.for('__malina_styles')
 const attributeKey = Symbol.for('__malina_styles_attribute')
@@ -43,7 +41,7 @@ const decorateTemplate = (styles, styleAttribute) => node => {
   } else return node
 }
 
-const decorateView = memoizedDecorator(compose(
+const decorateView = compose(
   mapTemplate(original =>
     ({ state }) => {
       const { [stylesKey]: originalStyles, [attributeKey]: originalStyleAttribute } = state || {}
@@ -53,7 +51,7 @@ const decorateView = memoizedDecorator(compose(
       const node = original()
       return decorateTemplate(styles, styleAttribute)(node)
     })
-), true)
+)
 
 export const cssModules = (styles, styleAttribute = 'styleName') => compose(
   decorateView,

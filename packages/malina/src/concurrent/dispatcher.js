@@ -48,7 +48,11 @@ export default class Dispatcher {
   }
 
   off(key, handler) {
-    if (key in this.listeners)
-      this.listeners.splice(this.listeners.indexOf(handler), 1)
+    if (key in this.listeners) {
+      this.listeners[key].splice(this.listeners[key].indexOf(handler), 1)
+
+      if (this.listeners[key].length === 0)
+        delete this.listeners[key]
+    }
   }
 }

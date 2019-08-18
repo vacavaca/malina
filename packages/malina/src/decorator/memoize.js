@@ -6,7 +6,7 @@ Too many views are decorated with the same decorator, you are probably leaking v
 
 Keep in mind that due to the declarative style of this library it's recommended to declare all your views statically, in the top-level scope of your modules.`)
 
-export const memoizedDecorator = (decorate, idempotent = false, limit = 10000) => {
+export default (decorate, idempotent = false, limit = 10000) => {
   const decoratedCache = new Map()
   const decoratedCacheLimit = idempotent ? limit * 2 : limit
 

@@ -1,5 +1,4 @@
-import { h, view } from 'malina'
-import { withActions, withTemplate } from 'malina-decorator'
+import { h, view, withActions, withTemplate } from 'malina'
 
 const onCreate = e => ({ state }) => {
   const title = e.currentTarget.value.trim()

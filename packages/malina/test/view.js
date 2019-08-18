@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { asyncTest, withTemplate, withState, withActions } = require('./util')
-const { h, view, mount, hydrate, template, Declaration } = require('..')
+const { asyncTest } = require('./util')
+const { h, view, mount, hydrate, template, withTemplate, withBehavior, withState, withActions } = require('..')
 
 describe('view', () => {
   describe('update', () => {
@@ -194,7 +194,11 @@ describe('view', () => {
         update: () => ({ text: 'Updated' })
       }
 
-      const View = new Declaration(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+      const View = view(
+        withTemplate(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text }))),
+        withBehavior(behavior),
+        withActions(actions)
+      )
       const instance = hydrate(dom.window.document.body, h(View))
 
       instance.actions.update()
@@ -210,9 +214,11 @@ describe('view', () => {
 
       let called = 0
 
-      const Inner = new Declaration(null, view => {
-        view.onMount(() => { called += 1 })
-      })
+      const Inner = view(
+        withBehavior(view => {
+          view.onMount(() => { called += 1 })
+        })
+      )
 
       const View = template(h('div', {}, h(Inner)))
       hydrate(dom.window.document.body, h(View))
@@ -226,15 +232,21 @@ describe('view', () => {
       let unmount = 0
       let destroy = 0
 
-      const Inner = new Declaration(h('div'), view => {
-        view.onUnmount(() => { unmount += 1 })
-        view.onDestroy(() => { destroy += 1 })
-      })
+      const Inner = view(
+        withTemplate(h('div')),
+        withBehavior(view => {
+          view.onUnmount(() => { unmount += 1 })
+          view.onDestroy(() => { destroy += 1 })
+        })
+      )
 
-      const Inner2 = new Declaration(h(Inner), view => {
-        view.onUnmount(() => { unmount += 1 })
-        view.onDestroy(() => { destroy += 1 })
-      })
+      const Inner2 = view(
+        withTemplate(h(Inner)),
+        withBehavior(view => {
+          view.onUnmount(() => { unmount += 1 })
+          view.onDestroy(() => { destroy += 1 })
+        })
+      )
 
       const exclude = () => () => ({ include: false })
 
@@ -265,7 +277,11 @@ describe('view', () => {
         update: () => ({ state }) => ({ counter: state.counter + 1 })
       }
 
-      const View = new Declaration(({ state, actions }) => h('div', { onClick: actions.update }, h(Inner, state)), behavior, actions)
+      const View = view(
+        withTemplate(({ state, actions }) => h('div', { onClick: actions.update }, h(Inner, state))),
+        withBehavior(behavior),
+        withActions(actions)
+      )
       hydrate(dom.window.document.body, h(View))
 
       assert.strictEqual(dom.window.document.body.innerHTML, '<div>0</div>')

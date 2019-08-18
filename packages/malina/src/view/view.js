@@ -2,14 +2,15 @@ import { keys, shallowEqual } from 'malina-util'
 import { Dispatcher } from '../concurrent'
 import { TemplateFacade, ActionFacade, ConcurrentFacade, OuterFacade } from './facade'
 import { assert, isProduction, testDevelopment } from '../env'
-import Context from './context'
+import RenderContext from './render-context'
+import StateContext from './state-context'
 import { h, Node } from '../vdom'
 import { isTemplateElement } from './util'
 import ViewTree from './view-tree'
 import Renderer from './renderer'
 
 class View {
-  constructor(context, node) {
+  constructor(renderContext, node, stateContext = null) {
     const { tag: declaration, attrs: state, children } = node
 
     this.template = declaration.template
@@ -22,15 +23,19 @@ class View {
     this.children = children
     this.id = declaration.id
 
-    this.context = context
+    this.renderContext = renderContext
     this.tree = new ViewTree()
-    this.renderer = new Renderer(this, context)
+    this.renderer = new Renderer(this, renderContext)
     this.node = null
     this.destroyed = false
     this.templateLock = false
     this.updateLock = false
     this.trackedActionUpdate = false
     this.tmpElement = null
+    this.stateContext = stateContext != null ? stateContext : null
+    this.stateContextSubscription = null
+    this.stateContextProvider = null
+    this.stateContextConsumer = null
 
     this.runBehavior()
   }
@@ -61,15 +66,15 @@ class View {
     if (this.node == null)
       this.node = this.renderTemplate()
 
-    const top = !this.context.isLocked()
+    const top = !this.renderContext.isLocked()
     if (top)
-      this.context.lock()
+      this.renderContext.lock()
 
     this.renderer.hydrate(element, this.node)
 
     if (top) {
-      this.context.unlock()
-      const queue = this.context.getCallbackQueue('mount')
+      this.renderContext.unlock()
+      const queue = this.renderContext.getCallbackQueue('mount')
 
       while (queue.length > 0) {
         const hook = queue.splice(0, 1)[0]
@@ -78,7 +83,7 @@ class View {
 
       this.dispatcher.notify('mount', [this.element])
     } else {
-      const queue = this.context.getCallbackQueue('mount')
+      const queue = this.renderContext.getCallbackQueue('mount')
       queue.push(() => this.dispatcher.notify('mount', [this.element]))
     }
   }
@@ -95,15 +100,15 @@ class View {
     if (this.node == null)
       this.node = this.renderTemplate()
 
-    const top = !this.context.isLocked()
+    const top = !this.renderContext.isLocked()
     if (top)
-      this.context.lock()
+      this.renderContext.lock()
 
     this.renderer.attach(element, this.node)
 
     if (top) {
-      this.context.unlock()
-      const queue = this.context.getCallbackQueue('mount')
+      this.renderContext.unlock()
+      const queue = this.renderContext.getCallbackQueue('mount')
 
       while (queue.length > 0) {
         const hook = queue.splice(0, 1)[0]
@@ -112,7 +117,7 @@ class View {
 
       this.dispatcher.notify('mount', [this.element])
     } else {
-      const queue = this.context.getCallbackQueue('mount')
+      const queue = this.renderContext.getCallbackQueue('mount')
       queue.push(() => this.dispatcher.notify('mount', [this.element]))
     }
   }
@@ -123,9 +128,9 @@ class View {
 
     this.tmpElement = null
 
-    const top = !this.context.isLocked()
+    const top = !this.renderContext.isLocked()
     if (top)
-      this.context.lock()
+      this.renderContext.lock()
 
     if (this.node == null)
       this.node = this.renderTemplate()
@@ -135,8 +140,8 @@ class View {
     this.renderer.mount(container, index)
 
     if (top) {
-      this.context.unlock()
-      const queue = this.context.getCallbackQueue('mount')
+      this.renderContext.unlock()
+      const queue = this.renderContext.getCallbackQueue('mount')
 
       while (queue.length > 0) {
         const hook = queue.splice(0, 1)[0]
@@ -145,7 +150,7 @@ class View {
 
       this.dispatcher.notify('mount', [this.element])
     } else {
-      const queue = this.context.getCallbackQueue('mount')
+      const queue = this.renderContext.getCallbackQueue('mount')
       queue.push(() => this.dispatcher.notify('mount', [this.element]))
     }
   }
@@ -171,6 +176,8 @@ class View {
     if (this.element !== null && update)
       this.refresh()
 
+    this.updateContext(update)
+
     if (this.element !== null && update)
       this.dispatcher.notify('update', [this.state])
 
@@ -184,16 +191,16 @@ class View {
     if (this.element === null)
       throw new Error('View has been already unmounted')
 
-    const top = !this.context.isLocked()
+    const top = !this.renderContext.isLocked()
     if (top)
-      this.context.lock()
+      this.renderContext.lock()
 
     this.tmpElement = this.element
     this.renderer.detach(this.node)
 
     if (top) {
-      this.context.unlock()
-      const queue = this.context.getCallbackQueue('unmount')
+      this.renderContext.unlock()
+      const queue = this.renderContext.getCallbackQueue('unmount')
 
       while (queue.length > 0) {
         const hook = queue.splice(0, 1)[0]
@@ -203,7 +210,7 @@ class View {
       this.dispatcher.notify('unmount')
       this.tmpElement = null
     } else {
-      const queue = this.context.getCallbackQueue('unmount')
+      const queue = this.renderContext.getCallbackQueue('unmount')
       queue.push(() => {
         this.dispatcher.notify('unmount')
         this.tmpElement = null
@@ -219,9 +226,12 @@ class View {
     if (element !== null)
       this.unmount()
 
-    const top = !this.context.isLocked()
+    const top = !this.renderContext.isLocked()
     if (top)
-      this.context.lock()
+      this.renderContext.lock()
+
+    if (this.stateContextSubscription !== null)
+      this.stateContextSubscription() // unsubscribe
 
     this.destroyInnerViews([], false)
     if (removeElement && element != null)
@@ -233,8 +243,8 @@ class View {
     assert(() => this.tree.isEmpty(), 'View tree is empty after destroy')
 
     if (top) {
-      this.context.unlock()
-      const queue = this.context.getCallbackQueue('destroy')
+      this.renderContext.unlock()
+      const queue = this.renderContext.getCallbackQueue('destroy')
 
       while (queue.length > 0) {
         const hook = queue.splice(0, 1)[0]
@@ -243,22 +253,22 @@ class View {
 
       this.dispatcher.notify('destroy')
     } else {
-      const queue = this.context.getCallbackQueue('destroy')
+      const queue = this.renderContext.getCallbackQueue('destroy')
       queue.push(() => this.dispatcher.notify('destroy'))
     }
   }
 
-  getOrInstantiateInnerView(node, path, context) {
+  getOrInstantiateInnerView(node, path, renderContext) {
     if (!this.tree.hasView(path))
-      return this.instantiateInnerView(node, path, context)
+      return this.instantiateInnerView(node, path, renderContext)
 
     return this.tree.getView(path)
   }
 
-  instantiateInnerView(node, path, context) {
+  instantiateInnerView(node, path, renderContext) {
     assert(() => !this.tree.hasView(path), 'View tree overwrite')
 
-    const view = new View(context, node)
+    const view = new View(renderContext, node, this.stateContext)
     this.tree.addView(path, view)
     return view
   }
@@ -279,6 +289,38 @@ class View {
     const view = this.tree.getView(path)
     this.tree.removeView(path)
     view.destroy(removeElement)
+  }
+
+  initializeContext(provider) {
+    const value = provider(this)
+    if (value == null)
+      return
+
+    if (this.stateContext != null) this.stateContext.update(value)
+    else this.stateContext = new StateContext(value)
+
+    this.stateContextProvider = provider
+  }
+
+  subscribeContext(consumer) {
+    if (this.stateContext != null) {
+      this.state = { ...this.state, ...(consumer(this.stateContext.value) || {}) }
+      this.stateContextSubscription = this.stateContext.subscribe(value => this.update(consumer(value)))
+    }
+
+    this.stateContextConsumer = consumer
+  }
+
+  /** @private */
+  updateContext(updated) {
+    if (this.stateContext == null)
+      return
+
+    if (updated && this.stateContextProvider != null)
+      this.stateContext.update(this.stateContextProvider(this))
+
+    if (updated && this.stateContextConsumer != null)
+      this.state = { ...this.state, ...(this.stateContextConsumer(this.stateContext.value) || {}) }
   }
 
   /** @private */
@@ -333,6 +375,7 @@ class View {
       throw new Error("Actions can't be called during template render")
 
     const update = !this.updateLock
+
     this.updateLock = true
     let result = action(...args)
     if (result instanceof Function)
@@ -379,6 +422,7 @@ class View {
         if (!updated && this.trackedActionUpdate) {
           this.trackedActionUpdate = false
           this.refresh()
+          this.updateContext(true)
           notify = true
         } else
           this.trackedActionUpdate = false
@@ -440,18 +484,18 @@ const mountOrHydrate = (container, node, index, {
   const viewNode = Node.isNode(node) ? node : h(node)
   const document = container.ownerDocument
 
-  let context = Context.initialize(document, {
+  let renderContext = RenderContext.initialize(document, {
     production: isProduction,
     svg: insideSvg
   })
 
-  if (!context.isSvg()) {
+  if (!renderContext.isSvg()) {
     const _window = document.defaultView
     if (container instanceof _window.SVGElement)
-      context = context.setSvg(true)
+      renderContext = renderContext.setSvg(true)
   }
 
-  const viewInstance = new View(context, viewNode)
+  const viewInstance = new View(renderContext, viewNode)
   const fragment = isTemplateElement(container) ? container.content : container
   if (hydrate) viewInstance.hydrate(fragment.childNodes[index])
   else viewInstance.mount(fragment, index)
@@ -472,12 +516,12 @@ export const instantiate = (document, node, {
 } = {}) => {
   const viewNode = Node.isNode(node) ? node : h(node)
 
-  const context = Context.initialize(document, {
+  const renderContext = RenderContext.initialize(document, {
     production: isProduction,
     svg: insideSvg
   })
 
-  const viewInstance = new View(context, viewNode)
+  const viewInstance = new View(renderContext, viewNode)
   return new OuterFacade(viewInstance)
 }
 

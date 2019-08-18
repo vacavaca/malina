@@ -1,5 +1,4 @@
-import { h, view } from 'malina'
-import { withState, withActions } from 'malina-decorator'
+import { h, view, withState, withActions } from 'malina'
 import { styled, withStyledTemplate, only } from 'malina-styled'
 
 import Input from './input'

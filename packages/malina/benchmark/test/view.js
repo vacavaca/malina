@@ -1,6 +1,6 @@
-const { Suite, withTemplate, withState, withActions } = require('../util')
+const { Suite } = require('../util')
 const { JSDOM } = require('jsdom')
-const { h, view, mount } = require('../..')
+const { h, view, mount, withTemplate, withActions, withState } = require('../..')
 
 module.exports = new Suite()
   .add('update simple list',

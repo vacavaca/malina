@@ -1,6 +1,5 @@
-import { h, view, isViewNode, isElementNode, Id } from 'malina'
+import { h, view, isViewNode, isElementNode, Id, withActions, withTemplate } from 'malina'
 import { flatten } from 'malina-util'
-import { withActions, withTemplate } from 'malina-decorator'
 import pathToRegexp from 'path-to-regexp'
 import { connectRouter } from './router'
 

@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount, template } = require('malina')
-const { cssModules, withTemplate, withState, withActions } = require('..')
+const { h, view, mount, template, withTemplate, withState, withActions } = require('malina')
+const { cssModules } = require('..')
 
 describe('cssModules', () => {
   it('should add classes', () => {

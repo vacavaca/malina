@@ -1,5 +1,6 @@
-import { Declaration, decorator, template, h } from 'malina'
 import { keys } from 'malina-util'
+import { Declaration, template, h } from '../vdom'
+import decorator from './decorator'
 
 const id = a => a
 

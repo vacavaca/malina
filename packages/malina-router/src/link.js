@@ -1,5 +1,4 @@
-import { h, view } from 'malina'
-import { withState, withActions, withTemplate } from 'malina-decorator'
+import { h, view, withState, withActions, withTemplate } from 'malina'
 import { omit } from 'malina-util'
 import { withRouter } from './router'
 

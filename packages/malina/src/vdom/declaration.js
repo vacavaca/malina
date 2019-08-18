@@ -1,7 +1,8 @@
+import { compose } from 'malina-util'
 import { genGlobalUniqId } from '../env'
 import { Node } from './node'
 
-const TEMPLATE_MEMO_DEPTH = 4 // memoization depth in the node tree
+const TEMPLATE_MEMO_DEPTH = 1 // memoization depth in the node tree
 
 const getReplacedNode = (prev, next, path) => {
   if (path.length >= TEMPLATE_MEMO_DEPTH)
@@ -70,6 +71,7 @@ const createTemplate = arg => {
   else return createTemplate(() => arg)
 }
 
+// immutable
 export class Declaration {
   constructor(template, behavior, actions) {
     this.template = createTemplate(template)
@@ -91,12 +93,32 @@ export class Declaration {
   }
 
   setDevelopmentOnly(value) {
-    this.isDevOnly = value
-    return this
+    const next = this.copy()
+    next.isDevOnly = value
+    return next
   }
 
   is(declaration) {
     return this === declaration || this.id === declaration.id || this.originalId === declaration.originalId
+  }
+
+  decorateWith(decoratorKey) {
+    const next = this.copy()
+    next.decorators = { ...this.decorators, [decoratorKey]: true }
+    return next
+  }
+
+  /** @private */
+  copy() {
+    const next = new Declaration(null)
+    next.template = this.template
+    next.behavior = this.behavior
+    next.actions = { ...this.actions }
+    next.id = this.id
+    next.originalId = this.originalId
+    next.isDevOnly = this.isDevOnly
+    next.decorators = { ...this.decorators }
+    return next
   }
 }
 
@@ -106,3 +128,27 @@ export const isViewNode = node =>
 export const isElementNode = node => Node.isNode(node) && !Declaration.isViewDeclaration(node.tag)
 
 export const isTextNode = node => !(node instanceof Object) && typeof node !== 'object'
+
+/**
+ * Declare view composed from a list of decorators
+ *
+ * @param  {...any} args decorators or one vdom node
+ * @returns {Declaration} view declaration
+ */
+export const view = (...args) => {
+  if (args.length > 1) return compose(...args)(new Declaration(null))
+  else if (args.length === 1) {
+    const arg = args[0]
+    if (arg instanceof Function) return arg(new Declaration(null))
+    else return new Declaration(arg)
+  } else return new Declaration(null)
+}
+
+/**
+ * Declare a simple view that only renders some template
+ * using it's state and children
+ *
+ * @param {Function|Node|string|null} arg vdom node or a function that returns vdom node
+ * @returns {Declaration} view declaration
+ */
+export const template = arg => new Declaration(arg)

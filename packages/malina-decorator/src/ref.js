@@ -1,6 +1,5 @@
-import { h, isElementNode, isViewNode, isDevelopment, warn } from 'malina'
+import { h, isElementNode, isViewNode, isDevelopment, warn, mapTemplate, withLifecycle } from 'malina'
 import { compose, omit } from 'malina-util'
-import { mapTemplate, withLifecycle } from './common'
 
 const accessElement = (root, path) => {
   let next = root

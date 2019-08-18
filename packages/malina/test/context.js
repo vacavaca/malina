@@ -1,8 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount } = require('malina')
-const { withTemplate, withState, withActions, getContext, withContext } = require('..')
+const { h, view, mount, withTemplate, withState, withActions, getContext, withContext } = require('..')
 
 describe('context', () => {
   it('should pass context down the tree', () => {

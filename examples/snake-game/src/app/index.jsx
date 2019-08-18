@@ -1,5 +1,5 @@
-import { h, view } from 'malina'
-import { cssModules, withTemplate, withState, withActions } from 'malina-decorator'
+import { h, view, withTemplate, withState, withActions } from 'malina'
+import { cssModules } from 'malina-decorator'
 import state from './state'
 import * as actions from './action'
 import Level from '../level'

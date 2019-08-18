@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, template, mount } = require('malina')
-const { withTemplate, withUniqIds } = require('..')
+const { h, view, template, mount, withTemplate } = require('malina')
+const { withUniqIds } = require('..')
 
 describe('id', () => {
   describe('withUniqIds', () => {

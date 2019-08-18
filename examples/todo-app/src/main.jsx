@@ -1,5 +1,4 @@
-import { h, view, List } from 'malina'
-import { withActions, withTemplate } from 'malina-decorator'
+import { h, view, List, withActions, withTemplate } from 'malina'
 
 import Todo from './todo'
 

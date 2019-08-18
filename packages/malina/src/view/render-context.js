@@ -1,4 +1,4 @@
-export default class Context {
+export default class RenderContext {
   constructor(docuement, store, globalStore) {
     this.document = docuement
     this.store = store
@@ -6,7 +6,7 @@ export default class Context {
   }
 
   static initialize(document, store) {
-    return new Context(document, store, {})
+    return new RenderContext(document, store, {})
   }
 
   isLocked() {
@@ -26,7 +26,15 @@ export default class Context {
   }
 
   setSvg(value) {
-    return this.copyWith({ svg: value })
+    const store = {}
+    for (const key in this.store) {
+      if (Object.prototype.hasOwnProperty.call(this.store, key))
+        store[key] = this.store[key]
+    }
+
+    store['svg'] = value
+
+    return new RenderContext(this.document, store, this.globalStore)
   }
 
   isSvg() {
@@ -46,7 +54,7 @@ export default class Context {
   }
 
   setUpdating(updating) {
-    const store = { }
+    const store = {}
     for (const key in this.store) {
       if (Object.prototype.hasOwnProperty.call(this.store, key))
         store[key] = this.store[key]
@@ -54,7 +62,7 @@ export default class Context {
 
     store['updating'] = updating
 
-    return new Context(this.document, store, this.globalStore)
+    return new RenderContext(this.document, store, this.globalStore)
   }
 
   getDocument() {
@@ -65,10 +73,6 @@ export default class Context {
     const store = useGlobal ? this.globalStore : this.store
     store[key] = value
     return this
-  }
-
-  copy(update) {
-    return new Context(this.document, { ...this.store, ...update }, this.globalStore)
   }
 
   getOrCreate(key, defval, useGlobal = false) {

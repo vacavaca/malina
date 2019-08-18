@@ -1,4 +1,4 @@
-import { withContext, getContext, withLifecycle, withActions } from 'malina-decorator'
+import { withContext, getContext, withLifecycle, withActions } from 'malina'
 import { compose } from 'malina-util'
 
 const getRouterControl = history => ({

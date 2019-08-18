@@ -1,5 +1,5 @@
-import { h, view } from 'malina'
-import { withTemplate, cssModules, withState } from 'malina-decorator'
+import { h, view, withTemplate, withState } from 'malina'
+import { cssModules } from 'malina-decorator'
 import cn from 'classnames'
 
 import styles from './style.scss'

@@ -40,7 +40,6 @@
   "license": "MIT",
   "dependencies": {
     "malina": "0.0.19",
-    "malina-decorator": "0.0.19",
     "malina-util": "0.0.19",
     "stylis": "^3.5.4"
   },

@@ -1,6 +1,5 @@
-import { h, view, branch } from 'malina'
+import { h, view, branch, withTemplate, withState, withActions, withLifecycle } from 'malina'
 import { connectRouter, Route } from 'malina-router'
-import { withTemplate, withState, withActions, withLifecycle } from 'malina-decorator'
 import { styled, withStyledTemplate } from 'malina-styled'
 
 import Main from './main'

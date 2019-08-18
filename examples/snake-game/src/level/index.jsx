@@ -1,9 +1,9 @@
-import { h, view, List } from 'malina'
+import { h, view, List, withTemplate, withState, withActions, withLifecycle } from 'malina'
 import cn from 'classnames'
-import { withTemplate, cssModules, withRefs, withState, withActions, withLifecycle } from 'malina-decorator'
+import { cssModules, withRefs } from 'malina-decorator'
 import { default as state, gridLengthToScreen } from './state'
 import * as actions from './action'
-import * as hooks from './hook'
+import * as lifecycle from './lifecycle'
 import Cell from '../cell'
 
 import styles from './style.scss'
@@ -101,6 +101,6 @@ export default view(
   withState(state),
   withRefs(),
   withActions(actions),
-  withLifecycle(hooks),
+  withLifecycle(lifecycle),
   cssModules(styles),
 )

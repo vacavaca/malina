@@ -1,7 +1,5 @@
-import { h, view, decorator } from 'malina'
+import { h, view, decorator, getContext, withContext, withTemplate, withState, withActions } from 'malina'
 import { shallowEqual, keys, compose, memoize } from 'malina-util'
-import { withTemplate, withState, withActions } from './common'
-import { getContext, withContext } from './context'
 
 const actions = {}
 

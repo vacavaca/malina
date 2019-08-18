@@ -6,14 +6,8 @@ const isValidToWrapView = value =>
   Node.isNode(value) ||
   (typeof value !== 'object' && Object.getPrototypeOf(value) === Function.prototype)
 
-const updateDecoratorsHistory = (key, prev, next) => {
-  const decorators = { [key]: true }
-  for (const key in prev.decorators)
-    decorators[key] = true
-
-  next.decorators = decorators
-  return next
-}
+const updateDecoratorsHistory = (key, next) =>
+  Declaration.isViewDeclaration(next) && next.decorateWith(key)
 
 export default fn => {
   const key = genGlobalUniqId('decorator', 8)
@@ -32,7 +26,7 @@ export default fn => {
     if (!Declaration.isViewDeclaration(decorated)) {
       if (isValidToWrapView(decorated))
         decorated = new Declaration(decorated)
-      else return updateDecoratorsHistory(key, innerView, decorated)
+      else return updateDecoratorsHistory(key, decorated)
     }
 
     if (innerView.originalId != null)
@@ -40,6 +34,6 @@ export default fn => {
     else
       decorated.originalId = innerView.id
 
-    return updateDecoratorsHistory(key, innerView, decorated)
+    return updateDecoratorsHistory(key, decorated)
   }
 }

@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, view, mount } = require('malina')
-const { withRefs, withTemplate, withLifecycle, withActions } = require('..')
+const { h, view, mount, withTemplate, withLifecycle, withActions } = require('malina')
+const { withRefs } = require('..')
 
 describe('ref', () => {
   describe('withRef', () => {

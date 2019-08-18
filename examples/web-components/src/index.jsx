@@ -1,7 +1,7 @@
 import 'babel-polyfill'
 
-import { h, view, Debug } from 'malina'
-import { withTemplate, withState, withActions, webComponent, renameState } from 'malina-decorator'
+import { h, view, Debug, withTemplate, withState, withActions, renameState } from 'malina'
+import { webComponent } from 'malina-decorator'
 
 const App = view(
   withTemplate(

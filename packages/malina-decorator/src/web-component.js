@@ -1,6 +1,5 @@
+import { instantiate, decorator, getGlobal, h, mapTemplate } from 'malina'
 import { keys } from 'malina-util'
-import { instantiate, decorator, getGlobal, h } from 'malina'
-import { mapTemplate } from './common'
 
 const isValidName = name =>
   name.split('-').length >= 2
@@ -104,7 +103,7 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
 
 const withComponentTemplate = mapTemplate(original => view => {
   const node = original()
-  if (node.tag !== 'template')
+  if (node == null || node.tag !== 'template')
     throw new Error("Root element of a web-component must be a 'template' element")
 
   if (keys(node.attrs).length > 0)

@@ -1,7 +1,5 @@
-import { isElementNode, h, isDevelopment, getGlobal } from 'malina'
+import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext } from 'malina'
 import { compose, Random } from 'malina-util'
-import { withContext, getContext } from './context'
-import { mapTemplate } from './common'
 
 const key = Symbol.for('__malina_ids')
 const randomKey = Symbol.for('__malina-decorator.id.random')

@@ -1,5 +1,4 @@
-import { h, view } from 'malina'
-import { withTemplate, withState, withActions } from 'malina-decorator'
+import { h, view, withTemplate, withState, withActions } from 'malina'
 
 import { toggleClass } from './util'
 

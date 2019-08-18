@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert')
 const { JSDOM } = require('jsdom')
-const { h, template, Declaration, mount, Debug } = require('..')
+const { h, template, mount, Debug, withTemplate, withBehavior, withActions, view } = require('..')
 
 describe('Debug', () => {
   it('should log component lifecycle', () => {
@@ -31,7 +31,11 @@ describe('Debug', () => {
       update: () => ({ text: 'Updated' })
     }
 
-    const View = new Declaration(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text })), behavior, actions)
+    const View = view(
+      withTemplate(({ state }) => h('div', { class: 'test' }, h(Inner, { text: state.text }))),
+      withBehavior(behavior),
+      withActions(actions)
+    )
     const instance = mount(dom.window.document.body, h(View))
 
     const debugParent = dom.window.document.body.childNodes[0].childNodes[0]

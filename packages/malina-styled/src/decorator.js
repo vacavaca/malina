@@ -1,5 +1,4 @@
-import { h, isViewNode, isElementNode } from 'malina'
-import { compose, getContext, withContext, mapTemplate, withLifecycle, withState, withTemplate } from 'malina-decorator'
+import { h, isViewNode, isElementNode, compose, getContext, withContext, mapTemplate, withLifecycle, withState, withTemplate } from 'malina'
 import Injector from './dom/injector'
 import hash from './hash'
 import { StyleList } from './style'

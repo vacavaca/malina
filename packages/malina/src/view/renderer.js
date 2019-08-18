@@ -86,14 +86,14 @@ const isNodeCustomElement = node =>
     (customElementNameRe.test(node.tag) ||
       ('is' in node.attrs && customElementNameRe.test(node.attrs.is))))
 
-const isDomElement = (context, node) =>
-  node instanceof context.getDocument().defaultView.Element ||
-  node instanceof context.getDocument().defaultView.Text
+const isDomElement = (renderingContext, node) =>
+  node instanceof renderingContext.getDocument().defaultView.Element ||
+  node instanceof renderingContext.getDocument().defaultView.Text
 
 class Renderer {
-  constructor(view, context) {
+  constructor(view, renderingContext) {
     this.view = view
-    this.context = context
+    this.renderingContext = renderingContext
     this.element = null
     this.eventListeners = new Map()
     this.eventListenerDelegates = new Map()
@@ -103,7 +103,7 @@ class Renderer {
    * Renders vDOM and returns rendered element
    */
   render(node) {
-    return this.createNode(node, [], this.context)
+    return this.createNode(node, [], this.renderingContext)
   }
 
   /**
@@ -114,7 +114,7 @@ class Renderer {
     if (this.element !== null)
       throw new Error('Already attached')
 
-    this.hydrateNode(element, node, [], this.context)
+    this.hydrateNode(element, node, [], this.renderingContext)
     this.attach(element)
   }
 
@@ -126,7 +126,7 @@ class Renderer {
       throw new Error('Already attached')
 
     this.element = element
-    this.attachNode(element, node, [], this.context)
+    this.attachNode(element, node, [], this.renderingContext)
   }
 
   mount(container, index) {
@@ -141,9 +141,9 @@ class Renderer {
    * Updates DOM tree
    */
   update(prev, next) {
-    this.context = this.context.setUpdating(true)
-    this.patch(this.element, prev, next, [], this.context)
-    this.context.setUpdating(false)
+    this.renderingContext = this.renderingContext.setUpdating(true)
+    this.patch(this.element, prev, next, [], this.renderingContext)
+    this.renderingContext.setUpdating(false)
   }
 
   /** Removes event listeners */
@@ -151,7 +151,7 @@ class Renderer {
     if (this.element === null)
       throw new Error('Already detached')
 
-    this.detachNode(this.element, node, [], this.context)
+    this.detachNode(this.element, node, [], this.renderingContext)
 
     assert(() => this.eventListeners.size === 0, 'Event listeners map is empty after detach')
     assert(() => this.eventListenerDelegates.size === 0, 'Event listener delegates map is empty after detach')
@@ -165,37 +165,37 @@ class Renderer {
   }
 
   /** @private */
-  patch(element, prev, next, path, context) {
+  patch(element, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
     if (isElementNode(prev)) {
-      if (next == null) this.patchFromNodeToNone(element, prev, path, context)
-      else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path, context)
-      else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path, context)
+      if (next == null) this.patchFromNodeToNone(element, prev, path, renderingContext)
+      else if (isElementNode(next)) this.patchFromNodeToNode(element, prev, next, path, renderingContext)
+      else if (isViewNode(next)) this.patchFromNodeToView(element, prev, next, path, renderingContext)
       else if (isTextNode(next)) this.patchFromNodeToText(element, prev, next, path)
-      else if (isDomElement(context, next)) this.patchFromElementNodeToDom(element, next, path)
+      else if (isDomElement(renderingContext, next)) this.patchFromElementNodeToDom(element, next, path)
       else throw new Error('Invalid template type')
     } else if (isViewNode(prev)) {
       if (next == null) this.patchFromViewToNone(element, prev, path)
-      else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path, context)
-      else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path, context)
+      else if (isElementNode(next)) this.patchFromViewToNode(element, prev, next, path, renderingContext)
+      else if (isViewNode(next)) this.patchFromViewToView(element, prev, next, path, renderingContext)
       else if (isTextNode(next)) this.patchFromViewToText(element, prev, next, path)
-      else if (isDomElement(context, next)) this.patchFromViewToDom(element, next, path)
+      else if (isDomElement(renderingContext, next)) this.patchFromViewToDom(element, next, path)
       else throw new Error('Invalid template type')
-    } else if (isDomElement(context, prev)) {
+    } else if (isDomElement(renderingContext, prev)) {
       if (next == null) this.patchFromDomToNone(element, path)
-      else if (isElementNode(next)) this.patchFromDomToNode(element, next, path, context)
-      else if (isViewNode(next)) this.patchFromDomToView(element, next, path, context)
+      else if (isElementNode(next)) this.patchFromDomToNode(element, next, path, renderingContext)
+      else if (isViewNode(next)) this.patchFromDomToView(element, next, path, renderingContext)
       else if (isTextNode(next)) this.patchFromDomToText(element, next, path)
-      else if (isDomElement(context, next)) this.patchFromDomToDom(element, next, path)
+      else if (isDomElement(renderingContext, next)) this.patchFromDomToDom(element, next, path)
       else throw new Error('Invalid template type')
     } else {
       if (next == null) this.patchFromTextToNone(element, path)
-      else if (isElementNode(next)) this.patchFromTextToNode(element, next, path, context)
-      else if (isViewNode(next)) this.patchFromTextToView(element, next, path, context)
+      else if (isElementNode(next)) this.patchFromTextToNode(element, next, path, renderingContext)
+      else if (isViewNode(next)) this.patchFromTextToView(element, next, path, renderingContext)
       else if (isTextNode(next)) this.patchTextNodes(element, prev, next, path)
-      else if (isDomElement(context, next)) this.patchFromTextToDom(element, next, path)
+      else if (isDomElement(renderingContext, next)) this.patchFromTextToDom(element, next, path)
       else throw new Error('Invalid template type')
     }
   }
@@ -229,8 +229,8 @@ class Renderer {
   }
 
   /** @private */
-  patchFromDomToNode(element, next, path, context) {
-    const newElement = this.createElementNode(next, path, context)
+  patchFromDomToNode(element, next, path, renderingContext) {
+    const newElement = this.createElementNode(next, path, renderingContext)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -238,8 +238,8 @@ class Renderer {
   }
 
   /** @private */
-  patchFromDomToView(element, next, path, context) {
-    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
+  patchFromDomToView(element, next, path, renderingContext) {
+    const view = this.view.instantiateInnerView(next, path, renderingContext.setUpdating(false))
 
     let index
     if (path.length > 0) index = path[path.length - 1]
@@ -248,7 +248,7 @@ class Renderer {
     const parent = element.parentNode
     element.remove()
 
-    if (context.isUpdating()) {
+    if (renderingContext.isUpdating()) {
       const newElement = view.render()
       insertElement(parent, index, newElement)
       view.attach(newElement)
@@ -260,7 +260,7 @@ class Renderer {
 
   /** @private */
   patchFromDomToText(element, next, path) {
-    const newElement = this.context.getDocument().createTextNode(`${next}`)
+    const newElement = this.renderingContext.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -305,8 +305,8 @@ class Renderer {
   }
 
   /** @private */
-  patchFromTextToNode(element, next, path, context) {
-    const newElement = this.createElementNode(next, path, context)
+  patchFromTextToNode(element, next, path, renderingContext) {
+    const newElement = this.createElementNode(next, path, renderingContext)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -314,15 +314,15 @@ class Renderer {
   }
 
   /** @private */
-  patchFromTextToView(element, next, path, context) {
-    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
+  patchFromTextToView(element, next, path, renderingContext) {
+    const view = this.view.instantiateInnerView(next, path, renderingContext.setUpdating(false))
     let index
     if (path.length > 0) index = path[path.length - 1]
     else index = Array.from(element.parentNode.childNodes).findIndex(n => n === element)
     const parent = element.parentNode
 
     element.remove()
-    if (context.isUpdating()) {
+    if (renderingContext.isUpdating()) {
       const newElement = view.render()
       insertElement(parent, index, newElement)
       view.attach(newElement)
@@ -333,11 +333,11 @@ class Renderer {
   }
 
   /** @private */
-  patchFromNodeToNone(element, prev, path, context) {
+  patchFromNodeToNone(element, prev, path, renderingContext) {
     if (isRoot(path))
       throw new Error('Root element deleted during patch')
 
-    this.detachElementNode(element, prev, path, context)
+    this.detachElementNode(element, prev, path, renderingContext)
     this.view.destroyInnerViews(path, false)
     element.remove()
   }
@@ -346,7 +346,7 @@ class Renderer {
   patchFromNodeToText(element, prev, next, path) {
     this.view.destroyInnerViews(path, false)
 
-    const newElement = this.context.getDocument().createTextNode(`${next}`)
+    const newElement = this.renderingContext.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -354,7 +354,7 @@ class Renderer {
   }
 
   /** @private */
-  patchFromNodeToNode(element, prev, next, path, context) {
+  patchFromNodeToNode(element, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
@@ -363,25 +363,25 @@ class Renderer {
 
     if (prev.tag === next.tag) {
       if (prevCustom && nextCustom) {
-        this.updateAttributes(element, prev, next, path, context)
+        this.updateAttributes(element, prev, next, path, renderingContext)
         element.innerHTML = ''
-        this.createChildren(element, next, path, context)
+        this.createChildren(element, next, path, renderingContext)
       } else if (prevCustom || nextCustom) {
         this.view.destroyInnerViews(path, false)
 
-        const newElement = this.createElementNode(next, path, context)
+        const newElement = this.createElementNode(next, path, renderingContext)
         element.replaceWith(newElement)
 
         if (isRoot(path))
           this.element = newElement
       } else {
-        this.updateAttributes(element, prev, next, path, context)
-        this.updateChildren(element, prev, next, path, context)
+        this.updateAttributes(element, prev, next, path, renderingContext)
+        this.updateChildren(element, prev, next, path, renderingContext)
       }
     } else {
       this.view.destroyInnerViews(path, false)
 
-      const newElement = this.createElementNode(next, path, context)
+      const newElement = this.createElementNode(next, path, renderingContext)
       element.replaceWith(newElement)
 
       if (isRoot(path))
@@ -390,9 +390,9 @@ class Renderer {
   }
 
   /** @private */
-  patchFromNodeToView(element, prev, next, path, context) {
+  patchFromNodeToView(element, prev, next, path, renderingContext) {
     this.view.destroyInnerViews(path, false)
-    const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
+    const view = this.view.instantiateInnerView(next, path, renderingContext.setUpdating(false))
 
     let index
     if (path.length > 0) index = path[path.length - 1]
@@ -400,7 +400,7 @@ class Renderer {
 
     const parent = element.parentNode
     element.remove()
-    if (context.isUpdating()) {
+    if (renderingContext.isUpdating()) {
       const newElement = view.render()
       insertElement(parent, index, newElement)
       view.attach(newElement)
@@ -422,7 +422,7 @@ class Renderer {
   patchFromViewToText(element, prev, next, path) {
     this.view.destroyInnerView(path, false)
 
-    const newElement = this.context.getDocument().createTextNode(`${next}`)
+    const newElement = this.renderingContext.getDocument().createTextNode(`${next}`)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -430,10 +430,10 @@ class Renderer {
   }
 
   /** @private */
-  patchFromViewToNode(element, prev, next, path, context) {
+  patchFromViewToNode(element, prev, next, path, renderingContext) {
     this.view.destroyInnerView(path, false)
 
-    const newElement = this.createElementNode(next, path, context)
+    const newElement = this.createElementNode(next, path, renderingContext)
     element.replaceWith(newElement)
 
     if (isRoot(path))
@@ -441,7 +441,7 @@ class Renderer {
   }
 
   /** @private */
-  patchFromViewToView(element, prev, next, path, context) {
+  patchFromViewToView(element, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
@@ -456,10 +456,10 @@ class Renderer {
       else index = Array.from(parent.childNodes).findIndex(n => n === element)
 
       this.view.destroyInnerView(path)
-      const view = this.view.instantiateInnerView(next, path, context.setUpdating(false))
+      const view = this.view.instantiateInnerView(next, path, renderingContext.setUpdating(false))
 
       element.remove()
-      if (context.isUpdating()) {
+      if (renderingContext.isUpdating()) {
         const newElement = view.render()
         insertElement(parent, index, newElement)
         view.attach(newElement)
@@ -471,90 +471,90 @@ class Renderer {
   }
 
   /** @private */
-  createNode(node, path, context) {
-    if (isElementNode(node)) return this.createElementNode(node, path, context)
-    else if (isViewNode(node)) return this.createViewNode(node, path, context)
-    else if (isDomElement(context, node)) return node
+  createNode(node, path, renderingContext) {
+    if (isElementNode(node)) return this.createElementNode(node, path, renderingContext)
+    else if (isViewNode(node)) return this.createViewNode(node, path, renderingContext)
+    else if (isDomElement(renderingContext, node)) return node
     else if (node === null || isTextNode(node)) return this.createTextNode(node)
   }
 
   /** @private */
-  hydrateNode(element, node, path, context) {
-    if (isElementNode(node)) return this.hydrateElementNode(element, node, path, context)
-    else if (isViewNode(node)) return this.hydrateViewNode(element, node, path, context)
+  hydrateNode(element, node, path, renderingContext) {
+    if (isElementNode(node)) return this.hydrateElementNode(element, node, path, renderingContext)
+    else if (isViewNode(node)) return this.hydrateViewNode(element, node, path, renderingContext)
   }
 
   /** @private */
-  attachNode(element, node, path, context) {
-    if (isElementNode(node)) return this.attachElementNode(element, node, path, context)
+  attachNode(element, node, path, renderingContext) {
+    if (isElementNode(node)) return this.attachElementNode(element, node, path, renderingContext)
     else if (isViewNode(node)) return this.attachViewNode(element, path)
   }
 
   /** @private */
-  detachNode(element, node, path, context) {
-    if (isElementNode(node)) return this.detachElementNode(element, node, path, context)
+  detachNode(element, node, path, renderingContext) {
+    if (isElementNode(node)) return this.detachElementNode(element, node, path, renderingContext)
     else if (isViewNode(node)) return this.detachViewNode(element, path)
   }
 
   /** @private */
-  createElementNode(node, path, context) {
-    let isSvg = context.isSvg()
+  createElementNode(node, path, renderingContext) {
+    let isSvg = renderingContext.isSvg()
     let element
     if (!isSvg && node.tag === 'svg') {
-      context = context.setSvg(true)
+      renderingContext = renderingContext.setSvg(true)
       isSvg = true
     }
 
-    if (isSvg) element = context.getDocument().createElementNS('http://www.w3.org/2000/svg', node.tag)
-    else element = context.getDocument().createElement(node.tag)
+    if (isSvg) element = renderingContext.getDocument().createElementNS('http://www.w3.org/2000/svg', node.tag)
+    else element = renderingContext.getDocument().createElement(node.tag)
 
-    this.addAttributes(element, node, path, context)
-    this.createChildren(element, node, path, context)
+    this.addAttributes(element, node, path, renderingContext)
+    this.createChildren(element, node, path, renderingContext)
     return element
   }
 
   /** @private */
-  hydrateElementNode(element, node, path, context) {
-    let isSvg = context.isSvg()
+  hydrateElementNode(element, node, path, renderingContext) {
+    let isSvg = renderingContext.isSvg()
     if (!isSvg && node.tag === 'svg') {
-      context = context.setSvg(true)
+      renderingContext = renderingContext.setSvg(true)
       isSvg = true
     }
 
-    this.hydrateAttributes(element, node, path, context)
-    this.hydrateChildren(element, node, path, context)
+    this.hydrateAttributes(element, node, path, renderingContext)
+    this.hydrateChildren(element, node, path, renderingContext)
   }
 
   /** @private */
-  attachElementNode(element, node, path, context) {
-    let isSvg = context.isSvg()
+  attachElementNode(element, node, path, renderingContext) {
+    let isSvg = renderingContext.isSvg()
     if (!isSvg && node.tag === 'svg') {
-      context = context.setSvg(true)
+      renderingContext = renderingContext.setSvg(true)
       isSvg = true
     }
 
-    this.attachAttributes(element, node, path, context)
-    this.attachChildren(element, node, path, context)
+    this.attachAttributes(element, node, path, renderingContext)
+    this.attachChildren(element, node, path, renderingContext)
   }
 
   /** @private */
-  detachElementNode(element, node, path, context) {
-    let isSvg = context.isSvg()
+  detachElementNode(element, node, path, renderingContext) {
+    let isSvg = renderingContext.isSvg()
     if (!isSvg && node.tag === 'svg') {
-      context = context.setSvg(true)
+      renderingContext = renderingContext.setSvg(true)
       isSvg = true
     }
 
-    this.detachAttributes(element, node, path, context)
-    this.detachChildren(element, node, path, context)
+    this.detachAttributes(element, node, path, renderingContext)
+    this.detachChildren(element, node, path, renderingContext)
   }
 
   /** @private */
-  createViewNode(node, path, context) {
-    const view = this.view.instantiateInnerView(node, path, context.setUpdating(false))
+  createViewNode(node, path, renderingContext) {
+    const view = this.view.instantiateInnerView(node, path, renderingContext.setUpdating(false))
 
     let element
-    if (context.isUpdating()) {
+    if (renderingContext.isUpdating()) {
       element = view.render(this.document)
       view.attach(element)
     } else element = view.render(this.document)
@@ -563,8 +563,8 @@ class Renderer {
   }
 
   /** @private */
-  hydrateViewNode(element, node, path, context) {
-    const view = this.view.getOrInstantiateInnerView(node, path, context)
+  hydrateViewNode(element, node, path, renderingContext) {
+    const view = this.view.getOrInstantiateInnerView(node, path, renderingContext)
     return view.hydrate(element)
   }
 
@@ -582,28 +582,28 @@ class Renderer {
 
   /** @private */
   createTextNode(node) {
-    return this.context.getDocument().createTextNode(`${node != null ? node : ''}`)
+    return this.renderingContext.getDocument().createTextNode(`${node != null ? node : ''}`)
   }
 
   /** @private */
-  createChildren(element, node, path, context) {
+  createChildren(element, node, path, renderingContext) {
     requireValidChildren(node)
 
     if ('innerHtml' in node.attrs)
       element.innerHTML = node.attrs.innerHtml
     else {
       // first create an entire child-tree and then append it to the container element
-      const fragment = context.getDocument().createDocumentFragment()
+      const fragment = renderingContext.getDocument().createDocumentFragment()
       let shift = 0
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        if (child === null || (context.isInProduction() && child.isDevOnly)) {
+        if (child === null || (renderingContext.isInProduction() && child.isDevOnly)) {
           shift += 1
           continue
         }
 
         const nextPath = path.concat([ndx - shift])
-        const childElement = this.createNode(child, nextPath, context)
+        const childElement = this.createNode(child, nextPath, renderingContext)
         fragment.appendChild(childElement)
       }
 
@@ -615,7 +615,7 @@ class Renderer {
   }
 
   /** @private */
-  hydrateChildren(element, node, path, context) {
+  hydrateChildren(element, node, path, renderingContext) {
     requireValidChildren(node, { noWarnKeys: true })
 
     if (isNodeCustomElement(node))
@@ -626,7 +626,7 @@ class Renderer {
     if (!('innerHtml' in node.attrs)) {
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        if (child === null || (context.isInProduction() && child.isDevOnly)) {
+        if (child === null || (renderingContext.isInProduction() && child.isDevOnly)) {
           shift += 1
           continue
         }
@@ -636,13 +636,13 @@ class Renderer {
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]
-        this.hydrateNode(childNode, child, nextPath, context)
+        this.hydrateNode(childNode, child, nextPath, renderingContext)
       }
     }
   }
 
   /** @private */
-  attachChildren(element, node, path, context) {
+  attachChildren(element, node, path, renderingContext) {
     requireValidChildren(node, { noWarnKeys: true })
 
     if (isNodeCustomElement(node))
@@ -653,7 +653,7 @@ class Renderer {
     if (!('innerHtml' in node.attrs)) {
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        if (child === null || (context.isInProduction() && child.isDevOnly)) {
+        if (child === null || (renderingContext.isInProduction() && child.isDevOnly)) {
           shift += 1
           continue
         }
@@ -663,13 +663,13 @@ class Renderer {
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]
-        this.attachNode(childNode, child, nextPath, context)
+        this.attachNode(childNode, child, nextPath, renderingContext)
       }
     }
   }
 
   /** @private */
-  detachChildren(element, node, path, context) {
+  detachChildren(element, node, path, renderingContext) {
     if (isNodeCustomElement(node))
       return
 
@@ -678,7 +678,7 @@ class Renderer {
     if (!('innerHtml' in node.attrs)) {
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        if (child === null || (context.isInProduction() && child.isDevOnly)) {
+        if (child === null || (renderingContext.isInProduction() && child.isDevOnly)) {
           shift += 1
           continue
         }
@@ -688,13 +688,13 @@ class Renderer {
 
         const nextPath = path.concat([ndx - shift])
         const childNode = fragment.childNodes[ndx]
-        this.detachNode(childNode, child, nextPath, context)
+        this.detachNode(childNode, child, nextPath, renderingContext)
       }
     }
   }
 
   /** @private */
-  updateChildren(element, prev, next, path, context) {
+  updateChildren(element, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
@@ -703,15 +703,15 @@ class Renderer {
     if ('innerHtml' in next.attrs)
       element.innerHTML = next.attrs.innerHtml
     else {
-      if (next.tag === 'svg' && !context.isSvg())
-        context = context.setSvg(true)
+      if (next.tag === 'svg' && !renderingContext.isSvg())
+        renderingContext = renderingContext.setSvg(true)
 
       const len = Math.max(prev.children.length, next.children.length)
       let nodeIndexShift = 0
       for (let ndx = 0; ndx < len; ndx++) {
         let prevChild = prev.children[ndx]
         let nextChild = ndx in next.children ? next.children[ndx] : null
-        if (context.isInProduction()) {
+        if (renderingContext.isInProduction()) {
           if (prevChild != null && nextChild != null && prevChild.isDevOnly && nextChild.isDevOnly)
             continue
           else if (prevChild != null && prevChild.isDevOnly)
@@ -723,12 +723,12 @@ class Renderer {
         const nextPath = path.concat([ndx])
         if (prevChild != null) {
           const childNode = element.childNodes[ndx - nodeIndexShift]
-          this.patch(childNode, prevChild, nextChild, nextPath, context)
+          this.patch(childNode, prevChild, nextChild, nextPath, renderingContext)
           if (nextChild == null)
             nodeIndexShift += 1
         } else {
           if (nextChild != null) {
-            const childElement = this.createNode(nextChild, nextPath, context)
+            const childElement = this.createNode(nextChild, nextPath, renderingContext)
             const fragment = isTemplateElement(element) ? element.content : element
             const before = fragment.childNodes[ndx]
             fragment.insertBefore(childElement, before)
@@ -739,18 +739,18 @@ class Renderer {
   }
 
   /** @private */
-  addAttributes(element, node, path, context) {
+  addAttributes(element, node, path, renderingContext) {
     for (const name in node.attrs) {
       if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
-      this.addAttribute(element, name, value, path, context)
+      this.addAttribute(element, name, value, path, renderingContext)
     }
   }
 
   /** @private */
-  hydrateAttributes(element, node, path, context) {
+  hydrateAttributes(element, node, path, renderingContext) {
     if (!('style' in node.attrs))
       element.removeAttribute('style')
 
@@ -759,34 +759,34 @@ class Renderer {
         continue
 
       const value = node.attrs[name]
-      this.hydrateAttribute(element, name, value, path, context)
+      this.hydrateAttribute(element, name, value, path, renderingContext)
     }
   }
 
   /** @private */
-  attachAttributes(element, node, path, context) {
+  attachAttributes(element, node, path, renderingContext) {
     for (const name in node.attrs) {
       if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
-      this.attachAttribute(element, name, value, path, context)
+      this.attachAttribute(element, name, value, path, renderingContext)
     }
   }
 
   /** @private */
-  detachAttributes(element, node, path, context) {
+  detachAttributes(element, node, path, renderingContext) {
     for (const name in node.attrs) {
       if (name === 'innerHtml' || name === 'ignoreKeys')
         continue
 
       const value = node.attrs[name]
-      this.detachAttribute(element, name, value, path, context)
+      this.detachAttribute(element, name, value, path, renderingContext)
     }
   }
 
   /** @private */
-  addAttribute(element, name, value, path, context) {
+  addAttribute(element, name, value, path, renderingContext) {
     if (name === 'style') {
       for (const prop in value)
         this.setStyleProp(element, prop, value[prop] || '')
@@ -795,7 +795,7 @@ class Renderer {
     else if (name === 'data' && value != null && typeof value === 'object') {
       for (const key in value)
         element.dataset[key] = value[key]
-    } else if (name !== 'focus' && name in element && !context.isSvg() && value != null)
+    } else if (name !== 'focus' && name in element && !renderingContext.isSvg() && value != null)
       element[name] = value
     else if (typeof value === 'boolean') {
       if (name !== 'focus') element.setAttribute(name, name)
@@ -803,7 +803,7 @@ class Renderer {
   }
 
   /** @private */
-  hydrateAttribute(element, name, value, path, context) {
+  hydrateAttribute(element, name, value, path, renderingContext) {
     if (name === 'style') {
       element.removeAttribute('style')
       for (const prop in value)
@@ -821,7 +821,7 @@ class Renderer {
   }
 
   /** @private */
-  attachAttribute(element, name, value, path, context) {
+  attachAttribute(element, name, value, path, renderingContext) {
     if (name === 'focus' && element.focus && element.blur) {
       if (value) element.focus()
       else element.blur()
@@ -829,7 +829,7 @@ class Renderer {
   }
 
   /** @private */
-  detachAttribute(element, name, value, path, context) {
+  detachAttribute(element, name, value, path, renderingContext) {
     if (value instanceof Function) {
       const event = normalizeEventName(name)
       this.removeEventListener(element, path, event)
@@ -837,7 +837,7 @@ class Renderer {
   }
 
   /** @private */
-  updateAttributes(element, prev, next, path, context) {
+  updateAttributes(element, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
@@ -848,8 +848,8 @@ class Renderer {
       const nextValue = next.attrs[name]
       if (name in prev.attrs) {
         const prevValue = prev.attrs[name]
-        this.updateAttribute(element, name, prevValue, nextValue, path, context)
-      } else this.addAttribute(element, name, nextValue, path, context)
+        this.updateAttribute(element, name, prevValue, nextValue, path, renderingContext)
+      } else this.addAttribute(element, name, nextValue, path, renderingContext)
     }
 
     for (const name in prev.attrs) {
@@ -857,12 +857,12 @@ class Renderer {
         continue
 
       if (!(name in next.attrs))
-        this.removeAttribute(element, name, prev.attrs[name], path, context)
+        this.removeAttribute(element, name, prev.attrs[name], path, renderingContext)
     }
   }
 
   /** @private */
-  updateAttribute(element, name, prev, next, path, context) {
+  updateAttribute(element, name, prev, next, path, renderingContext) {
     if (prev === next)
       return
 
@@ -883,11 +883,11 @@ class Renderer {
         if (next !== prev)
           this.updateEventListener(path, normalizeEventName(name), next)
       } else if (nextFunction) {
-        this.removeAttribute(element, name, prev, path, context)
+        this.removeAttribute(element, name, prev, path, renderingContext)
         this.addEventListener(element, path, normalizeEventName(name), next)
       } else if (prevFunction) {
         this.removeEventListener(element, path, normalizeEventName(name))
-        this.addAttribute(element, name, next, path, context)
+        this.addAttribute(element, name, next, path, renderingContext)
       }
     } else if (name === 'data') {
       const prevObject = prev != null && typeof prev === 'object'
@@ -907,7 +907,7 @@ class Renderer {
         for (const key in next)
           element.dataset[key] = next[key]
       }
-    } else if (name !== 'focus' && name in element && !context.isSvg())
+    } else if (name !== 'focus' && name in element && !renderingContext.isSvg())
       element[name] = next
     else if (typeof prev === 'boolean') {
       if (name === 'focus') {
@@ -926,7 +926,7 @@ class Renderer {
   }
 
   /** @private */
-  removeAttribute(element, name, prev, path, context) {
+  removeAttribute(element, name, prev, path, renderingContext) {
     if (name === 'style')
       element.removeAttribute('style')
     else if (prev instanceof Function) {
@@ -935,7 +935,7 @@ class Renderer {
     } else if (name === 'data' && prev != null && typeof prev === 'object') {
       for (const key in element.dataset)
         delete element.dataset[key]
-    } else if (name !== 'focus' && name in element && !context.isSvg())
+    } else if (name !== 'focus' && name in element && !renderingContext.isSvg())
       element[name] = undefined
     else if (typeof prev === 'boolean') {
       if (name === 'focus' && element.blur)
