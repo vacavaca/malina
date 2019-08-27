@@ -54,7 +54,23 @@ describe('Debug', () => {
 
     assert.deepStrictEqual(createData, { state: { info: 'test-component', data: 'Lorem ipsum' } })
     assert.deepStrictEqual(mountData, { state: { info: 'test-component', data: 'Lorem ipsum' }, element: { parent: debugParent, index: 0 } })
-    assert.deepStrictEqual(updateData, { state: { info: 'test-component', data: 'Updated' }, update: { data: 'Updated' }, element: { parent: debugParent, index: 0 } })
+    assert.deepStrictEqual(updateData, {
+      state: { info: 'test-component', data: 'Updated' },
+      element:
+      {
+        parent: debugParent,
+        index: 0
+      },
+      update:
+      {
+        previousState: { info: 'test-component', data: 'Lorem ipsum' },
+        nextState: { info: 'test-component', data: 'Updated' },
+        previousChildren: [],
+        nextChildren: [],
+        update: { data: 'Updated' },
+        childrenUpdated: false
+      }
+    })
 
     instance.destroy()
 

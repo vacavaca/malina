@@ -26,6 +26,9 @@ export default class RenderContext {
   }
 
   setSvg(value) {
+    if (this.isSvg() === value)
+      return this
+
     const store = {}
     for (const key in this.store) {
       if (Object.prototype.hasOwnProperty.call(this.store, key))
@@ -54,6 +57,9 @@ export default class RenderContext {
   }
 
   setUpdating(updating) {
+    if (this.isUpdating() === updating)
+      return this
+
     const store = {}
     for (const key in this.store) {
       if (Object.prototype.hasOwnProperty.call(this.store, key))

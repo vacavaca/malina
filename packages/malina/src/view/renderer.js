@@ -97,6 +97,8 @@ class Renderer {
     this.element = null
     this.eventListeners = new Map()
     this.eventListenerDelegates = new Map()
+    this.attachQueue = []
+    this.isDeferElementAttach = false
   }
 
   /**
@@ -129,8 +131,8 @@ class Renderer {
     this.attachNode(element, node, [], this.renderingContext)
   }
 
-  mount(container, index) {
-    insertElement(container, index, this.element)
+  mount(element, container, index) {
+    insertElement(container, index, element)
   }
 
   move(container, index) {
@@ -157,6 +159,17 @@ class Renderer {
     assert(() => this.eventListenerDelegates.size === 0, 'Event listener delegates map is empty after detach')
 
     this.element = null
+  }
+
+  deferElementAttach() {
+    this.isDeferElementAttach = true
+  }
+
+  flushAttachQueue() {
+    const queue = this.attachQueue
+    this.attachQueue = []
+    for (const { element, name, value, path, renderingContext } of queue)
+      this.attachAttribute(element, name, value, path, renderingContext)
   }
 
   /** @private */
@@ -230,8 +243,11 @@ class Renderer {
 
   /** @private */
   patchFromDomToNode(element, next, path, renderingContext) {
-    const newElement = this.createElementNode(next, path, renderingContext)
+    const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false))
     element.replaceWith(newElement)
+
+    if (renderingContext.isUpdating())
+      this.attachElementNode(element, next, path, renderingContext)
 
     if (isRoot(path))
       this.element = newElement
@@ -306,8 +322,11 @@ class Renderer {
 
   /** @private */
   patchFromTextToNode(element, next, path, renderingContext) {
-    const newElement = this.createElementNode(next, path, renderingContext)
+    const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false))
+
     element.replaceWith(newElement)
+    if (renderingContext.isUpdating())
+      this.attachElementNode(element, next, path, renderingContext)
 
     if (isRoot(path))
       this.element = newElement
@@ -369,8 +388,11 @@ class Renderer {
       } else if (prevCustom || nextCustom) {
         this.view.destroyInnerViews(path, false)
 
-        const newElement = this.createElementNode(next, path, renderingContext)
+        const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false))
+
         element.replaceWith(newElement)
+        if (renderingContext.isUpdating())
+          this.attachElementNode(element, next, path, renderingContext)
 
         if (isRoot(path))
           this.element = newElement
@@ -381,8 +403,10 @@ class Renderer {
     } else {
       this.view.destroyInnerViews(path, false)
 
-      const newElement = this.createElementNode(next, path, renderingContext)
+      const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false))
       element.replaceWith(newElement)
+      if (renderingContext.isUpdating())
+        this.attachElementNode(element, next, path, renderingContext)
 
       if (isRoot(path))
         this.element = newElement
@@ -433,8 +457,10 @@ class Renderer {
   patchFromViewToNode(element, prev, next, path, renderingContext) {
     this.view.destroyInnerView(path, false)
 
-    const newElement = this.createElementNode(next, path, renderingContext)
+    const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false))
     element.replaceWith(newElement)
+    if (renderingContext.isUpdating())
+      this.attachElementNode(element, next, path, renderingContext)
 
     if (isRoot(path))
       this.element = newElement
@@ -589,6 +615,7 @@ class Renderer {
   createChildren(element, node, path, renderingContext) {
     requireValidChildren(node)
 
+    const nodesToAttach = []
     if ('innerHtml' in node.attrs)
       element.innerHTML = node.attrs.innerHtml
     else {
@@ -603,13 +630,20 @@ class Renderer {
         }
 
         const nextPath = path.concat([ndx - shift])
-        const childElement = this.createNode(child, nextPath, renderingContext)
+        const childElement = this.createNode(child, nextPath, renderingContext.setUpdating(false))
         fragment.appendChild(childElement)
+        if (renderingContext.isUpdating())
+          nodesToAttach.push({ element: childElement, node: child, path: nextPath })
       }
 
       if (node.children.length > 0) {
         const container = isTemplateElement(element) ? element.content : element
         container.appendChild(fragment)
+
+        for (const { element, node, path } of nodesToAttach) {
+          if (isElementNode(node)) this.attachElementNode(element, node, path, renderingContext)
+          else if (isViewNode(node)) this.attachViewNode(element, path)
+        }
       }
     }
   }
@@ -728,10 +762,14 @@ class Renderer {
             nodeIndexShift += 1
         } else {
           if (nextChild != null) {
-            const childElement = this.createNode(nextChild, nextPath, renderingContext)
+            const childElement = this.createNode(nextChild, nextPath, renderingContext.setUpdating(false))
             const fragment = isTemplateElement(element) ? element.content : element
             const before = fragment.childNodes[ndx]
             fragment.insertBefore(childElement, before)
+            if (renderingContext.isUpdating()) {
+              if (isElementNode(nextChild)) this.attachElementNode(childElement, nextChild, nextPath, renderingContext)
+              else if (isViewNode(nextChild)) this.attachViewNode(childElement, nextPath)
+            }
           } else nodeIndexShift += 1
         }
       }
@@ -770,7 +808,8 @@ class Renderer {
         continue
 
       const value = node.attrs[name]
-      this.attachAttribute(element, name, value, path, renderingContext)
+      if (!this.isDeferElementAttach) this.attachAttribute(element, name, value, path, renderingContext)
+      else this.attachQueue.push({ element, name, value, path, renderingContext })
     }
   }
 
@@ -814,9 +853,6 @@ class Renderer {
       // TODO do we realy need it?
       for (const key in value)
         element.dataset[key] = value[key]
-    } else if (name === 'focus' && element.focus && element.blur) {
-      if (value) element.focus()
-      else element.blur()
     }
   }
 

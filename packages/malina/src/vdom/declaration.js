@@ -2,7 +2,7 @@ import { compose } from 'malina-util'
 import { genGlobalUniqId } from '../env'
 import { Node } from './node'
 
-const TEMPLATE_MEMO_DEPTH = 1 // memoization depth in the node tree
+const TEMPLATE_MEMO_DEPTH = 3 // memoization depth in the node tree
 
 const getReplacedNode = (prev, next, path) => {
   if (path.length >= TEMPLATE_MEMO_DEPTH)

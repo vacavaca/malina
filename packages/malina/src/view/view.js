@@ -70,6 +70,7 @@ class View {
     if (top)
       this.renderContext.lock()
 
+    this.renderer.deferElementAttach()
     this.renderer.hydrate(element, this.node)
 
     if (top) {
@@ -82,9 +83,14 @@ class View {
       }
 
       this.dispatcher.notify('mount', [this.element])
+
+      this.renderer.flushAttachQueue()
     } else {
       const queue = this.renderContext.getCallbackQueue('mount')
-      queue.push(() => this.dispatcher.notify('mount', [this.element]))
+      queue.push(() => {
+        this.dispatcher.notify('mount', [this.element])
+        this.renderer.flushAttachQueue()
+      })
     }
   }
 
@@ -104,6 +110,7 @@ class View {
     if (top)
       this.renderContext.lock()
 
+    this.renderer.deferElementAttach()
     this.renderer.attach(element, this.node)
 
     if (top) {
@@ -116,9 +123,13 @@ class View {
       }
 
       this.dispatcher.notify('mount', [this.element])
+      this.renderer.flushAttachQueue()
     } else {
       const queue = this.renderContext.getCallbackQueue('mount')
-      queue.push(() => this.dispatcher.notify('mount', [this.element]))
+      queue.push(() => {
+        this.dispatcher.notify('mount', [this.element])
+        this.renderer.flushAttachQueue()
+      })
     }
   }
 
@@ -136,8 +147,9 @@ class View {
       this.node = this.renderTemplate()
 
     const element = this.renderer.render(this.node)
+    this.renderer.deferElementAttach()
+    this.renderer.mount(element, container, index)
     this.renderer.attach(element, this.node)
-    this.renderer.mount(container, index)
 
     if (top) {
       this.renderContext.unlock()
@@ -149,9 +161,13 @@ class View {
       }
 
       this.dispatcher.notify('mount', [this.element])
+      this.renderer.flushAttachQueue()
     } else {
       const queue = this.renderContext.getCallbackQueue('mount')
-      queue.push(() => this.dispatcher.notify('mount', [this.element]))
+      queue.push(() => {
+        this.dispatcher.notify('mount', [this.element])
+        this.renderer.flushAttachQueue()
+      })
     }
   }
 
@@ -230,8 +246,10 @@ class View {
     if (top)
       this.renderContext.lock()
 
-    if (this.stateContextSubscription !== null)
+    if (this.stateContextSubscription !== null) {
       this.stateContextSubscription() // unsubscribe
+      this.stateContextSubscription = null
+    }
 
     this.destroyInnerViews([], false)
     if (removeElement && element != null)
@@ -305,6 +323,8 @@ class View {
   subscribeContext(consumer) {
     if (this.stateContext != null) {
       this.state = { ...this.state, ...(consumer(this.stateContext.value) || {}) }
+      if (this.stateContextSubscription !== null)
+        this.stateContextSubscription()
       this.stateContextSubscription = this.stateContext.subscribe(value => this.update(consumer(value)))
     }
 

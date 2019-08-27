@@ -1,4 +1,4 @@
-import { keys } from 'malina-util'
+import { keys, compose } from 'malina-util'
 import { Declaration, template, h } from '../vdom'
 import decorator from './decorator'
 
@@ -29,6 +29,11 @@ export const withActions = actions => decorator(Inner =>
     ...(Inner.actions || {}),
     ...(actions || {})
   }))
+
+export const withStateActions = (state, actions) => compose(
+  withState(state),
+  withActions(actions)
+)
 
 export const withLifecycle = handlers => withBehavior(view => {
   if ('create' in handlers)

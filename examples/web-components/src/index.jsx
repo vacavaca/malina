@@ -1,6 +1,6 @@
 import 'babel-polyfill'
 
-import { h, view, Debug, withTemplate, withState, withActions, renameState } from 'malina'
+import { h, view, Debug, withTemplate, withState, withActions } from 'malina'
 import { webComponent } from 'malina-decorator'
 
 const App = view(
@@ -99,13 +99,14 @@ const Text = view(
   p {
     color: red;
   }
-  `}</style>
-      <Debug info="content" counter={state['data-counter']} />
+  `}
+      </style>
+      <Debug info="content" counter={state.counter} />
       <p>{children}</p>
-      <b>One more counter: {state['data-counter']}</b>
+      <b>One more counter: {state.counter}</b>
     </template>
   ),
-  webComponent('x-text', { observe: ['data-counter'] })
+  webComponent('x-text', { observe: { 'data-counter': 'counter' } })
 )
 
 const Content = view(

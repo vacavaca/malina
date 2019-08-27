@@ -16,7 +16,7 @@ export default view(
       <input
         class="new-todo"
         placeholder="What needs to be done?"
-        autofocus
+        focus
         onChange={actions.onCreate}
       />
     </header>),

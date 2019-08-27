@@ -1,5 +1,8 @@
-import { instantiate, decorator, getGlobal, h, mapTemplate } from 'malina'
+import { instantiate, decorator, getGlobal, h } from 'malina'
 import { keys } from 'malina-util'
+
+const isTemplateElement = element =>
+  element instanceof element.ownerDocument.defaultView.HTMLTemplateElement
 
 const isValidName = name =>
   name.split('-').length >= 2
@@ -9,7 +12,7 @@ const requireValidName = name => {
     throw new Error(`"${name}" is not valid custom element name`)
 }
 
-const getCustomElementClass = (window, declaration, name, { shadow = 'open', observe = [] }) =>
+const getCustomElementClass = (window, declaration, name, { shadow = 'open', observe = {} }) =>
   class extends window.HTMLElement {
     constructor(...args) {
       const self = super(...args)
@@ -21,7 +24,7 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
     }
 
     static get observedAttributes() {
-      return observe || []
+      return observe != null ? (Array.isArray(observe) ? observe : keys(observe)) : []
     }
 
     connectedCallback() {
@@ -29,13 +32,21 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
         const shadowRoot = this.attachShadow({ mode: shadow })
         const attrs = {}
 
-        for (const attr of this.attributes)
-          attrs[attr.name] = attr.value
+        for (const attr of this.attributes) {
+          if (observe != null && attr.name in observe) attrs[observe[attr.name]] = attr.value
+          else attrs[attr.name] = attr.value
+        }
 
         const children = Array.from(this.childNodes)
 
         this.view = instantiate(window.document, h(declaration, attrs, children))
         const template = this.view.render()
+        if (!isTemplateElement(template))
+          throw new Error('Root element of a web-component must be a \'template\' element')
+
+        if (template.hasAttributes())
+          throw new Error('Root element of a web-component must not have any attributes')
+
         shadowRoot.appendChild(template.content)
       }
 
@@ -50,9 +61,8 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
 
     attributeChangedCallback(name, prevValue, nextValue) {
       if (this.view != null) {
-        this.view.update({
-          [name]: nextValue
-        })
+        if (observe != null && name in observe) this.view.update({ [observe[name]]: nextValue })
+        else this.view.update({ [name]: nextValue })
       }
     }
 
@@ -101,23 +111,12 @@ const getCustomElementClass = (window, declaration, name, { shadow = 'open', obs
     }
   }
 
-const withComponentTemplate = mapTemplate(original => view => {
-  const node = original()
-  if (node == null || node.tag !== 'template')
-    throw new Error("Root element of a web-component must be a 'template' element")
-
-  if (keys(node.attrs).length > 0)
-    throw new Error('Root element of a web-component must not have any attributes')
-
-  return node
-})
-
 const normalizedWebComponent = (_window, name, options = {}) => {
   requireValidName(name)
 
   return decorator(Inner => {
     if ('customElements' in _window) {
-      const cls = getCustomElementClass(_window, withComponentTemplate(Inner), name, options)
+      const cls = getCustomElementClass(_window, Inner, name, options)
       _window.customElements.define(name, cls)
       return cls
     }

@@ -7,7 +7,9 @@ import App from './app'
 
 const ready = () => {
   const history = createBrowserHistory()
-  console.log(mount(document.body, <App history={history} />))
+  const view = mount(document.body, <App history={history} />)
+
+  console.log(view)
 }
 
 document.addEventListener('DOMContentLoaded', ready)

@@ -26,18 +26,25 @@ const getElementData = view => {
   return data
 }
 
+const updatePreviousStorage = (prevStorage, view) => {
+  prevStorage.prev = {
+    state: view.state,
+    children: view.children
+  }
+}
+
 const getUpdateData = (prevStorage, view) => {
   let update = null
 
   const allkeys = {}
-  for (const key of keys(prevStorage.prev))
+  for (const key of keys(prevStorage.prev.state))
     allkeys[key] = true
 
   for (const key of keys(view.state))
     allkeys[key] = true
 
   for (const key in allkeys) {
-    const prevValue = prevStorage.prev[key]
+    const prevValue = prevStorage.prev.state[key]
     const nextValue = view.state[key]
 
     if (prevValue !== nextValue) {
@@ -48,7 +55,14 @@ const getUpdateData = (prevStorage, view) => {
     }
   }
 
-  return update
+  return {
+    previousState: prevStorage.prev.state,
+    nextState: { ...view.state },
+    previousChildren: prevStorage.prev.children,
+    nextChildren: view.children,
+    update,
+    childrenUpdated: prevStorage.prev.children !== view.children
+  }
 }
 
 const onCreate = logger => view => {
@@ -67,7 +81,7 @@ const onMount = (logger, prevStorage) => view => {
     element: getElementData(view)
   }
 
-  prevStorage.prev = view.state
+  updatePreviousStorage(prevStorage, view)
 
   logger(msg, data)
 }
@@ -83,7 +97,7 @@ const onUpdate = (logger, prevStorage) => view => {
   if (update != null)
     data.update = update
 
-  prevStorage.prev = view.state
+  updatePreviousStorage(prevStorage, view)
 
   logger(msg, data)
 }
