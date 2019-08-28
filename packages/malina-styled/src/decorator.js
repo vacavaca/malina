@@ -11,6 +11,7 @@ const provideContext = compose(
   getContext(ctx => injectorKey in ctx ? { [injectorKey]: ctx[injectorKey] } : {}),
   withContext(({ state }) => {
     if (!(injectorKey in state)) {
+      console.log('init')
       const injector = new Injector()
       state[injectorKey] = injector
       return { [injectorKey]: injector }

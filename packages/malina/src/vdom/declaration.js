@@ -2,7 +2,8 @@ import { compose } from 'malina-util'
 import { genGlobalUniqId } from '../env'
 import { Node } from './node'
 
-const TEMPLATE_MEMO_DEPTH = 3 // memoization depth in the node tree
+const TEMPLATE_MEMO_DEPTH = 4 // memoization depth in the node tree
+const TEMPLATE_MEMO_TRIES = 10
 
 const getReplacedNode = (prev, next, path) => {
   if (path.length >= TEMPLATE_MEMO_DEPTH)
@@ -44,37 +45,63 @@ const memoizedTemplate = fn => {
   if (TEMPLATE_MEMO_DEPTH === 0)
     return fn
 
+  let timesChanged = 0
   let prev = null
   return (...args) => {
     const next = fn(...args)
     if (prev === next)
       return next
 
+    if (timesChanged > TEMPLATE_MEMO_TRIES)
+      return next
+
     const prevNode = Node.isNode(prev)
     const nextNode = Node.isNode(next)
     if (prevNode && nextNode) {
       const node = getReplacedNode(prev, next, [])
+      if (node !== prev) timesChanged += 1
+      else timesChanged -= 1
       prev = node
       return node
     } else if (nextNode) {
+      timesChanged += 1
       prev = next
       return next
     } else {
+      timesChanged += 1
       prev = null
       return next
     }
   }
 }
 
-const createTemplate = arg => {
-  if (arg instanceof Function) return memoizedTemplate(arg)
-  else return createTemplate(() => arg)
+const optimizeTemplate = fn => {
+  const memoized = memoizedTemplate(fn)
+  let constant
+  let prev
+  return facade => {
+    if (constant)
+      return prev
+
+    const node = memoized(facade)
+    if (constant === undefined) {
+      constant = facade.constant
+      prev = node
+    }
+
+    return node
+  }
+}
+
+export const createTemplate = arg => {
+  if (arg instanceof Function) return optimizeTemplate(arg)
+  else return () => arg
 }
 
 // immutable
 export class Declaration {
   constructor(template, behavior, actions) {
-    this.template = createTemplate(template)
+    this.template = template instanceof Function ? template : () => template
     this.behavior = behavior || (() => { })
     this.actions = actions || {}
     this.id = genGlobalUniqId('declaration', 8)

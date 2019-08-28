@@ -1,9 +1,11 @@
 export class TemplateFacade {
   constructor(view) {
     this.view = view
+    this.constant = true
   }
 
   get state() {
+    this.constant = false
     return this.view.state
   }
 
@@ -12,6 +14,7 @@ export class TemplateFacade {
   }
 
   get children() {
+    this.constant = false
     return this.view.children || []
   }
 }

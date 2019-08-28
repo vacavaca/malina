@@ -92,7 +92,7 @@ const template = ({ state: { persistTodos }, actions }) =>
   </Route>
 
 export default view(
-  withTemplate(template),
+  withStyledTemplate(template),
   connectRouter(),
   withLifecycle({ create })
 )

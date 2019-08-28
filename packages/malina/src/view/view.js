@@ -4,7 +4,7 @@ import { TemplateFacade, ActionFacade, ConcurrentFacade, OuterFacade } from './f
 import { assert, isProduction, testDevelopment } from '../env'
 import RenderContext from './render-context'
 import StateContext from './state-context'
-import { h, Node } from '../vdom'
+import { h, Node, createTemplate } from '../vdom'
 import { isTemplateElement } from './util'
 import ViewTree from './view-tree'
 import Renderer from './renderer'
@@ -13,7 +13,7 @@ class View {
   constructor(renderContext, node, stateContext = null) {
     const { tag: declaration, attrs: state, children } = node
 
-    this.template = declaration.template
+    this.template = createTemplate(declaration.template)
     this.state = state
     this.actions = this.bindActions(declaration.actions)
     this.behavior = declaration.behavior
