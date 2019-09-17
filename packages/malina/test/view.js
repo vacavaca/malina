@@ -290,5 +290,18 @@ describe('view', () => {
 
       assert.strictEqual(dom.window.document.body.innerHTML, '<div>1</div>')
     })
+
+    it('should attach to views', () => {
+      const dom = new JSDOM(`<body></body>`)
+
+      const View = template(
+        h('hid', {}, [
+          null,
+          h('span', {}, 'test')
+        ])
+      )
+
+      mount(dom.window.document.body, h(View))
+    })
   })
 })

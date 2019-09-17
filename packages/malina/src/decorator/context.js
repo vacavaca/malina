@@ -2,6 +2,21 @@ import { withBehavior } from './base'
 
 const defaultContextProvider = state => state
 
+/**
+ * Add values from view state to context
+ *
+ * @example
+ * view(withContext({ api }))
+ *
+ * @example
+ * view(
+ *   withContext({ state: { todos }, actions }) => ({ todos, actions }) // available globaly
+ * )
+ *
+ * @param {Function} provider context provider as a function of view
+ *                            returns object
+ * @returns {Function} view decorator
+ */
 export const withContext = (provider = defaultContextProvider) => {
   const normalizedProvider = view => {
     const context = provider instanceof Function ? provider(view) : provider
@@ -19,6 +34,26 @@ export const withContext = (provider = defaultContextProvider) => {
 
 const defaultContextConsumer = context => ({ context })
 
+/**
+ * Get values from context to view state
+ *
+ * @example
+ * // state.todos now contains global state with todos
+ * view(
+ *   getContext(({ todos }) => ({ todos }))
+ * )
+ *
+ * @example
+ * // same as ({ todos }) => ({ todos })
+ * view(getContext("todos"))
+ *
+ * @example
+ * // same as ({ todos }) => ({ todosContext: todos })
+ * view(getContet({ todos: 'todosContext' }))
+ *
+ * @param  {...any} args getter or string or mapping
+ * @returns {Function} view decorator
+ */
 export const getContext = (...args) => {
   const normalizedConsumer = ctx => {
     if (args.length === 0) return defaultContextConsumer(ctx)

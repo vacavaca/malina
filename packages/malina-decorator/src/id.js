@@ -1,4 +1,4 @@
-import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext } from 'malina'
+import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext, isViewNode } from 'malina'
 import { compose, Random } from 'malina-util'
 
 const key = Symbol.for('__malina_ids')
@@ -13,16 +13,16 @@ else {
     global_[randomKey] = random
 }
 
-const mapIdTemplate = (length, realPrefix, ctx) => node => {
+const mapIdTemplate = (options, ctx) => node => {
   if (ctx == null)
     return node
 
   if (Array.isArray(node))
-    return node.map(mapIdTemplate(length, realPrefix, ctx.ids))
-  else if (isElementNode(node)) {
+    return node.map(mapIdTemplate(options, ctx.ids))
+  else if (isElementNode(node) || (options.views && isViewNode(node))) {
     let nextAttrs = node.attrs
-    const realIdName = `${realPrefix}Id`
-    const realForName = `${realPrefix}HtmlFor`
+    const realIdName = `${options.realPrefix}Id`
+    const realForName = `${options.realPrefix}For`
 
     const replaceAttributes = []
     if (realIdName in node.attrs) {
@@ -36,8 +36,8 @@ const mapIdTemplate = (length, realPrefix, ctx) => node => {
       const fr = node.attrs[realForName]
       nextAttrs = { ...node.attrs, for: fr }
       delete nextAttrs[realForName]
-    } else if ('htmlFor' in node.attrs)
-      replaceAttributes.push('htmlFor')
+    } else if ('for' in node.attrs)
+      replaceAttributes.push('for')
 
     for (const replace of replaceAttributes) {
       const passed = node.attrs[replace]
@@ -47,11 +47,11 @@ const mapIdTemplate = (length, realPrefix, ctx) => node => {
       else {
         let randomId
         if (isDevelopment) {
-          let id = ++ctx.id
+          let id = ++ctx.ref.id
           randomId = `${id}`
-          while (randomId.length < length)
+          while (randomId.length < options.length)
             randomId = `0${randomId}`
-        } else randomId = random.id(length)
+        } else randomId = random.id(options.length)
 
         const generated = `${passed}_${randomId}`
         ctx.ids[passed] = generated
@@ -59,20 +59,26 @@ const mapIdTemplate = (length, realPrefix, ctx) => node => {
       }
     }
 
-    return h(node.tag, nextAttrs, node.children.map(mapIdTemplate(length, realPrefix, ctx)))
+    return h(node.tag, nextAttrs, node.children.map(mapIdTemplate(options, ctx)))
   } else return node
 }
 
-export const withUniqIds = (length = 4, realPrefix = 'real') =>
+const getOptions = (options = {}) => ({
+  length: options.length || 4,
+  realPrefix: options.realPrefix || 'html',
+  views: options.views || false
+})
+
+export const withUniqIds = options =>
   compose(
     getContext(ctx => key in ctx ? { [key]: ctx[key] } : {}),
     withContext(({ state }) => {
       if (!(key in state)) {
-        const context = { ids: {}, id: 0 }
+        const context = { id: 0 }
         state[key] = context
         return { [key]: context }
       } else return {}
     }),
     mapTemplate(original => view =>
-      mapIdTemplate(length, realPrefix, view.state[key])(original()))
+      mapIdTemplate(getOptions(options), { ref: view.state[key], ids: {} })(original()))
   )

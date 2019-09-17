@@ -3,7 +3,7 @@ import { genGlobalUniqId } from '../env'
 import { Node } from './node'
 
 const TEMPLATE_MEMO_DEPTH = 4 // memoization depth in the node tree
-const TEMPLATE_MEMO_TRIES = 10
+const TEMPLATE_MEMO_TRIES = 6
 
 const getReplacedNode = (prev, next, path) => {
   if (path.length >= TEMPLATE_MEMO_DEPTH)

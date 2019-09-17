@@ -621,15 +621,12 @@ class Renderer {
     else {
       // first create an entire child-tree and then append it to the container element
       const fragment = renderingContext.getDocument().createDocumentFragment()
-      let shift = 0
       for (const ndx in node.children) {
         const child = node.children[ndx]
-        if (child === null || (renderingContext.isInProduction() && child.isDevOnly)) {
-          shift += 1
+        if (child === null || (renderingContext.isInProduction() && child.isDevOnly))
           continue
-        }
 
-        const nextPath = path.concat([ndx - shift])
+        const nextPath = path.concat([ndx])
         const childElement = this.createNode(child, nextPath, renderingContext.setUpdating(false))
         fragment.appendChild(childElement)
         if (renderingContext.isUpdating())
@@ -668,8 +665,8 @@ class Renderer {
         if (isNodeCustomElement(child))
           continue
 
-        const nextPath = path.concat([ndx - shift])
-        const childNode = fragment.childNodes[ndx]
+        const nextPath = path.concat([ndx])
+        const childNode = fragment.childNodes[ndx - shift]
         this.hydrateNode(childNode, child, nextPath, renderingContext)
       }
     }
@@ -695,8 +692,8 @@ class Renderer {
         if (isNodeCustomElement(child))
           continue
 
-        const nextPath = path.concat([ndx - shift])
-        const childNode = fragment.childNodes[ndx]
+        const nextPath = path.concat([ndx])
+        const childNode = fragment.childNodes[ndx - shift]
         this.attachNode(childNode, child, nextPath, renderingContext)
       }
     }
@@ -720,8 +717,8 @@ class Renderer {
         if (isNodeCustomElement(child))
           continue
 
-        const nextPath = path.concat([ndx - shift])
-        const childNode = fragment.childNodes[ndx]
+        const nextPath = path.concat([ndx])
+        const childNode = fragment.childNodes[ndx - shift]
         this.detachNode(childNode, child, nextPath, renderingContext)
       }
     }

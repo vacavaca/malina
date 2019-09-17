@@ -9,6 +9,25 @@ const isValidToWrapView = value =>
 const updateDecoratorsHistory = (key, next) =>
   Declaration.isViewDeclaration(next) && next.decorateWith(key)
 
+/**
+ * Create new view decorator
+ *
+ * View decorator is a simple function that accepts view declrations
+ * and returns new view declaration, this method provides more
+ * convinient interface and some optimisations for creating decorator
+ * functions.
+ *
+ * It's usually easier to create new decorators using a composition of
+ * other decorators provided in this package.
+ *
+ * @example
+ * const mapState = mapper => decorator(View =>
+ *   template(({ state, children }) => h(View, mapper(state), children))
+ * )
+ *
+ * @param {Object} fn decorator function
+ * @returns {Function} decorator function
+ */
 export default fn => {
   const key = genGlobalUniqId('decorator', 8)
 

@@ -16,7 +16,7 @@ describe('id', () => {
             h('span', { id: 'test' }, ['AAA'])
           ])
         ),
-        withUniqIds(4))
+        withUniqIds({ length: 4 }))
 
       mount(dom.window.document.body, h(Test))
 
@@ -42,7 +42,7 @@ describe('id', () => {
             h(Inner)
           ])
         ),
-        withUniqIds(4))
+        withUniqIds({ length: 4 }))
 
       mount(dom.window.document.body, h(Test))
 
@@ -62,7 +62,7 @@ describe('id', () => {
             h('p', { id: 'test_2' }, ['Hello'])
           ])
         ),
-        withUniqIds(5))
+        withUniqIds({ length: 5 }))
 
       const Test = view(
         withTemplate(() =>
@@ -71,13 +71,13 @@ describe('id', () => {
             h(Inner)
           ])
         ),
-        withUniqIds(4))
+        withUniqIds({ length: 4 }))
 
       mount(dom.window.document.body, h(Test))
 
       assert.strictEqual(
         dom.window.document.body.innerHTML,
-        '<div id="test_0001"><span id="other_0002">AAA</span><section><p id="test_0001">Hello</p><p id="test_2_00003">Hello</p></section></div>'
+        '<div id="test_0001"><span id="other_0002">AAA</span><section><p id="test_00003">Hello</p><p id="test_2_00004">Hello</p></section></div>'
       )
     })
   })

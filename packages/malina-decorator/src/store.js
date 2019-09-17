@@ -35,14 +35,14 @@ const passToContext = compose(
 )
 
 const StoreView = view(
-  withTemplate(({ state, children }) => h(state.view, state.passed, children)),
+  withTemplate(({ children }) => children),
   withState({ store: null }),
   withActions(actions),
   passToContext
 )
 
 export const withStore = initial => decorator(Inner =>
-  ({ state, children }) => h(StoreView, { store: initial, passed: state, view: Inner }, children))
+  ({ state, children }) => h(StoreView, { store: initial }, h(Inner, state, children)))
 
 const empty = (...a) => ({})
 

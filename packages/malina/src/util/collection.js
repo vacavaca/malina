@@ -18,6 +18,7 @@ const state = state => ({
   render: state.render,
   mountPoint: null,
   initialized: false,
+  reverse: false,
   views: {},
   index: [],
   prevData: []
@@ -95,6 +96,8 @@ const requireUniqueIndex = index => {
   }
   return index
 }
+
+// FIXME error when items are added to the end of the list, check
 
 const diffUpdate = ({ state }) => {
   const [container, mountIndex] = state.mountPoint
@@ -190,6 +193,15 @@ const behavior = async view => {
 
 const ListRenderer = new Declaration(null, behavior)
 
+/**
+ * Indexed list view
+ *
+ * @example
+ * const items = []
+ * <List data={items} indexBy="id">{
+ *  (item, index, items) => <Item {...item} />
+ * }</List>
+ */
 export const List = new Declaration(({ state, children }) => {
   if (children.length !== 0) {
     if (children.length !== 1 || !(children[0] instanceof Function))
@@ -201,6 +213,15 @@ export const List = new Declaration(({ state, children }) => {
   } else return null
 })
 
+/**
+ * Map view
+ *
+ * @example
+ * const items = {}
+ * <Map data={items}>{
+ *  (item, index, items) => <Item {...item} />
+ * }</Map>
+ */
 export const Map = new Declaration(({ state, children }) => {
   if (children.length !== 1 || !(children[0] instanceof Function))
     throw new Error('You must provide a render function as the only children to the Map')
