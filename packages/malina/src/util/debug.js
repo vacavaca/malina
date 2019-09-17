@@ -1,6 +1,7 @@
 import { omit, keys } from 'malina-util'
 import { h, Declaration } from '../vdom'
 import { log as consoleLog } from '../env'
+import { childIndex } from '../helper'
 
 const wrapLogger = logger => {
   const loggerOrConsole = logger != null ? logger : consoleLog
@@ -17,7 +18,7 @@ const wrapLogger = logger => {
 const getElementData = view => {
   const data = {
     parent: view.element.parentNode,
-    index: Array.prototype.indexOf.call(view.element.parentNode.childNodes, view.element)
+    index: childIndex(view.element)
   }
 
   if (view.children != null && view.children.length > 0)

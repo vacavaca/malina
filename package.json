@@ -12,7 +12,8 @@
     "clean-dist": "make clean-dist",
     "release": "make release",
     "build": "make build",
-    "publish": "run () { make bump=$1 publish; }; run"
+    "publish": "run () { make bump=$1 publish; }; run",
+    "todo": "make todo"
   },
   "author": "vacavaca <vacavaca@fastmail.com>",
   "repository": {

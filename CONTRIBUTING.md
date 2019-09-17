@@ -64,6 +64,10 @@ eg. `npm run publish patch`
 
 `npm run commit`
 
+### Show TODOs
+
+`npm run todo`
+
 
 Inside the packages directory the following npm commands are usualy available:
 

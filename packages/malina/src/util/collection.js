@@ -1,7 +1,9 @@
 import { diffArrays } from 'diff'
 import { keys } from 'malina-util'
-import { h, Declaration } from '../vdom'
+import { h, view, template } from '../vdom'
 import { mount } from '../view'
+import { withLifecycle, withState } from '../decorator'
+import { childIndex } from '../helper'
 
 const index = index => {
   if (index == null)
@@ -16,15 +18,16 @@ const state = state => ({
 
   accessor: index(state.indexBy),
   render: state.render,
-  mountPoint: null,
+  mountPoint: null, // [parent, idnex]
   initialized: false,
   reverse: false,
   views: {},
   index: [],
-  prevData: []
+  prevData: [],
+  prevReverse: null
 })
 
-const ItemRenderer = new Declaration(({ state: { render } }) => render)
+const ItemRenderer = template(({ state: { render } }) => render)
 
 const normalizeDiffPatches = patches => {
   let ndx = 0
@@ -64,27 +67,44 @@ const normalizeDiffPatches = patches => {
   return result
 }
 
+const buildIndex = state => {
+  const index = []
+  for (let i = 0; i < state.data.length; i++) {
+    const viewIndex = indexToDataIndex(state, i) // data index to view index
+    index.push(state.accessor(state.data[viewIndex]))
+  }
+
+  requireUniqueIndex(index)
+  return index
+}
+
+const indexToDataIndex = (state, ndx) => (state.reverse ? (state.data.length - 1 - ndx) : ndx)
+
+const indexToPrevDataIndex = (state, ndx) => {
+  if (state.prevReverse !== null) return (state.prevReverse ? (state.prevData.length - 1 - ndx) : ndx)
+  else return (state.reverse ? (state.prevData.length - 1 - ndx) : ndx)
+}
+
 const initialize = ({ state }) => {
   const [container, mountIndex] = state.mountPoint
   container.childNodes[mountIndex].remove()
-  state.initialized = true
 
-  state.index = []
-  state.views = {}
-  for (const i in state.data) {
-    const index = +i
-    const item = state.data[index]
-    const key = state.accessor(item, index, state.data)
-    state.index.push(key)
+  const index = buildIndex(state)
+  for (let i = 0; i < index.length; i++) {
+    const dataIndex = indexToDataIndex(state, i)
+    const item = state.data[dataIndex]
+    const key = index[i]
 
     const node = h(ItemRenderer, { render: state.render(item, index, state.data) })
-    const instance = mount(container, node, mountIndex + index)
+    const instance = mount(container, node, mountIndex + i)
 
-    state.views[key] = { view: instance, index: mountIndex + index }
+    state.views[key] = { view: instance, index: i }
   }
 
-  requireUniqueIndex(state.index)
+  state.index = index
+  state.initialized = true
   state.prevData = state.data
+  state.prevReverse = state.reverse
 }
 
 const requireUniqueIndex = index => {
@@ -97,13 +117,11 @@ const requireUniqueIndex = index => {
   return index
 }
 
-// FIXME error when items are added to the end of the list, check
-
 const diffUpdate = ({ state }) => {
   const [container, mountIndex] = state.mountPoint
 
-  const index = state.data.map(state.accessor)
-  requireUniqueIndex(index)
+  const index = buildIndex(state)
+
   const patches = diffArrays(state.index, index)
   const normalizedPatches = normalizeDiffPatches(patches)
 
@@ -112,21 +130,27 @@ const diffUpdate = ({ state }) => {
     const patch = normalizedPatches[i]
     const key = patch.value
     const index = +patch.index
+    const dataIndex = indexToDataIndex(state, index)
     const updating = key in state.views
     if (patch.added && key !== state.index[index]) {
-      if (updating) { // swap to views
+      if (updating) { // swap two views
         const to = patch.index
         const swapKey = state.index[to]
         const { index: from, view: first } = state.views[key]
         const second = state.views[swapKey].view
 
-        first.move(container, to)
-        if (state.prevData[from] !== state.data[to])
-          first.update({ render: state.render(state.data[to], to, state.data) })
+        const fromPrevDataIndex = indexToPrevDataIndex(state, from)
+        const toPrevDataIndex = indexToPrevDataIndex(state, to)
+        const toDataIndex = indexToDataIndex(state, to)
+        const fromDataIndex = indexToDataIndex(state, from)
 
-        second.move(container, from + 1)
-        if (state.prevData[to] !== state.data[from])
-          second.update({ render: state.render(state.data[from], to, state.data) })
+        first.move(container, to + mountIndex)
+        if (state.prevData[fromPrevDataIndex] !== state.data[toDataIndex])
+          first.update({ render: state.render(state.data[toDataIndex], to, state.data) })
+
+        second.move(container, from + 1 + mountIndex)
+        if (state.prevData[toPrevDataIndex] !== state.data[fromDataIndex])
+          second.update({ render: state.render(state.data[fromDataIndex], to, state.data) })
 
         state.views[key] = { view: first, index: to }
         state.views[swapKey] = { view: second, index: from }
@@ -134,24 +158,26 @@ const diffUpdate = ({ state }) => {
         updated[key] = true
         updated[swapKey] = true
       } else { // add new view
-        const item = state.data[index]
+        const item = state.data[dataIndex]
         const node = h(ItemRenderer, { render: state.render(item, index, state.data) })
         const instance = mount(container, node, mountIndex + index)
-        state.views[key] = { view: instance, index: mountIndex + index }
+        state.views[key] = { view: instance, index: index }
       }
     } else if (patch.removed) { // remove view
       const instance = state.views[key].view
       instance.destroy()
       delete state.views[key]
     } else if (!(key in updated)) { // update view
-      const item = state.data[index]
-      if (item !== state.prevData[index])
+      const item = state.data[dataIndex]
+      const prevDataIndex = indexToPrevDataIndex(state, index)
+      if (item !== state.prevData[prevDataIndex])
         state.views[key].view.update({ render: state.render(item, index, state.data) })
     }
   }
 
   state.index = index
   state.prevData = state.data
+  state.prevReverse = state.reverse
 }
 
 const update = view => {
@@ -164,7 +190,7 @@ const update = view => {
 
 const handleMount = view => {
   const { state, element } = view
-  state.mountPoint = [element.parentNode, Array.prototype.indexOf.call(element.parentNode.childNodes, element)]
+  state.mountPoint = [element.parentNode, childIndex(element)]
   update(view)
 }
 
@@ -181,17 +207,17 @@ const handleDestroy = ({ state }) => {
   state.views = {}
   state.index = []
   state.prevData = []
+  state.prevReverse = null
 }
 
-const behavior = async view => {
-  view.state = { ...view.state, ...state(view.state) }
-
-  view.onMount(handleMount)
-  view.onUpdate(update)
-  view.onDestroy(handleDestroy)
-}
-
-const ListRenderer = new Declaration(null, behavior)
+const ListRenderer = view(
+  withState(state),
+  withLifecycle({
+    mount: handleMount,
+    update,
+    destroy: handleDestroy
+  })
+)
 
 /**
  * Indexed list view
@@ -202,7 +228,7 @@ const ListRenderer = new Declaration(null, behavior)
  *  (item, index, items) => <Item {...item} />
  * }</List>
  */
-export const List = new Declaration(({ state, children }) => {
+export const List = template(({ state, children }) => {
   if (children.length !== 0) {
     if (children.length !== 1 || !(children[0] instanceof Function))
       throw new Error('You must provide a render function as the only children to the List')
@@ -222,7 +248,7 @@ export const List = new Declaration(({ state, children }) => {
  *  (item, index, items) => <Item {...item} />
  * }</Map>
  */
-export const Map = new Declaration(({ state, children }) => {
+export const Map = template(({ state, children }) => {
   if (children.length !== 1 || !(children[0] instanceof Function))
     throw new Error('You must provide a render function as the only children to the Map')
 

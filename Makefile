@@ -46,7 +46,7 @@ release: bootstrap-ci clean-dist
 	lerna run --bail --stream release
 
 .PHONY: publish
-publish:
+publish: todo
 	if [ -z "$(bump)" ]; then echo "\nPlease specify bump!\n"; exit 1; fi;
 	changelog --$(bump)
 	npm version $(bump) --no-git-tag-version
@@ -58,3 +58,8 @@ publish:
 	git add packages/*/package-lock.json package-lock.json
 	git commit -m $(lock_msg)
 	git push origin master
+
+.PHONY: todo
+todo:
+	@ echo "To add new todo insert 'TODO', 'FIXME', or 'OPTIMIZEME' tag to comments in the code."
+	@ TODOS=`find packages/*/src packages/*/test packages/*/benchmark examples/*/src -type f  | xargs grep '\(TODO\|FIXME\|OPTIMIZEME\)'`; if [ -z "$$TODOS" ]; then exit 0; else echo ""; echo "Existing TODOs:"; echo "$$TODOS"; exit 1; fi;

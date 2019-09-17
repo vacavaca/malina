@@ -295,13 +295,37 @@ describe('view', () => {
       const dom = new JSDOM(`<body></body>`)
 
       const View = template(
-        h('hid', {}, [
+        h('div', {}, [
           null,
           h('span', {}, 'test')
         ])
       )
 
       mount(dom.window.document.body, h(View))
+    })
+
+    it('should hydrate data attributes', () => {
+      const dom = new JSDOM(`<body><div></div></body>`)
+
+      const View = template(h('div', { data: { test: 42 } }))
+
+      hydrate(dom.window.document.body, h(View))
+
+      assert.strictEqual(dom.window.document.body.childNodes[0].dataset.test, '42')
+      assert.strictEqual(dom.window.document.body.childNodes[0].getAttribute('data-test'), '42')
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div data-test="42"></div>')
+    })
+
+    it('should hydrate data attributes overwriting', () => {
+      const dom = new JSDOM(`<body><div data-test="43"></div></body>`)
+
+      const View = template(h('div', { data: { test: 42 } }))
+
+      hydrate(dom.window.document.body, h(View))
+
+      assert.strictEqual(dom.window.document.body.childNodes[0].dataset.test, '42')
+      assert.strictEqual(dom.window.document.body.childNodes[0].getAttribute('data-test'), '42')
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div data-test="42"></div>')
     })
   })
 })

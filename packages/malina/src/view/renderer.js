@@ -847,7 +847,6 @@ class Renderer {
     } else if (value instanceof Function)
       this.addEventListener(element, path, normalizeEventName(name), value)
     else if (name === 'data' && value != null && typeof value === 'object') {
-      // TODO do we realy need it?
       for (const key in value)
         element.dataset[key] = value[key]
     }
