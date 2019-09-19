@@ -126,6 +126,7 @@ export class Node {
 /**
  * VDOM Node constructor for JSX
  *
+ * @function
  * @param {*} tag node tag
  * @param {*} attrs node attributs
  * @param  {...any} children node childen

@@ -151,6 +151,8 @@ export class Declaration {
 
 /**
  * Check if the given object is VDOM Node with view declaration
+ *
+ * @method
  * @param {*} node object to check
  * @returns {boolean} true if node is VDOM Node with view declaration, false if not
  */
@@ -159,6 +161,8 @@ export const isViewNode = node =>
 
 /**
  * Check if the given object is VDOM Node with HTML element
+ *
+ * @method
  * @param {*} node object to check
  * @returns {boolean} true if node is VDOM Node with HTML element, false if not
  */
@@ -166,6 +170,8 @@ export const isElementNode = node => Node.isNode(node) && !Declaration.isViewDec
 
 /**
  * Check if the given object is VDOM Node with text
+ *
+ * @method
  * @param {*} node object to check
  * @returns {boolean} true if node is VDOM Node with text, false if not
  */
@@ -174,6 +180,7 @@ export const isTextNode = node => !(node instanceof Object) && typeof node !== '
 /**
  * Declare view composed from a list of decorators
  *
+ * @method
  * @param  {...any} args decorators or one vdom node
  * @returns {Declaration} view declaration
  */
@@ -190,6 +197,7 @@ export const view = (...args) => {
  * Declare a simple view that only renders some template
  * using it's state and children
  *
+ * @method
  * @param {Function|Node|string|null} arg vdom node or a function that returns vdom node
  * @returns {Declaration} view declaration
  */

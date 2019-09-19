@@ -327,5 +327,28 @@ describe('view', () => {
       assert.strictEqual(dom.window.document.body.childNodes[0].getAttribute('data-test'), '42')
       assert.strictEqual(dom.window.document.body.innerHTML, '<div data-test="42"></div>')
     })
+
+    it('should replace root element with empty text node', () => {
+      const dom = new JSDOM(`<body></body>`)
+
+      const View = view(
+        withTemplate(({ state: { empty } }) => (
+          empty ? null : h('div')
+        )),
+        withState({ empty: false }),
+        withActions({
+          empty: () => ({ empty: true })
+        })
+      )
+
+      const instance = mount(dom.window.document.body, h(View))
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div></div>')
+
+      instance.actions.empty()
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '')
+      assert.strictEqual(dom.window.document.body.childNodes[0].textContent, '')
+    })
   })
 })

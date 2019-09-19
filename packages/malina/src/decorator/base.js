@@ -28,6 +28,7 @@ const createInitializer = value => state => {
  *  })
  * )
  *
+ * @method
  * @param  {...Function} handlers handlers
  * @returns {Function} view decorator
  */
@@ -41,7 +42,7 @@ export const withBehavior = (...handlers) => decorator(Inner =>
   }, Inner.actions))
 
 /**
- * Add default state tot ivew
+ * Add default state to ivew
  *
  * @example
  * view(
@@ -55,6 +56,7 @@ export const withBehavior = (...handlers) => decorator(Inner =>
  *   }))
  * )
  *
+ * @method
  * @param {Object} state state object to add
  * @returns {Function} view decorator
  */
@@ -79,6 +81,7 @@ export const withState = state => withBehavior(
  *  })
  * )
  *
+ * @method
  * @param {Object} actions object with actions
  * @returns {Function}
  */
@@ -103,6 +106,7 @@ export const withActions = actions => decorator(Inner =>
  *   )
  * )
  *
+ * @method
  * @param {Object} state state object
  * @param {Object} actions actions object
  * @returns {Function} view decorator
@@ -133,6 +137,7 @@ export const withStateActions = (state, actions) => compose(
  *   })
  * )
  *
+ * @method
  * @param {Object} handlers object with handlers
  * @returns {Function} view decorator
  */
@@ -166,6 +171,7 @@ export const withLifecycle = handlers => withBehavior(view => {
  *   )
  * )
  *
+ * @method
  * @param {*} template template function or object
  * @returns {Function} view decorator
  */
@@ -182,6 +188,7 @@ export const withTemplate = template => decorator(Inner =>
  *   )
  * )
  *
+ * @method
  * @param {Function} mapper mapper function, it will be given the
  *                          original template function as an argument
  * @returns {Function} view decorator
@@ -203,6 +210,7 @@ export const mapTemplate = mapper => decorator(Inner =>
  *   mapState(({ open }) => ({ closed: !open }))
  * )
  *
+ * @method
  * @param {Function} mapper mapper function
  * @returns {Function} view decorator
  */
@@ -218,6 +226,7 @@ export const mapState = (mapper = id) => decorator(Inner =>
  *   renameState({ oldProp: 'newProp' })
  * )
  *
+ * @method
  * @param {Object} nameMap mapping between old and new property names
  * @returns {Function} view decorator
  */

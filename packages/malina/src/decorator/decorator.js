@@ -30,6 +30,7 @@ const updateDecoratorsHistory = (key, next) =>
  *   template(({ state, children }) => h(View, mapper(state), children))
  * )
  *
+ * @method
  * @param {Object} fn decorator function
  * @returns {Function} decorator function
  */

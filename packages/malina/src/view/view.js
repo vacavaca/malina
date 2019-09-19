@@ -525,6 +525,7 @@ const mountOrHydrate = (container, node, index, {
 /**
  * Mount view
  *
+ * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
  * @param {number|undefined} index element index
@@ -542,6 +543,7 @@ export const mount = (container, node, index = 0, {
 /**
  * Hydrate view
  *
+ * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
  * @param {number|undefined} index element index
@@ -559,6 +561,7 @@ export const hydrate = (container, node, index = 0, {
 /**
  * Instantiate view
  *
+ * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
  * @param {Object|undefined} options options object:
@@ -586,6 +589,7 @@ export const instantiate = (document, node, {
 /**
  * Render view
  *
+ * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
  * @param {Object|undefined} options options object:

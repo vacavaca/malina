@@ -32,6 +32,7 @@ const normalizeContextProvider = arg => {
  *   withContext({ state: { todos }, actions }) => ({ todos, actions }) // available globaly
  * )
  *
+ * @method
  * @param {Object|Function} provider context provider as a function of view
  *                            or context object
  * @returns {Function} view decorator
@@ -89,6 +90,7 @@ const normalizeContextConsumer = args => {
  * // same as ({ todos }) => ({ todosContext: todos })
  * view(getContet({ todos: 'todosContext' }))
  *
+ * @method
  * @param  {...any} args getter or string or mapping
  * @returns {Function} view decorator
  */
