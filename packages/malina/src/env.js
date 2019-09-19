@@ -23,6 +23,12 @@ const consoleAvailable = 'console' in _global
 const warnAvailable = consoleAvailable && 'warn' in _global.console
 const logAvailable = consoleAvailable && 'log' in _global.console
 
+/**
+ * Prints warning to the console in development environment,
+ * does nothing if console or warn method is not available
+ *
+ * @param {String} msg message
+ */
 export const warn = msg => {
   if (isDevelopment && warnAvailable)
     _global.console.warn(msg)
@@ -33,11 +39,16 @@ export const log = (...args) => {
     _global.console.log(...args)
 }
 
+/**
+ * Get current global object
+ * @retursn {Object} global object
+ */
 export const getGlobal = () => _global
 
 export const assert = (condition, msg = null) => {
-  if (isDevelopment && warnAvailable) {
-    if (!condition())
+  if (isDevelopment) {
+    const test = condition instanceof Function ? condition() : condition
+    if (!test)
       throw new Error(`Condition failed${msg != null ? `: ${msg}` : ''}`)
   }
 }

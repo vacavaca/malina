@@ -258,7 +258,7 @@ class View {
     this.node = null
     this.destroyed = true
 
-    assert(() => this.tree.isEmpty(), 'View tree is empty after destroy')
+    assert(this.tree.isEmpty(), 'View tree is empty after destroy')
 
     if (top) {
       this.renderContext.unlock()
@@ -522,14 +522,52 @@ const mountOrHydrate = (container, node, index, {
   return new OuterFacade(viewInstance)
 }
 
+/**
+ * Mount view
+ *
+ * @param {Document} document document object
+ * @param {*} node VDOM Node
+ * @param {number|undefined} index element index
+ * @param {Object|undefined} options options object:
+ * {
+ *   insideSvg: {boolean|undefined} set to true if node is rendered insode some SVG Element (default false)
+ *   env: {string|undefined} NODE_ENV value
+ * }
+ * @returns {Object} view instance object
+ */
 export const mount = (container, node, index = 0, {
   insideSvg = false, env = isProduction ? 'production' : 'development'
 } = {}) => mountOrHydrate(container, node, index, { insideSvg, hydrate: false, isProduction: !testDevelopment(env) })
 
+/**
+ * Hydrate view
+ *
+ * @param {Document} document document object
+ * @param {*} node VDOM Node
+ * @param {number|undefined} index element index
+ * @param {Object|undefined} options options object:
+ * {
+ *   insideSvg: {boolean|undefined} set to true if node is rendered insode some SVG Element (default false)
+ *   env: {string|undefined} NODE_ENV value
+ * }
+ * @returns {Object} view instance object
+ */
 export const hydrate = (container, node, index = 0, {
   insideSvg = false, env = isProduction ? 'production' : 'development'
 } = {}) => mountOrHydrate(container, node, index, { insideSvg, hydrate: true, isProduction: !testDevelopment(env) })
 
+/**
+ * Instantiate view
+ *
+ * @param {Document} document document object
+ * @param {*} node VDOM Node
+ * @param {Object|undefined} options options object:
+ * {
+ *   insideSvg: {boolean|undefined} set to true if node is rendered insode some SVG Element (default false)
+ *   env: {string|undefined} NODE_ENV value
+ * }
+ * @returns {Object} view instance object
+ */
 export const instantiate = (document, node, {
   insideSvg = false,
   env = isProduction ? 'production' : 'development'
@@ -545,6 +583,18 @@ export const instantiate = (document, node, {
   return new OuterFacade(viewInstance)
 }
 
+/**
+ * Render view
+ *
+ * @param {Document} document document object
+ * @param {*} node VDOM Node
+ * @param {Object|undefined} options options object:
+ * {
+ *   insideSvg: {boolean|undefined} set to true if node is rendered insode some SVG Element (default false)
+ *   env: {string|undefined} NODE_ENV value
+ * }
+ * @returns {Object} view instance object
+ */
 export const render = (document, node, {
   insideSvg = false,
   env = isProduction ? 'production' : 'development'

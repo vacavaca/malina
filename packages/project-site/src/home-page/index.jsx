@@ -9,7 +9,7 @@ import styles from './styles.scss'
 
 //  handled by parcel
 import { readFileSync } from 'fs'
-const example = readFileSync(__dirname + '/example.txt', 'utf-8')
+const example = readFileSync(__dirname + '/example.jsx', 'utf-8')
 
 const getNameClass = transition =>
   cn("name", {

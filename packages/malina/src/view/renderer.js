@@ -155,8 +155,8 @@ class Renderer {
 
     this.detachNode(this.element, node, [], this.renderingContext)
 
-    assert(() => this.eventListeners.size === 0, 'Event listeners map is empty after detach')
-    assert(() => this.eventListenerDelegates.size === 0, 'Event listener delegates map is empty after detach')
+    assert(this.eventListeners.size === 0, 'Event listeners map is empty after detach')
+    assert(this.eventListenerDelegates.size === 0, 'Event listener delegates map is empty after detach')
 
     this.element = null
   }

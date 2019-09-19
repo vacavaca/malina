@@ -144,6 +144,24 @@ const getDebugView = (logger = null) => {
   }
 }
 
+/**
+ * Debug view
+ *
+ * Prints lifecycle events to console.log or logger (if provided)
+ * use it to debug your components.
+ *
+ * Debug view works only in development environment
+ *
+ * @example
+ * <Debug param={42} />
+ *
+ * @example
+ * <Debug logger={(msg, data = null) => console.log(msg, data)} param={42} />
+ *
+ * @example
+ * state =>
+ *  <Debug {...state} />
+ */
 export default new Declaration(({ state, children }) =>
   h(getDebugView(state.logger), omit(['logger'], state), children)
 ).setDevelopmentOnly(true)

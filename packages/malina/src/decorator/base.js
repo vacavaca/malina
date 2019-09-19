@@ -14,7 +14,18 @@ const createInitializer = value => state => {
  *
  * @example
  * view(
- *   withBehavior(view => { console.log('view created') })
+ *   withBehavior(async view => {
+ *     console.log('view created')
+ *
+ *     await view.mount()
+ *     console.log('view mounted')
+ *
+ *     while (await view.updating()) {
+ *       console.log('view updated')
+ *     }
+ *
+ *     console.log('view unmounted')
+ *  })
  * )
  *
  * @param  {...Function} handlers handlers
@@ -37,6 +48,13 @@ export const withBehavior = (...handlers) => decorator(Inner =>
  *   withState({ foo: 'bar' })
  * )
  *
+ * @example
+ * view(
+ *   withState(props => ({
+ *     foo: props.foo === 42 ? 'bar' : null
+ *   }))
+ * )
+ *
  * @param {Object} state state object to add
  * @returns {Function} view decorator
  */
@@ -51,7 +69,14 @@ export const withState = state => withBehavior(
  *
  * @example
  * view(
- *   withActions({ increment: (n = 1) => ({ state: { counter }}) => ({ counter: counter + n }) })
+ *   withActions({
+ *     increment: (n = 1) => ({ state: { counter }}) => ({ counter: counter + n }),
+ *     reset: (n = 0) => ({ counter: n }),
+ *     resetAndIncrement: (resetTo = 0, incrementBy = 1) => ({ actions }) => {
+ *       actions.reset(resetTo)
+ *       actions.increment(incrementBy)
+ *     }
+ *  })
  * )
  *
  * @param {Object} actions object with actions
@@ -72,7 +97,8 @@ export const withActions = actions => decorator(Inner =>
  *     { counter: 0 },
  *     {
  *       increment: (n = 1) => ({ state: { counter }}) => ({ counter: counter + n }),
- *       decrement: (n = 1) => ({ state: { counter }}) => ({ counter: counter - n })
+ *       decrement: (n = 1) => ({ state: { counter }}) => ({ counter: counter - n }),
+ *       reset: (n = 0) => ({ counter: n }),
  *     }
  *   )
  * )
@@ -95,9 +121,15 @@ export const withStateActions = (state, actions) => compose(
  *     mount: view => {
  *       console.log('view mounted', view)
  *     },
+ *     update: view => {
+ *       console.log('view updated', view)
+ *     },
  *     unmount: view => {
  *       console.log('view unmounted', view)
  *     },
+ *     destroy: view => {
+ *       console.log('view destroyed', view)
+ *     }
  *   })
  * )
  *

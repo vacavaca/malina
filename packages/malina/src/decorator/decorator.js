@@ -13,11 +13,16 @@ const updateDecoratorsHistory = (key, next) =>
  * Create new view decorator
  *
  * View decorator is a simple function that accepts view declrations
- * and returns new view declaration, this method provides more
+ * and returns a new view declaration, this method provides more
  * convinient interface and some optimisations for creating decorator
  * functions.
  *
- * It's usually easier to create new decorators using a composition of
+ * Notes:
+ *   Decorators created with this function must be idempotent i.e. applying
+ * the same decorator twice leads to the same result as if it was applied
+ * only once.
+ *
+ *   It's usually easier to create new decorators using a composition of
  * other decorators provided in this package.
  *
  * @example

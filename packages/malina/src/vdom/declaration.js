@@ -149,11 +149,26 @@ export class Declaration {
   }
 }
 
+/**
+ * Check if the given object is VDOM Node with view declaration
+ * @param {*} node object to check
+ * @returns {boolean} true if node is VDOM Node with view declaration, false if not
+ */
 export const isViewNode = node =>
   Node.isNode(node) && Declaration.isViewDeclaration(node.tag)
 
+/**
+ * Check if the given object is VDOM Node with HTML element
+ * @param {*} node object to check
+ * @returns {boolean} true if node is VDOM Node with HTML element, false if not
+ */
 export const isElementNode = node => Node.isNode(node) && !Declaration.isViewDeclaration(node.tag)
 
+/**
+ * Check if the given object is VDOM Node with text
+ * @param {*} node object to check
+ * @returns {boolean} true if node is VDOM Node with text, false if not
+ */
 export const isTextNode = node => !(node instanceof Object) && typeof node !== 'object'
 
 /**

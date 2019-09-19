@@ -25,6 +25,14 @@ const memoizeOne = (fn, isEqual) => {
   }
 }
 
+/**
+ * Creste memoized function
+ * @param {Function} fn function to memoize
+ * @param {number|undefined} length memoizarion cache size (default 1)
+ * @param {Function|undefined} isEqual equality checker function to use when
+ * comparing arguments (default is strict equality check)
+ * @returns {Function} function with enabled memoization
+ */
 export const memoize = (fn, length = 1, isEqual = defaultIsEqual) => {
   if (length === 1)
     return memoizeOne(fn, isEqual)
