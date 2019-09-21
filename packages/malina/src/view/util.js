@@ -1,2 +1,2 @@
 export const isTemplateElement = element =>
-  element instanceof element.ownerDocument.defaultView.HTMLTemplateElement
+  element instanceof element.ownerDocument.defaultView.HTMLTemplateElement;

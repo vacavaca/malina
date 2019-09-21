@@ -1,84 +1,84 @@
-import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext, isViewNode } from 'malina'
-import { compose, Random } from 'malina-util'
+import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext, isViewNode } from 'malina';
+import { compose, Random } from 'malina-util';
 
-const key = Symbol.for('__malina_ids')
-const randomKey = Symbol.for('__malina-decorator.id.random')
+const key = Symbol.for('__malina_ids');
+const randomKey = Symbol.for('__malina-decorator.id.random');
 
-const global_ = getGlobal()
-let random
-if (global_ != null && randomKey in global_) random = global_[randomKey]
+const global_ = getGlobal();
+let random;
+if (global_ != null && randomKey in global_) random = global_[randomKey];
 else {
-  random = new Random('malina-decorator.id-seed')
+  random = new Random('malina-decorator.id-seed');
   if (global_ != null)
-    global_[randomKey] = random
+    global_[randomKey] = random;
 }
 
 const mapIdTemplate = (options, ctx) => node => {
   if (ctx == null)
-    return node
+    return node;
 
   if (Array.isArray(node))
-    return node.map(mapIdTemplate(options, ctx.ids))
+    return node.map(mapIdTemplate(options, ctx.ids));
   else if (isElementNode(node) || (options.views && isViewNode(node))) {
-    let nextAttrs = node.attrs
-    const realIdName = `${options.realPrefix}Id`
-    const realForName = `${options.realPrefix}For`
+    let nextAttrs = node.attrs;
+    const realIdName = `${options.realPrefix}Id`;
+    const realForName = `${options.realPrefix}For`;
 
-    const replaceAttributes = []
+    const replaceAttributes = [];
     if (realIdName in node.attrs) {
-      const id = node.attrs[realIdName]
-      nextAttrs = { ...node.attrs, id }
-      delete nextAttrs[realIdName]
+      const id = node.attrs[realIdName];
+      nextAttrs = { ...node.attrs, id };
+      delete nextAttrs[realIdName];
     } else if ('id' in node.attrs)
-      replaceAttributes.push('id')
+      replaceAttributes.push('id');
 
     if (realForName in node.attrs) {
-      const fr = node.attrs[realForName]
-      nextAttrs = { ...node.attrs, for: fr }
-      delete nextAttrs[realForName]
+      const fr = node.attrs[realForName];
+      nextAttrs = { ...node.attrs, for: fr };
+      delete nextAttrs[realForName];
     } else if ('for' in node.attrs)
-      replaceAttributes.push('for')
+      replaceAttributes.push('for');
 
     for (const replace of replaceAttributes) {
-      const passed = node.attrs[replace]
-      nextAttrs = { ...node.attrs }
+      const passed = node.attrs[replace];
+      nextAttrs = { ...node.attrs };
       if (passed in ctx.ids)
-        nextAttrs[replace] = ctx.ids[passed]
+        nextAttrs[replace] = ctx.ids[passed];
       else {
-        let randomId
+        let randomId;
         if (isDevelopment) {
-          let id = ++ctx.ref.id
-          randomId = `${id}`
+          let id = ++ctx.ref.id;
+          randomId = `${id}`;
           while (randomId.length < options.length)
-            randomId = `0${randomId}`
-        } else randomId = random.id(options.length)
+            randomId = `0${randomId}`;
+        } else randomId = random.id(options.length);
 
-        const generated = `${passed}_${randomId}`
-        ctx.ids[passed] = generated
-        nextAttrs[replace] = generated
+        const generated = `${passed}_${randomId}`;
+        ctx.ids[passed] = generated;
+        nextAttrs[replace] = generated;
       }
     }
 
-    return h(node.tag, nextAttrs, node.children.map(mapIdTemplate(options, ctx)))
-  } else return node
-}
+    return h(node.tag, nextAttrs, node.children.map(mapIdTemplate(options, ctx)));
+  } else return node;
+};
 
 const getOptions = (options = {}) => ({
   length: options.length || 4,
   realPrefix: options.realPrefix || 'html',
   views: options.views || false
-})
+});
 
 export const withUniqIds = options =>
   compose(
     getContext(ctx => key in ctx ? { [key]: ctx[key] } : {}),
     withContext(({ state }) => {
       if (!(key in state)) {
-        const context = { id: 0 }
-        state[key] = context
-        return { [key]: context }
-      } else return {}
+        const context = { id: 0 };
+        state[key] = context;
+        return { [key]: context };
+      } else return {};
     }),
     mapTemplate(original => view =>
       mapIdTemplate(getOptions(options), { ref: view.state[key], ids: {} })(original()))
-  )
+  );

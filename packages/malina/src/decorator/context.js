@@ -1,25 +1,25 @@
-import { keys } from 'malina-util'
-import { withBehavior } from './base'
+import { keys } from 'malina-util';
+import { withBehavior } from './base';
 
-const defaultContextProvider = ({ state }) => state
+const defaultContextProvider = ({ state }) => state;
 
 const normalizeContextProvider = arg => {
   if (arg === defaultContextProvider)
-    return arg
+    return arg;
 
-  let provider = () => null
-  if (arg instanceof Function) provider = arg
-  else provider = () => arg
+  let provider = () => null;
+  if (arg instanceof Function) provider = arg;
+  else provider = () => arg;
 
   return view => {
-    const context = provider(view)
-    const typeOfContext = typeof context
+    const context = provider(view);
+    const typeOfContext = typeof context;
     if (typeOfContext !== 'object')
-      throw new Error(`Context must be an object, got ${typeOfContext}`)
+      throw new Error(`Context must be an object, got ${typeOfContext}`);
 
-    return context
-  }
-}
+    return context;
+  };
+};
 
 /**
  * Add values from view state to context
@@ -38,40 +38,40 @@ const normalizeContextProvider = arg => {
  * @returns {Function} view decorator
  */
 export const withContext = (provider = defaultContextProvider) => {
-  const normalizedProvider = normalizeContextProvider(provider)
+  const normalizedProvider = normalizeContextProvider(provider);
 
   return withBehavior(facade => {
-    facade.view.initializeContext(normalizedProvider)
-  })
-}
+    facade.view.initializeContext(normalizedProvider);
+  });
+};
 
-const defaultContextConsumer = context => ({ context })
+const defaultContextConsumer = context => ({ context });
 
 const createPropContextConsumer = names => context => {
-  const value = {}
+  const value = {};
   for (const key of names)
-    value[key] = context[key]
+    value[key] = context[key];
 
-  return value
-}
+  return value;
+};
 
 const createObjectContextConsumer = object => context => {
-  const value = {}
+  const value = {};
   for (const key of keys(object))
-    value[object[key]] = context[key]
+    value[object[key]] = context[key];
 
-  return value
-}
+  return value;
+};
 
 const normalizeContextConsumer = args => {
-  if (args.length === 0) return defaultContextConsumer
+  if (args.length === 0) return defaultContextConsumer;
   else if (args.length === 1) {
-    const arg = args[0]
-    if (arg instanceof Function) return arg
-    else if (typeof arg === 'string') return createPropContextConsumer(arg)
-    else return createObjectContextConsumer(arg)
-  } else return createPropContextConsumer(...args)
-}
+    const arg = args[0];
+    if (arg instanceof Function) return arg;
+    else if (typeof arg === 'string') return createPropContextConsumer(arg);
+    else return createObjectContextConsumer(arg);
+  } else return createPropContextConsumer(...args);
+};
 
 /**
  * Get values from context to view state
@@ -95,9 +95,9 @@ const normalizeContextConsumer = args => {
  * @returns {Function} view decorator
  */
 export const getContext = (...args) => {
-  const normalizedConsumer = normalizeContextConsumer(args)
+  const normalizedConsumer = normalizeContextConsumer(args);
 
   return withBehavior(facade => {
-    facade.view.subscribeContext(normalizedConsumer)
-  })
-}
+    facade.view.subscribeContext(normalizedConsumer);
+  });
+};

@@ -63,3 +63,7 @@ publish: todo
 todo:
 	@ echo "To add new todo insert 'TODO', 'FIXME', or 'OPTIMIZEME' tag to comments in the code."
 	@ TODOS=`find packages/*/src packages/*/test packages/*/benchmark examples/*/src -type f  | xargs grep '\(TODO\|FIXME\|OPTIMIZEME\)'`; if [ -z "$$TODOS" ]; then exit 0; else echo ""; echo "Existing TODOs:"; echo "$$TODOS"; exit 1; fi;
+
+.PHONY: doc
+doc:
+	lerna exec --no-private 'make doc'

@@ -6,13 +6,13 @@
  */
 export const compose = (...fns) => {
   if (fns.length === 0)
-    return arg => arg
+    return arg => arg;
 
   if (fns.length === 1)
-    return fns[0]
+    return fns[0];
 
-  return fns.reduce((a, b) => (...args) => b(a(...args)))
-}
+  return fns.reduce((a, b) => (...args) => b(a(...args)));
+};
 
 /**
  * Get object property names including property symbols
@@ -22,72 +22,72 @@ export const compose = (...fns) => {
  */
 export const keys = obj =>
   Object.getOwnPropertyNames(obj)
-    .concat(Object.getOwnPropertySymbols(obj))
+    .concat(Object.getOwnPropertySymbols(obj));
 
 const shallowEqualArray = (a, b) => {
   if (a === b)
-    return true
+    return true;
 
   if ((a == null) !== (b == null))
-    return false
+    return false;
 
   if (a == null)
-    return true
+    return true;
 
-  const len = a.length
+  const len = a.length;
   if (len !== b.length)
-    return false
+    return false;
 
   for (let i = 0; i < len; i++) {
     if (a[i] !== b[i])
-      return false
+      return false;
   }
 
-  return true
-}
+  return true;
+};
 
 const isEmptyIterableObject = a => {
   for (const k in a)
-    return false
+    return false;
 
-  return true
-}
+  return true;
+};
 
 const shallowEqualObject = (a, b) => {
   if (a === b)
-    return true
+    return true;
 
   if ((a == null) !== (b == null))
-    return false
+    return false;
 
   if (a == null)
-    return true
+    return true;
 
   if (isEmptyIterableObject(a) !== isEmptyIterableObject(b))
-    return false
+    return false;
 
   for (const key in Object.getOwnPropertyNames(a)) {
     if (!(key in b) || a[key] !== b[key])
-      return false
+      return false;
   }
 
   for (const symbol in Object.getOwnPropertySymbols(a)) {
     if (!(symbol in b) || a[symbol] !== b[symbol])
-      return false
+      return false;
   }
 
   for (const key in Object.getOwnPropertyNames(b)) {
     if (!(key in a))
-      return false
+      return false;
   }
 
   for (const symbol in Object.getOwnPropertySymbols(b)) {
     if (!(symbol in a))
-      return false
+      return false;
   }
 
-  return true
-}
+  return true;
+};
 
 /**
  * Shallowly compare two objects
@@ -97,12 +97,12 @@ const shallowEqualObject = (a, b) => {
  * @returns {boolean} true if objects are shallow equal, false if not
  */
 export const shallowEqual = (a, b) => {
-  const aIsArray = Array.isArray(a)
+  const aIsArray = Array.isArray(a);
   if (aIsArray !== Array.isArray(b))
-    return false
+    return false;
 
-  return aIsArray ? shallowEqualArray(a, b) : shallowEqualObject(a, b)
-}
+  return aIsArray ? shallowEqualArray(a, b) : shallowEqualObject(a, b);
+};
 
 /**
  * Get copy of an object excluding given keys
@@ -112,23 +112,23 @@ export const shallowEqual = (a, b) => {
  * @returns {Object} object without given keys
  */
 export const omit = (keyToOmit, obj) => {
-  const result = {}
-  const index = {}
-  const len = keyToOmit.length
-  let i = 0
+  const result = {};
+  const index = {};
+  const len = keyToOmit.length;
+  let i = 0;
 
   while (i < len) {
-    index[keyToOmit[i]] = true
-    i += 1
+    index[keyToOmit[i]] = true;
+    i += 1;
   }
 
   for (const key of keys(obj)) {
     if (!(key in index))
-      result[key] = obj[key]
+      result[key] = obj[key];
   }
 
-  return result
-}
+  return result;
+};
 
 /**
  * Flatten an array
@@ -137,27 +137,27 @@ export const omit = (keyToOmit, obj) => {
  * @returns {Array} flattened array
  */
 export const flatten = array => {
-  const result = []
-  const len = array.length
-  let i = 0
+  const result = [];
+  const len = array.length;
+  let i = 0;
 
   while (i < len) {
     if (Array.isArray(array[i])) {
-      const value = flatten(array[i])
-      const nextLen = value.length
-      let j = 0
+      const value = flatten(array[i]);
+      const nextLen = value.length;
+      let j = 0;
       while (j < nextLen) {
-        result[result.length] = value[j]
-        j += 1
+        result[result.length] = value[j];
+        j += 1;
       }
-    } else result[result.length] = array[i]
-    i += 1
+    } else result[result.length] = array[i];
+    i += 1;
   }
 
-  return result
-}
+  return result;
+};
 
-const defaultCompare = (a, b) => (a > b ? 1 : (a < b ? -1 : 0))
+const defaultCompare = (a, b) => (a > b ? 1 : (a < b ? -1 : 0));
 
 /**
  * Search the specified value in the specified array using
@@ -176,26 +176,26 @@ const defaultCompare = (a, b) => (a > b ? 1 : (a < b ? -1 : 0))
  */
 export const binarySearch = (value, array, compare = defaultCompare) => {
   if (array.length > 1) {
-    let min = 0
-    let max = array.length - 1
+    let min = 0;
+    let max = array.length - 1;
 
     while (min <= max) {
-      const i = (min + max) >>> 1
-      const element = array[i]
-      const comp = compare(element, value)
+      const i = (min + max) >>> 1;
+      const element = array[i];
+      const comp = compare(element, value);
 
       if (comp < 0)
-        min = i + 1
+        min = i + 1;
       else if (comp > 0)
-        max = i - 1
-      else return i
+        max = i - 1;
+      else return i;
     }
 
-    return -min - 1
+    return -min - 1;
   } else if (array.length === 1) {
-    const cmp = compare(value, array[0])
-    if (cmp > 0) return -2
-    else if (cmp < 0) return -1
-    else return 0
-  } else return -2
-}
+    const cmp = compare(value, array[0]);
+    if (cmp > 0) return -2;
+    else if (cmp < 0) return -1;
+    else return 0;
+  } else return -2;
+};

@@ -1,1 +1,1 @@
-export { instantiate, render, mount, hydrate } from './view'
+export { instantiate, render, mount, hydrate } from './view';

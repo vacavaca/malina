@@ -1,7 +1,7 @@
 
-import seedrandom from 'seedrandom'
+import seedrandom from 'seedrandom';
 
-const base58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+const base58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
 
 /**
  * Pseudo-Random Number Generator
@@ -12,7 +12,7 @@ export class Random {
    * @param {string|null|undefined} seed seed
    */
   constructor(seed = null) {
-    this.rng = seed != null ? seedrandom(seed) : Math.random
+    this.rng = seed != null ? seedrandom(seed) : Math.random;
   }
 
   /**
@@ -21,7 +21,7 @@ export class Random {
    * @returns {number}
    */
   double() {
-    return this.rng()
+    return this.rng();
   }
 
   /**
@@ -32,10 +32,10 @@ export class Random {
    * @returns {string} generated id string
    */
   id(length) {
-    let result = ''
+    let result = '';
     for (let i = 0; i < length; i++)
-      result += base58[Math.round(this.rng() * (base58.length - 1))]
+      result += base58[Math.round(this.rng() * (base58.length - 1))];
 
-    return result
+    return result;
   }
 }

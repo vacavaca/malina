@@ -1,10 +1,10 @@
-const tests = require('./test')
+const tests = require('./test');
 
 tests.forEach(test => test
   .on('complete start', event => {
-    console.log('')
+    console.log('');
   })
   .on('cycle', event => {
-    console.log(`${event.target}`)
+    console.log(`${event.target}`);
   })
-  .run({ async: true }))
+  .run({ async: true }));

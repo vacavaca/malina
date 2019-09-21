@@ -1,6 +1,6 @@
-import { h, view, withState, withActions, withTemplate } from 'malina'
-import { omit } from 'malina-util'
-import { withRouter } from './router'
+import { h, view, withState, withActions, withTemplate } from 'malina';
+import { omit } from 'malina-util';
+import { withRouter } from './router';
 
 const state = {
   to: null,
@@ -8,23 +8,23 @@ const state = {
   replace: false,
   state: {},
   view: 'a'
-}
+};
 
-const reserved = ['router', 'to', 'replace', 'state', 'view']
+const reserved = ['router', 'to', 'replace', 'state', 'view'];
 
 const handleClick = e => ({ state: { router, to, target, replace, state } }) => {
   if (to == null)
-    return
+    return;
 
-  const modified = !!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)
+  const modified = !!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey);
 
   if (!e.defaultPrevented && e.button === 0 && (!target || target === '_self') && !modified) {
-    e.preventDefault()
+    e.preventDefault();
 
-    const method = replace ? router.replace : router.push
-    method(to, state)
+    const method = replace ? router.replace : router.push;
+    method(to, state);
   }
-}
+};
 
 export default view(
   withTemplate(({ state: { to, view, ...rest }, actions, children }) =>
@@ -36,4 +36,4 @@ export default view(
   withState(state),
   withActions({ handleClick }),
   withRouter()
-)
+);

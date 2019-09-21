@@ -1,4 +1,4 @@
-import { Declaration } from '../vdom'
+import { Declaration } from '../vdom';
 
 /**
  * Returns "left" if "test" condition is true, returns "right" overwise
@@ -14,7 +14,7 @@ import { Declaration } from '../vdom'
  * @param {*} left left-hand side
  * @param {*} right right-hand side
  */
-export const branch = (test, left, right = null) => test ? left : right
+export const branch = (test, left, right = null) => test ? left : right;
 
 /**
  * Shows children when "when" prop is true
@@ -27,7 +27,7 @@ export const branch = (test, left, right = null) => test ? left : right
  *   </div>
  * )
  */
-export const Show = new Declaration(({ state: { when = false }, children }) => branch(when, children, null))
+export const Show = new Declaration(({ state: { when = false }, children }) => branch(when, children, null));
 
 /**
  * Hides children when "when" prop is true
@@ -40,4 +40,4 @@ export const Show = new Declaration(({ state: { when = false }, children }) => b
  *   </div>
  * )
  */
-export const Hide = new Declaration(({ state: { when = true }, children }) => branch(when, null, children))
+export const Hide = new Declaration(({ state: { when = true }, children }) => branch(when, null, children));

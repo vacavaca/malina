@@ -1,4 +1,4 @@
-import { flatten, shallowEqual } from 'malina-util'
+import { flatten, shallowEqual } from 'malina-util';
 
 /**
  * Virtual DOM Node
@@ -6,12 +6,12 @@ import { flatten, shallowEqual } from 'malina-util'
 export class Node {
   constructor(tag, attrs = {}, children = []) {
     if (tag == null)
-      throw new Error('Node tag cannot be empty')
+      throw new Error('Node tag cannot be empty');
 
-    this.tag = tag
-    this.attrs = attrs || {}
-    this.children = flatten(children)
-    this.isDevOnly = typeof tag === 'object' && tag.isDevOnly
+    this.tag = tag;
+    this.attrs = attrs || {};
+    this.children = flatten(children);
+    this.isDevOnly = typeof tag === 'object' && tag.isDevOnly;
   }
 
   /**
@@ -22,7 +22,7 @@ export class Node {
    */
   static isNode(obj) {
     return typeof obj === 'object' && obj !== null &&
-      obj.isNode instanceof Function && obj.isNode()
+      obj.isNode instanceof Function && obj.isNode();
   }
 
   /**
@@ -34,12 +34,12 @@ export class Node {
    * @returns {boolean} true if nodes are equal, false if not
    */
   static isEqualNodes(a, b, compareChildren = true) {
-    const isNode = Node.isNode(a)
+    const isNode = Node.isNode(a);
     if (isNode !== Node.isNode(b))
-      return false
+      return false;
 
-    if (isNode) return a.isEqual(b)
-    else return a === b
+    if (isNode) return a.isEqual(b);
+    else return a === b;
   }
 
   /**
@@ -47,7 +47,7 @@ export class Node {
    * @returns {boolean}
    */
   isNode() {
-    return true // because instanceof can be inreliable on some build configurations
+    return true; // because instanceof can be inreliable on some build configurations
   }
 
   /**
@@ -56,7 +56,7 @@ export class Node {
    * @returns {boolean}
    */
   isDevOnly() {
-    return this.isDevOnly
+    return this.isDevOnly;
   }
 
   /**
@@ -69,32 +69,32 @@ export class Node {
    */
   isEqual(other, compareChildren = true) {
     if (this === other)
-      return true
+      return true;
 
     if (this.tag !== other.tag)
-      return false
+      return false;
 
     if (this.isDevOnly !== other.isDevOnly)
-      return false
+      return false;
 
     if (!shallowEqual(this.attrs, other.attrs))
-      return false
+      return false;
 
     if (compareChildren) {
       if (this.children === other.children)
-        return true
+        return true;
 
-      const len = this.children.length
+      const len = this.children.length;
       if (len !== other.children.length)
-        return false
+        return false;
 
       for (let i = 0; i < len; i++) {
         if (!Node.isEqualNodes(this.children[i], other.children[i]))
-          return false
+          return false;
       }
     }
 
-    return true
+    return true;
   }
 
   /**
@@ -102,24 +102,24 @@ export class Node {
    */
   toString() {
     const attrString = Object.keys(this.attrs).reduce((a, k) => {
-      const value = this.attrs[k]
-      if (typeof value === 'string') return `${a} ${k}="${value}"`
-      else if (value instanceof Function) return `${a} ${k}=[Function]`
-      else return `${a} ${k}={${typeof value !== 'object' ? JSON.stringify(value) : '{...}'}}`
-    }, '')
+      const value = this.attrs[k];
+      if (typeof value === 'string') return `${a} ${k}="${value}"`;
+      else if (value instanceof Function) return `${a} ${k}=[Function]`;
+      else return `${a} ${k}={${typeof value !== 'object' ? JSON.stringify(value) : '{...}'}}`;
+    }, '');
 
-    const tagName = typeof this.tag === 'string' ? this.tag : '[View]'
+    const tagName = typeof this.tag === 'string' ? this.tag : '[View]';
 
     if (this.children.length > 0) {
       return `<${tagName}${attrString}>\n${
         this.children.map(child => {
           if (child == null)
-            return '\t""'
-          const str = child.toString()
-          return str.split('\n').map(s => `\t${s}`).join('\n')
+            return '\t""';
+          const str = child.toString();
+          return str.split('\n').map(s => `\t${s}`).join('\n');
         }).join('\n')
-      }\n</${tagName}>`
-    } else return `<${tagName}${attrString}/>`
+      }\n</${tagName}>`;
+    } else return `<${tagName}${attrString}/>`;
   }
 }
 
@@ -132,6 +132,6 @@ export class Node {
  * @param  {...any} children node childen
  */
 export const h = (tag, attrs, ...children) => {
-  const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children
-  return new Node(tag, attrs, childrenArray)
-}
+  const childrenArray = children.length === 1 && Array.isArray(children[0]) ? children[0] : children;
+  return new Node(tag, attrs, childrenArray);
+};

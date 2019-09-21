@@ -1,4 +1,4 @@
-import { Declaration } from '../vdom'
+import { Declaration } from '../vdom';
 
 /**
  * View with empty text node
@@ -12,5 +12,6 @@ import { Declaration } from '../vdom'
  * }
  *
  * withLifecycle({ mount })(None)
+ * @name None
  */
-export default new Declaration(null)
+export default new Declaration(null);

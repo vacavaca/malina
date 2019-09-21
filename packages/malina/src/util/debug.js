@@ -1,58 +1,58 @@
-import { omit, keys } from 'malina-util'
-import { h, Declaration } from '../vdom'
-import { log as consoleLog } from '../env'
-import { childIndex } from '../helper'
+import { omit, keys } from 'malina-util';
+import { h, Declaration } from '../vdom';
+import { log as consoleLog } from '../env';
+import { childIndex } from '../helper';
 
 const wrapLogger = logger => {
-  const loggerOrConsole = logger != null ? logger : consoleLog
+  const loggerOrConsole = logger != null ? logger : consoleLog;
   return (msg, data = null) => {
-    const logData = data != null ? { ...data } : null
+    const logData = data != null ? { ...data } : null;
     if (logData != null && 'state' in logData)
-      logData.state = { ...omit(['logger'], logData.state) }
+      logData.state = { ...omit(['logger'], logData.state) };
 
-    let logArgs = logData != null ? [msg, logData] : [msg]
-    loggerOrConsole(...logArgs)
-  }
-}
+    let logArgs = logData != null ? [msg, logData] : [msg];
+    loggerOrConsole(...logArgs);
+  };
+};
 
 const getElementData = view => {
   const data = {
     parent: view.element.parentNode,
     index: childIndex(view.element)
-  }
+  };
 
   if (view.children != null && view.children.length > 0)
-    data.element = view.element
+    data.element = view.element;
 
-  return data
-}
+  return data;
+};
 
 const updatePreviousStorage = (prevStorage, view) => {
   prevStorage.prev = {
     state: view.state,
     children: view.children
-  }
-}
+  };
+};
 
 const getUpdateData = (prevStorage, view) => {
-  let update = null
+  let update = null;
 
-  const allkeys = {}
+  const allkeys = {};
   for (const key of keys(prevStorage.prev.state))
-    allkeys[key] = true
+    allkeys[key] = true;
 
   for (const key of keys(view.state))
-    allkeys[key] = true
+    allkeys[key] = true;
 
   for (const key in allkeys) {
-    const prevValue = prevStorage.prev.state[key]
-    const nextValue = view.state[key]
+    const prevValue = prevStorage.prev.state[key];
+    const nextValue = view.state[key];
 
     if (prevValue !== nextValue) {
       if (update === null)
-        update = {}
+        update = {};
 
-      update[key] = nextValue
+      update[key] = nextValue;
     }
   }
 
@@ -63,86 +63,86 @@ const getUpdateData = (prevStorage, view) => {
     nextChildren: view.children,
     update,
     childrenUpdated: prevStorage.prev.children !== view.children
-  }
-}
+  };
+};
 
 const onCreate = logger => view => {
-  const msg = 'DEBUG: created ' + (view.state.info ? `"${view.state.info}"` : '')
+  const msg = 'DEBUG: created ' + (view.state.info ? `"${view.state.info}"` : '');
   const data = {
     state: view.state
-  }
+  };
 
-  logger(msg, data)
-}
+  logger(msg, data);
+};
 
 const onMount = (logger, prevStorage) => view => {
-  const msg = 'DEBUG: mounted ' + (view.state.info ? `"${view.state.info}"` : '')
+  const msg = 'DEBUG: mounted ' + (view.state.info ? `"${view.state.info}"` : '');
   const data = {
     state: view.state,
     element: getElementData(view)
-  }
+  };
 
-  updatePreviousStorage(prevStorage, view)
+  updatePreviousStorage(prevStorage, view);
 
-  logger(msg, data)
-}
+  logger(msg, data);
+};
 
 const onUpdate = (logger, prevStorage) => view => {
-  const msg = 'DEBUG: updated ' + (view.state.info ? `"${view.state.info}"` : '')
+  const msg = 'DEBUG: updated ' + (view.state.info ? `"${view.state.info}"` : '');
   const data = {
     state: view.state,
     element: getElementData(view)
-  }
+  };
 
-  const update = getUpdateData(prevStorage, view)
+  const update = getUpdateData(prevStorage, view);
   if (update != null)
-    data.update = update
+    data.update = update;
 
-  updatePreviousStorage(prevStorage, view)
+  updatePreviousStorage(prevStorage, view);
 
-  logger(msg, data)
-}
+  logger(msg, data);
+};
 
 const onUnmount = logger => view => {
-  const msg = 'DEBUG: unmounted ' + (view.state.info ? `"${view.state.info}"` : '')
+  const msg = 'DEBUG: unmounted ' + (view.state.info ? `"${view.state.info}"` : '');
   const data = {
     state: view.state,
     element: getElementData(view)
-  }
+  };
 
-  logger(msg, data)
-}
+  logger(msg, data);
+};
 
 const onDestroy = logger => view => {
-  const msg = 'DEBUG: destroyed ' + (view.state.info ? `"${view.state.info}"` : '')
-  logger(msg)
-}
+  const msg = 'DEBUG: destroyed ' + (view.state.info ? `"${view.state.info}"` : '');
+  logger(msg);
+};
 
 const behavior = logger => view => {
-  const prevStorage = { prev: {} }
+  const prevStorage = { prev: {} };
 
-  onCreate(logger)(view)
+  onCreate(logger)(view);
 
-  view.onMount(onMount(logger, prevStorage))
-  view.onUpdate(onUpdate(logger, prevStorage))
-  view.onUnmount(onUnmount(logger))
-  view.onDestroy(onDestroy(logger))
-}
+  view.onMount(onMount(logger, prevStorage));
+  view.onUpdate(onUpdate(logger, prevStorage));
+  view.onUnmount(onUnmount(logger));
+  view.onDestroy(onDestroy(logger));
+};
 
-const cachedViews = new Map()
-const maxCached = 10000
+const cachedViews = new Map();
+const maxCached = 10000;
 
 const getDebugView = (logger = null) => {
-  if (cachedViews.has(logger)) return cachedViews.get(logger)
+  if (cachedViews.has(logger)) return cachedViews.get(logger);
   else {
-    const View = new Declaration(null, behavior(wrapLogger(logger)))
+    const View = new Declaration(null, behavior(wrapLogger(logger)));
 
     if (cachedViews.size < maxCached)
-      cachedViews.set(logger, View)
+      cachedViews.set(logger, View);
 
-    return View
+    return View;
   }
-}
+};
 
 /**
  * Debug view
@@ -161,7 +161,8 @@ const getDebugView = (logger = null) => {
  * @example
  * state =>
  *  <Debug {...state} />
+ * @name Debug
  */
 export default new Declaration(({ state, children }) =>
   h(getDebugView(state.logger), omit(['logger'], state), children)
-).setDevelopmentOnly(true)
+).setDevelopmentOnly(true);

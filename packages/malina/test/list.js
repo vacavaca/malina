@@ -1,12 +1,12 @@
 /* eslint-disable no-undef */
-const assert = require('assert')
-const { JSDOM } = require('jsdom')
-const { h, view, mount, withTemplate, withState, withActions, List } = require('..')
+const assert = require('assert');
+const { JSDOM } = require('jsdom');
+const { h, view, mount, withTemplate, withState, withActions, List } = require('..');
 
 describe('util', () => {
   describe('List', () => {
     it('should render lists', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -19,15 +19,15 @@ describe('util', () => {
             { text: 'Third', id: 3 }
           ]
         })
-      )
+      );
 
-      mount(dom.window.document.body, h(View))
+      mount(dom.window.document.body, h(View));
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>');
+    });
 
     it('should add items to the end of the list', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -49,18 +49,18 @@ describe('util', () => {
             ]
           })
         })
-      )
+      );
 
-      const instance = mount(dom.window.document.body, h(View))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>')
+      const instance = mount(dom.window.document.body, h(View));
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>');
 
-      instance.actions.add()
+      instance.actions.add();
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
+    });
 
     it('should add items to the begining of the list', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -82,18 +82,18 @@ describe('util', () => {
             ]
           })
         })
-      )
+      );
 
-      const instance = mount(dom.window.document.body, h(View))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="4">Fourth</div><div id="5">Fith</div>')
+      const instance = mount(dom.window.document.body, h(View));
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="4">Fourth</div><div id="5">Fith</div>');
 
-      instance.actions.add()
+      instance.actions.add();
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
+    });
 
     it('should render reversed lists', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -106,15 +106,15 @@ describe('util', () => {
             { text: 'First', id: 1 }
           ]
         })
-      )
+      );
 
-      mount(dom.window.document.body, h(View))
+      mount(dom.window.document.body, h(View));
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div>');
+    });
 
     it('should add items to the end of the reversed list', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -136,18 +136,18 @@ describe('util', () => {
             ]
           })
         })
-      )
+      );
 
-      const instance = mount(dom.window.document.body, h(View))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
+      const instance = mount(dom.window.document.body, h(View));
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
 
-      instance.actions.add()
+      instance.actions.add();
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
+    });
 
     it('should add items to the begining of the list', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data } }) =>
@@ -169,18 +169,18 @@ describe('util', () => {
             ]
           })
         })
-      )
+      );
 
-      const instance = mount(dom.window.document.body, h(View))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div>')
+      const instance = mount(dom.window.document.body, h(View));
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div>');
 
-      instance.actions.add()
+      instance.actions.add();
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
-    })
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="1">First</div><div id="2">Second</div><div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
+    });
 
     it('should add items to the end of the reversed list alternating order', () => {
-      const dom = new JSDOM('<body></body>')
+      const dom = new JSDOM('<body></body>');
 
       const View = view(
         withTemplate(({ state: { data, reverse } }) =>
@@ -204,14 +204,14 @@ describe('util', () => {
             ]
           })
         })
-      )
+      );
 
-      const instance = mount(dom.window.document.body, h(View))
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>')
+      const instance = mount(dom.window.document.body, h(View));
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="3">Third</div><div id="4">Fourth</div><div id="5">Fith</div>');
 
-      instance.actions.add()
+      instance.actions.add();
 
-      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="5">Fith</div><div id="4">Fourth</div><div id="3">Third</div><div id="2">Second</div><div id="1">First</div>')
-    })
-  })
-})
+      assert.strictEqual(dom.window.document.body.innerHTML, '<div id="5">Fith</div><div id="4">Fourth</div><div id="3">Third</div><div id="2">Second</div><div id="1">First</div>');
+    });
+  });
+});

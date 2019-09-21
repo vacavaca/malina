@@ -1,13 +1,13 @@
-import { keys, compose } from 'malina-util'
-import { Declaration, template, h } from '../vdom'
-import decorator from './decorator'
+import { keys, compose } from 'malina-util';
+import { Declaration, template, h } from '../vdom';
+import decorator from './decorator';
 
-const id = a => a
+const id = a => a;
 
 const createInitializer = value => state => {
-  if (value instanceof Function) return value(state) || {}
-  else return value || {}
-}
+  if (value instanceof Function) return value(state) || {};
+  else return value || {};
+};
 
 /**
  * Add new behavior handlers to view
@@ -35,11 +35,11 @@ const createInitializer = value => state => {
 export const withBehavior = (...handlers) => decorator(Inner =>
   new Declaration(Inner.template, view => {
     if (Inner.behavior instanceof Function)
-      Inner.behavior(view)
+      Inner.behavior(view);
 
     for (const handler of handlers)
-      handler(view)
-  }, Inner.actions))
+      handler(view);
+  }, Inner.actions));
 
 /**
  * Add default state to ivew
@@ -62,9 +62,9 @@ export const withBehavior = (...handlers) => decorator(Inner =>
  */
 export const withState = state => withBehavior(
   view => {
-    view.state = { ...createInitializer(state)(view.state), ...view.state }
+    view.state = { ...createInitializer(state)(view.state), ...view.state };
   }
-)
+);
 
 /**
  * Add actions to view
@@ -89,7 +89,7 @@ export const withActions = actions => decorator(Inner =>
   new Declaration(Inner.template, Inner.behavior, {
     ...(Inner.actions || {}),
     ...(actions || {})
-  }))
+  }));
 
 /**
  * Add initial state and actions to view
@@ -114,7 +114,7 @@ export const withActions = actions => decorator(Inner =>
 export const withStateActions = (state, actions) => compose(
   withState(state),
   withActions(actions)
-)
+);
 
 /**
  * Add lifecycle handlers to view
@@ -143,20 +143,20 @@ export const withStateActions = (state, actions) => compose(
  */
 export const withLifecycle = handlers => withBehavior(view => {
   if ('create' in handlers)
-    handlers.create(view)
+    handlers.create(view);
 
   if ('mount' in handlers)
-    view.onMount(handlers.mount)
+    view.onMount(handlers.mount);
 
   if ('update' in handlers)
-    view.onUpdate(handlers.update)
+    view.onUpdate(handlers.update);
 
   if ('unmount' in handlers)
-    view.onUnmount(handlers.unmount)
+    view.onUnmount(handlers.unmount);
 
   if ('destroy' in handlers)
-    view.onDestroy(handlers.destroy)
-})
+    view.onDestroy(handlers.destroy);
+});
 
 /**
  * Add template to view
@@ -176,7 +176,7 @@ export const withLifecycle = handlers => withBehavior(view => {
  * @returns {Function} view decorator
  */
 export const withTemplate = template => decorator(Inner =>
-  new Declaration(template, Inner.behavior, Inner.actions))
+  new Declaration(template, Inner.behavior, Inner.actions));
 
 /**
  * Create new template based on the original using mapper function
@@ -196,11 +196,11 @@ export const withTemplate = template => decorator(Inner =>
 export const mapTemplate = mapper => decorator(Inner =>
   new Declaration(view => {
     const original = () => {
-      return Inner.template(view)
-    }
+      return Inner.template(view);
+    };
 
-    return mapper(original)(view)
-  }, Inner.behavior, Inner.actions))
+    return mapper(original)(view);
+  }, Inner.behavior, Inner.actions));
 
 /**
  * Map state using mapper function
@@ -216,7 +216,7 @@ export const mapTemplate = mapper => decorator(Inner =>
  */
 export const mapState = (mapper = id) => decorator(Inner =>
   template(({ state, children }) => h(Inner, mapper(state), children))
-)
+);
 
 /**
  * Rename state properties
@@ -231,11 +231,11 @@ export const mapState = (mapper = id) => decorator(Inner =>
  * @returns {Function} view decorator
  */
 export const renameState = (nameMap = {}) => mapState(state => {
-  const renamed = {}
+  const renamed = {};
   for (const key of keys(nameMap)) {
     if (key in state)
-      renamed[nameMap[key]] = state[key]
+      renamed[nameMap[key]] = state[key];
   }
 
-  return renamed
-})
+  return renamed;
+});

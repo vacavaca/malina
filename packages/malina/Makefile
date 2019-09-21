@@ -50,3 +50,7 @@ release:						 \
 	check 						 \
 	$(node_release)		 \
 	post-clean
+
+.PHONY: doc
+doc:
+	jsdoc -c jsdoc.conf.json -r --verbose

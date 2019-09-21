@@ -1,6 +1,6 @@
-import babel from 'rollup-plugin-babel'
+import babel from 'rollup-plugin-babel';
 
-import packageJson from './package.json'
+import packageJson from './package.json';
 
 module.exports = {
   input: 'index.js',
@@ -13,4 +13,4 @@ module.exports = {
   plugins: [
     babel()
   ]
-}
+};

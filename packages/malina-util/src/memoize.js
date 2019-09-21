@@ -1,29 +1,29 @@
-const defaultIsEqual = (a, b) => a === b
+const defaultIsEqual = (a, b) => a === b;
 
 const checkParams = (prev, next, isEqual) => {
-  const len = prev.length
+  const len = prev.length;
   if (len !== next.length)
-    return false
+    return false;
 
   for (let i = 0; i < len; i++) {
     if (!isEqual(prev[i], next[i]))
-      return false
+      return false;
   }
 
-  return true
-}
+  return true;
+};
 
 const memoizeOne = (fn, isEqual) => {
-  let prevParams = null
-  let prevResult = null
+  let prevParams = null;
+  let prevResult = null;
 
   return (...args) => {
     if (prevParams === null || !checkParams(prevParams, args, isEqual))
-      prevResult = fn(...args)
-    prevParams = args
-    return prevResult
-  }
-}
+      prevResult = fn(...args);
+    prevParams = args;
+    return prevResult;
+  };
+};
 
 /**
  * Creste memoized function
@@ -35,28 +35,28 @@ const memoizeOne = (fn, isEqual) => {
  */
 export const memoize = (fn, length = 1, isEqual = defaultIsEqual) => {
   if (length === 1)
-    return memoizeOne(fn, isEqual)
+    return memoizeOne(fn, isEqual);
 
   if (length === 0)
-    return fn
+    return fn;
 
-  let prevParams = []
-  let prevResults = []
+  let prevParams = [];
+  let prevResults = [];
 
   return (...args) => {
     for (let i = prevParams.length - 1; i >= 0; i--) {
       if (checkParams(prevParams[i], args, isEqual))
-        return prevResults[i]
+        return prevResults[i];
     }
 
-    prevParams.push(args)
-    const result = fn(...args)
-    prevResults.push(result)
+    prevParams.push(args);
+    const result = fn(...args);
+    prevResults.push(result);
     if (prevParams.length > length) {
-      prevParams.splice(0, 1)
-      prevResults.splice(0, 1)
+      prevParams.splice(0, 1);
+      prevResults.splice(0, 1);
     }
 
-    return result
-  }
-}
+    return result;
+  };
+};

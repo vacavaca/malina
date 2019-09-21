@@ -1,4 +1,4 @@
-import { Declaration } from '../vdom'
+import { Declaration } from '../vdom';
 
 /**
  * View that simply renders its children,
@@ -21,5 +21,6 @@ import { Declaration } from '../vdom'
  *  <h1>Hello</h1>
  * </Id>
  * // renders: <h1>Hello</h1>
+ * @name Id
  */
-export default new Declaration(({ children }) => children)
+export default new Declaration(({ children }) => children);

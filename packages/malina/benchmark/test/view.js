@@ -1,6 +1,6 @@
-const { Suite } = require('../util')
-const { JSDOM } = require('jsdom')
-const { h, view, mount, withTemplate, withActions, withState } = require('../..')
+const { Suite } = require('../util');
+const { JSDOM } = require('jsdom');
+const { h, view, mount, withTemplate, withActions, withState } = require('../..');
 
 module.exports = new Suite()
   .add('update simple list',
@@ -25,16 +25,16 @@ module.exports = new Suite()
             todos: [state.todos[0], { name: `test ${state.i + 1}` }, state.todos[2]]
           })
         })
-      )
+      );
 
-      ctx.dom = new JSDOM('<body></body>')
-      ctx.instance = mount(ctx.dom.window.document.body, h(ctx.Test))
+      ctx.dom = new JSDOM('<body></body>');
+      ctx.instance = mount(ctx.dom.window.document.body, h(ctx.Test));
     },
     ctx => {
-      ctx.instance.actions.update()
+      ctx.instance.actions.update();
     },
     ctx => {
-      console.log('Result: ', ctx.dom.window.document.body.innerHTML)
+      console.log('Result: ', ctx.dom.window.document.body.innerHTML);
     })
   .add('render same markup',
     ctx => {
@@ -57,15 +57,15 @@ module.exports = new Suite()
         withActions({
           update: () => ({ state }) => ({ i: state.i + 1 })
         })
-      )
+      );
 
-      ctx.dom = new JSDOM('<body></body>')
-      ctx.instance = mount(ctx.dom.window.document.body, h(ctx.Test))
+      ctx.dom = new JSDOM('<body></body>');
+      ctx.instance = mount(ctx.dom.window.document.body, h(ctx.Test));
     },
     ctx => {
-      ctx.instance.actions.update()
+      ctx.instance.actions.update();
     },
     ctx => {
-      console.log('Result: ', ctx.dom.window.document.body.innerHTML)
+      console.log('Result: ', ctx.dom.window.document.body.innerHTML);
     })
-  .tests
+  .tests;
