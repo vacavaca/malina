@@ -2,7 +2,7 @@
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 const { h, view, template, mount, Id, withTemplate, withContext, withBehavior } = require('malina');
-const { withStore, connect, bindActions } = require('..');
+const { withStore, connect, bindActions } = require('../index.js');
 const { asyncTest } = require('./util');
 
 describe('store', () => {

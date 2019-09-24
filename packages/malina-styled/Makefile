@@ -23,13 +23,17 @@ $(build_node): src
 
 $(node_release): $(build_node)
 ifeq ($(NODE_ENV),production)
-	uglifyjs -m toplevel $(build_node) > $(node_release)
+	./node_modules/uglify-es/bin/uglifyjs -m toplevel $(build_node) > $(node_release)
 else
 	cp $(build_node) $(node_release)
 endif
 
 .PHONY: test
 test:
+	echo "Nothing to test yet"
+
+.PHONY: coverage
+coverage:
 	echo "Nothing to test yet"
 
 .PHONY: benchmark

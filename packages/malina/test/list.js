@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
-const { h, view, mount, withTemplate, withState, withActions, List } = require('..');
+const { h, view, mount, withTemplate, withState, withActions, List } = require('../index.js');
 
 describe('util', () => {
   describe('List', () => {

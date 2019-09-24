@@ -2,7 +2,7 @@
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 const { h, view, template, mount, withTemplate } = require('malina');
-const { withUniqIds } = require('..');
+const { withUniqIds } = require('../index.js');
 
 describe('id', () => {
   describe('withUniqIds', () => {

@@ -2,7 +2,7 @@
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 const { h, view, mount, template, withTemplate, withState, withActions } = require('malina');
-const { cssModules } = require('..');
+const { cssModules } = require('../index.js');
 
 describe('cssModules', () => {
   it('should add classes', () => {

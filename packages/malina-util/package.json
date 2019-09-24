@@ -7,10 +7,11 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Nothing to test yet\"",
+    "test": "make test",
+    "coverage": "make coverage",
     "benchmark": "echo \"Nothing to benchmark yet\"",
     "build": "make build",
-    "check": "make clean check",
+    "check": "make check",
     "clean": "make clean",
     "release": "NODE_ENV=production make release"
   },
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "@babel/register": "^7.6.0",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.18.2",
@@ -37,6 +39,8 @@
     "eslint-plugin-standard": "^4.0.0",
     "rollup": "^0.66.6",
     "jsdoc": "^3.6.3",
+    "mocha": "^5.2.0",
+    "nyc": "^14.1.1",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^3.4.0",

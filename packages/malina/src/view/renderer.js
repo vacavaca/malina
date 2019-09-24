@@ -493,7 +493,8 @@ class Renderer {
     if (isElementNode(node)) return this.createElementNode(node, path, renderingContext);
     else if (isViewNode(node)) return this.createViewNode(node, path, renderingContext);
     else if (isDomElement(renderingContext, node)) return node;
-    else if (node === null || isTextNode(node)) return this.createTextNode(node);
+    else if (isTextNode(node)) return this.createTextNode(node);
+    else if (node === null) return this.createEmptyElement(renderingContext);
   }
 
   /** @private */
@@ -1070,15 +1071,20 @@ class Renderer {
     this.eventListenerDelegates.delete(key);
     this.eventListeners.delete(key);
   }
+
+  /** @private */
+  createEmptyElement(renderingContext) {
+    return renderingContext.getDocument().createTextNode('');
+  }
 }
 
 // for debuging renderer calls
 // for (const k of Object.getOwnPropertyNames(Renderer.prototype)) {
-//   const buff = Renderer.prototype[k]
-//   Renderer.prototype[k] = function (...args) {
-//     console.log(k, args)
-//     return buff.apply(this, args)
-//   }
+//   const buff = Renderer.prototype[k];
+//   Renderer.prototype[k] = function method(...args) {
+//     console.log(k, args);
+//     return buff.apply(this, args);
+//   };
 // }
 
 export default Renderer;

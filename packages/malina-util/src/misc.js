@@ -66,22 +66,22 @@ const shallowEqualObject = (a, b) => {
   if (isEmptyIterableObject(a) !== isEmptyIterableObject(b))
     return false;
 
-  for (const key in Object.getOwnPropertyNames(a)) {
+  for (const key of Object.getOwnPropertyNames(a)) {
     if (!(key in b) || a[key] !== b[key])
       return false;
   }
 
-  for (const symbol in Object.getOwnPropertySymbols(a)) {
+  for (const symbol of Object.getOwnPropertySymbols(a)) {
     if (!(symbol in b) || a[symbol] !== b[symbol])
       return false;
   }
 
-  for (const key in Object.getOwnPropertyNames(b)) {
+  for (const key of Object.getOwnPropertyNames(b)) {
     if (!(key in a))
       return false;
   }
 
-  for (const symbol in Object.getOwnPropertySymbols(b)) {
+  for (const symbol of Object.getOwnPropertySymbols(b)) {
     if (!(symbol in a))
       return false;
   }

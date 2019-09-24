@@ -2,7 +2,7 @@
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 const { h, view, mount, withTemplate, withLifecycle, withActions } = require('malina');
-const { withRefs } = require('..');
+const { withRefs } = require('../index.js');
 
 describe('ref', () => {
   describe('withRef', () => {

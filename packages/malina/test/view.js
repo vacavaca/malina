@@ -2,7 +2,7 @@
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
 const { asyncTest } = require('./util');
-const { h, view, mount, hydrate, template, withTemplate, withBehavior, withState, withActions } = require('..');
+const { h, view, mount, hydrate, template, withTemplate, withBehavior, withState, withActions } = require('../index.js');
 
 describe('view', () => {
   describe('update', () => {
@@ -349,6 +349,29 @@ describe('view', () => {
 
       assert.strictEqual(dom.window.document.body.innerHTML, '');
       assert.strictEqual(dom.window.document.body.childNodes[0].textContent, '');
+    });
+
+    it('should replace root element with empty text node', () => {
+      const dom = new JSDOM(`<body><svg></svg></body>`);
+
+      const View = view(
+        withTemplate(({ state: { empty } }) => (
+          empty ? null : h('g')
+        )),
+        withState({ empty: false }),
+        withActions({
+          empty: () => ({ empty: true })
+        })
+      );
+
+      const instance = mount(dom.window.document.body.childNodes[0], h(View), 0, { insideSvg: true });
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<svg><g></g></svg>');
+
+      instance.actions.empty();
+
+      assert.strictEqual(dom.window.document.body.innerHTML, '<svg></svg>');
+      assert.strictEqual(dom.window.document.body.childNodes[0].childNodes[0].textContent, '');
     });
   });
 });

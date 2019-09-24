@@ -55,4 +55,9 @@ export default class Dispatcher {
         delete this.listeners[key];
     }
   }
+
+  dispose() {
+    this.resolvers = {};
+    this.listeners = {};
+  }
 }

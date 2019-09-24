@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
-const { h, view, mount, withTemplate, withState, withActions, getContext, withContext } = require('..');
+const { h, view, mount, withTemplate, withState, withActions, getContext, withContext } = require('../index.js');
 
 describe('context', () => {
   it('should pass context down the tree', () => {

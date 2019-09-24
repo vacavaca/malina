@@ -4,3 +4,5 @@
 .env
 node_modules
 doc
+coverage
+.nyc_output

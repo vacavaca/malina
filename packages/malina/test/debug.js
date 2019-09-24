@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 const assert = require('assert');
 const { JSDOM } = require('jsdom');
-const { h, template, mount, Debug, withTemplate, withBehavior, withActions, view } = require('..');
+const { h, template, mount, Debug, withTemplate, withBehavior, withActions, view } = require('../index.js');
 
 describe('Debug', () => {
   it('should log component lifecycle', () => {

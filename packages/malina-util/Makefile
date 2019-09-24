@@ -23,7 +23,7 @@ $(build_node): src
 
 $(node_release): $(build_node)
 ifeq ($(NODE_ENV),production)
-	uglifyjs -m toplevel $(build_node) > $(node_release)
+	./node_modules/uglify-es/bin/uglifyjs -m toplevel $(build_node) > $(node_release)
 else
 	cp $(build_node) $(node_release)
 endif
@@ -33,7 +33,11 @@ check: lint
 
 .PHONY: test
 test:
-	echo "Nothing to test yet"
+	NODE_ENV=testing nyc --reporter=html mocha --require @babel/register test
+
+.PHONY: coverage
+coverage:
+	NODE_ENV=testing nyc $(COVFLAGS) mocha -R min --require @babel/register test
 
 .PHONY: benchmark
 benchmark:

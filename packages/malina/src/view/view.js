@@ -270,9 +270,13 @@ class View {
       }
 
       this.dispatcher.notify('destroy');
+      this.dispatcher.dispose();
     } else {
       const queue = this.renderContext.getCallbackQueue('destroy');
-      queue.push(() => this.dispatcher.notify('destroy'));
+      queue.push(() => {
+        this.dispatcher.notify('destroy');
+        this.dispatcher.dispose();
+      });
     }
   }
 

@@ -37,6 +37,10 @@ check: build
 test: build
 	lerna exec --no-private 'make test'
 
+.PHONY: coverage
+coverage: build
+	lerna exec --no-private 'make coverage'
+
 .PHONY: benchmark
 benchmark: build
 	lerna exec --no-private 'make benchmark'
