@@ -68,9 +68,9 @@ const normalizeContextConsumer = args => {
   else if (args.length === 1) {
     const arg = args[0];
     if (arg instanceof Function) return arg;
-    else if (typeof arg === 'string') return createPropContextConsumer(arg);
+    else if (typeof arg === 'string') return createPropContextConsumer([arg]);
     else return createObjectContextConsumer(arg);
-  } else return createPropContextConsumer(...args);
+  } else return createPropContextConsumer(args);
 };
 
 /**

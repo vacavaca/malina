@@ -20,7 +20,6 @@ const state = state => ({
   render: state.render,
   mountPoint: null, // [parent, idnex]
   initialized: false,
-  reverse: false,
   views: {},
   index: [],
   prevData: [],

@@ -6,7 +6,7 @@ const id = a => a;
 
 const createInitializer = value => state => {
   if (value instanceof Function) return value(state) || {};
-  else return value || {};
+  else return value;
 };
 
 /**

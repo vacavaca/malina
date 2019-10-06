@@ -165,7 +165,7 @@ const defaultCompare = (a, b) => (a > b ? 1 : (a < b ? -1 : 0));
  *
  * @param {*} value search value
  * @param {array} array array to search in
- * @param {Function|undefined} compare comparator to use,
+ * @param {Function} [compare] comparator to use,
  * default comparator uses js comparison operators
  * @returns {number} index of the search value
  * if it is contained in the array, otherwise

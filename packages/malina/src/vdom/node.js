@@ -30,7 +30,7 @@ export class Node {
    *
    * @param {*} a first object
    * @param {*} b second object
-   * @param {boolean|undefined} compareChildren compare node children or not (default true)
+   * @param {boolean} [compareChildren] compare node children or not (default true)
    * @returns {boolean} true if nodes are equal, false if not
    */
   static isEqualNodes(a, b, compareChildren = true) {
@@ -64,7 +64,7 @@ export class Node {
    * a.isEqual(b) is equivalent to Node.isEqual(a, b)
    *
    * @param {*} other other object to compare with
-   * @param {boolean|undefined} compareChildren compare node children or not (default true)
+   * @param {boolean} [compareChildren] compare node children or not (default true)
    * @returns {boolean} true is nodes are equal, false otherwise
    */
   isEqual(other, compareChildren = true) {

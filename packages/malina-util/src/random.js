@@ -9,7 +9,7 @@ const base58 = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
 export class Random {
   /**
    * @constructor
-   * @param {string|null|undefined} seed seed
+   * @param {string|null} [seed] seed
    */
   constructor(seed = null) {
     this.rng = seed != null ? seedrandom(seed) : Math.random;

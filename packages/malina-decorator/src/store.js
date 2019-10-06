@@ -1,4 +1,4 @@
-import { h, view, decorator, getContext, withContext, withTemplate, withState, withActions } from 'malina';
+import { h, view, decorator, getContext, withContext, withTemplate, withActions } from 'malina';
 import { shallowEqual, keys, compose, memoize } from 'malina-util';
 
 const actions = {};
@@ -36,7 +36,6 @@ const passToContext = compose(
 
 const StoreView = view(
   withTemplate(({ children }) => children),
-  withState({ store: null }),
   withActions(actions),
   passToContext
 );

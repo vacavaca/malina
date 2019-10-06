@@ -31,7 +31,7 @@ const updateDecoratorsHistory = (key, next) =>
  *
  * @method
  * @name decorator
- * @param {Object} fn decorator function
+ * @param {Function} fn decorator function
  * @returns {Function} decorator function
  */
 export default fn => {

@@ -1,7 +1,8 @@
-import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext, isViewNode } from 'malina';
+import { isElementNode, h, isDevelopment, getGlobal, mapTemplate, withContext, getContext, isViewNode, withState } from 'malina';
 import { compose, Random } from 'malina-util';
 
-const key = Symbol.for('__malina_ids');
+const ctxKey = Symbol.for('__malina_ids.ctx');
+const stateKey = Symbol.for('__malina_ids.state');
 const randomKey = Symbol.for('__malina-decorator.id.random');
 
 const global_ = getGlobal();
@@ -71,14 +72,20 @@ const getOptions = (options = {}) => ({
 
 export const withUniqIds = options =>
   compose(
-    getContext(ctx => key in ctx ? { [key]: ctx[key] } : {}),
+    getContext(ctx => ctxKey in ctx ? { [ctxKey]: ctx[ctxKey] } : {}),
     withContext(({ state }) => {
-      if (!(key in state)) {
+      if (!(ctxKey in state)) {
         const context = { id: 0 };
-        state[key] = context;
-        return { [key]: context };
+        state[ctxKey] = context;
+        return { [ctxKey]: context };
       } else return {};
     }),
+    withState({
+      [stateKey]: {
+        ids: {}
+      }
+    }),
     mapTemplate(original => view =>
-      mapIdTemplate(getOptions(options), { ref: view.state[key], ids: {} })(original()))
+      mapIdTemplate(getOptions(options), { ref: view.state[ctxKey], ids: view.state[stateKey].ids })(original())
+    )
   );

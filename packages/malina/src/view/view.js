@@ -519,7 +519,7 @@ const mountOrHydrate = (container, node, index, {
       renderContext = renderContext.setSvg(true);
   }
 
-  const viewInstance = new View(renderContext, viewNode);
+  const viewInstance = new View(renderContext, viewNode, new StateContext());
   const fragment = isTemplateElement(container) ? container.content : container;
   if (hydrate) viewInstance.hydrate(fragment.childNodes[index]);
   else viewInstance.mount(fragment, index);
@@ -527,15 +527,19 @@ const mountOrHydrate = (container, node, index, {
 };
 
 /**
+ * @typedef {Object} RenderOptions
+ * @property {boolean} [insideSvg] set to true if the node is rendered inside some SVG Element
+ * @property {string} [env] NODE_ENV value
+ */
+
+/**
  * Mount view
  *
  * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
- * @param {number|undefined} index element index
- * @param {Object|undefined} options options object:
- * @param {bolean|undefined} options.insideSvg set to true if the node is rendered inside some SVG Element
- * @param {string|undefined} options.env NODE_ENV value
+ * @param {number} [index] element index
+ * @param {RenderOptions} [options] options
  * @returns {Object} view instance object
  */
 export const mount = (container, node, index = 0, {
@@ -548,10 +552,8 @@ export const mount = (container, node, index = 0, {
  * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
- * @param {number|undefined} index element index
- * @param {Object|undefined} options options object:
- * @param {bolean|undefined} options.insideSvg set to true if the node is rendered inside some SVG Element
- * @param {string|undefined} options.env NODE_ENV value
+ * @param {number} [index] element index
+ * @param {RenderOptions} [options] options
  * @returns {Object} view instance object
  */
 export const hydrate = (container, node, index = 0, {
@@ -564,9 +566,7 @@ export const hydrate = (container, node, index = 0, {
  * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
- * @param {Object|undefined} options options object:
- * @param {bolean|undefined} options.insideSvg set to true if the node is rendered inside some SVG Element
- * @param {string|undefined} options.env NODE_ENV value
+ * @param {RenderOptions} [options] options
  * @returns {Object} view instance object
  */
 export const instantiate = (document, node, {
@@ -580,7 +580,7 @@ export const instantiate = (document, node, {
     svg: insideSvg
   });
 
-  const viewInstance = new View(renderContext, viewNode);
+  const viewInstance = new View(renderContext, viewNode, new StateContext());
   return new OuterFacade(viewInstance);
 };
 
@@ -590,9 +590,7 @@ export const instantiate = (document, node, {
  * @method
  * @param {Document} document document object
  * @param {*} node VDOM Node
- * @param {Object|undefined} options options object:
- * @param {bolean|undefined} options.insideSvg set to true if the node is rendered inside some SVG Element
- * @param {string|undefined} options.env NODE_ENV value
+ * @param {RenderOptions} [options] options
  * @returns {Object} view instance object
  */
 export const render = (document, node, {

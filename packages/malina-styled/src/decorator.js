@@ -94,7 +94,7 @@ const mapStyledTemplate = mapTemplate(original => ({ state }) => {
   return mapNode(state[stylesKey], state[originalStylesKey])(node);
 });
 
-const initializeStyleMap = withState(() => ({ [stylesKey]: new StyleList(), [originalStylesKey]: {} }));
+const initializeStyleMap = withState(props => ({ [stylesKey]: new StyleList(), [originalStylesKey]: {} }));
 
 const initializeInjector = withLifecycle({
   mount: view => {
