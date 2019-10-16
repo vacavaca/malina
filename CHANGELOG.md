@@ -1,3 +1,42 @@
+#### 0.0.20 (2019-10-16)
+
+##### Chores
+
+*  Update lock files ([29e74403](https://github.com/vacavaca/malina/commit/29e7440327f49323a530673b68c1f9c09f1400bf))
+*  Security audit ([f3f8b21e](https://github.com/vacavaca/malina/commit/f3f8b21e3e184c7319254cf855a002fa82a4b977))
+*  Update lock files and run audit ([74aed61e](https://github.com/vacavaca/malina/commit/74aed61e137e91c7ad196c8ef2c83eb3d30fc567))
+
+##### Documentation Changes
+
+* **malina:**  Add more docs ([4f8bb155](https://github.com/vacavaca/malina/commit/4f8bb155e44c790b8c24db4d49bdd586c6099678))
+
+##### Bug Fixes
+
+*  Fix node attaching, and id decorator ([aeb54873](https://github.com/vacavaca/malina/commit/aeb54873d13e73505a3c5a89ad8a9e548cfe9ae9))
+*  Minor fixes and improvements ([5d6d1957](https://github.com/vacavaca/malina/commit/5d6d1957b111c62043485d9903e68c74aeb054f3))
+*  Add more jsdoc to malina package, minor improvements ([747234c4](https://github.com/vacavaca/malina/commit/747234c41e4d2f4eb607487c9f6b70d77a0948f9))
+*  Fix todos in the code ([fab7c265](https://github.com/vacavaca/malina/commit/fab7c265d7e02445593f53952ebf0335eb2c6a77))
+*  Several fixes, minor improvements and API docs ([b0fe222d](https://github.com/vacavaca/malina/commit/b0fe222d7935cb9a9a8ed081ae3c2673307953bf))
+*  Fix element attach ([c77443b8](https://github.com/vacavaca/malina/commit/c77443b8fd1cd220d5797a93c2bfae98028cc74d))
+*  Minor fixes and optimizations ([d451f3f9](https://github.com/vacavaca/malina/commit/d451f3f97c20ca80debd5c554fe2e841ea2d7aa3))
+*  Several fixes and minor improvements ([158b8b35](https://github.com/vacavaca/malina/commit/158b8b35b979e9c89203e56ddae376e52f537b00))
+
+##### Performance Improvements
+
+* **malina:**  Optimize templates ([72a93869](https://github.com/vacavaca/malina/commit/72a9386973a427daa8ec31e9476da00f3fe6d740))
+
+##### Refactors
+
+*  Move base decorators to malina package, refactor context ([32d312fd](https://github.com/vacavaca/malina/commit/32d312fd60c45d6b8230a9a4ebab1e8845884574))
+
+##### Code Style Changes
+
+*  Change code-style, add API docs ([3676176e](https://github.com/vacavaca/malina/commit/3676176ec6447bcb876c9dde0dd380ec811c3cf9))
+
+##### Tests
+
+*  Configure coverage reports ([18adbad9](https://github.com/vacavaca/malina/commit/18adbad9f13df4e250e9f13fcaa3cf10b789b1d8))
+
 #### 0.0.19 (2019-07-03)
 
 ##### Build System / Dependencies
