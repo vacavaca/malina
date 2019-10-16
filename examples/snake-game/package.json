@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
-    "parcel": "^1.12.3",
+    "parcel": "^1.12.4",
     "postcss-modules": "^1.4.1",
     "sass": "^1.22.7"
   }
