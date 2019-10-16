@@ -80,11 +80,11 @@ export const withUniqIds = options =>
         return { [ctxKey]: context };
       } else return {};
     }),
-    withState({
+    withState(() => ({
       [stateKey]: {
         ids: {}
       }
-    }),
+    })),
     mapTemplate(original => view =>
       mapIdTemplate(getOptions(options), { ref: view.state[ctxKey], ids: view.state[stateKey].ids })(original())
     )

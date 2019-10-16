@@ -239,7 +239,7 @@ class Renderer {
     element.replaceWith(newElement);
 
     if (renderingContext.isUpdating())
-      this.attachElementNode(element, next, path, renderingContext);
+      this.attachElementNode(newElement, next, path, renderingContext);
 
     if (isRoot(path))
       this.element = newElement;
@@ -318,7 +318,7 @@ class Renderer {
 
     element.replaceWith(newElement);
     if (renderingContext.isUpdating())
-      this.attachElementNode(element, next, path, renderingContext);
+      this.attachElementNode(newElement, next, path, renderingContext);
 
     if (isRoot(path))
       this.element = newElement;
@@ -384,7 +384,7 @@ class Renderer {
 
         element.replaceWith(newElement);
         if (renderingContext.isUpdating())
-          this.attachElementNode(element, next, path, renderingContext);
+          this.attachElementNode(newElement, next, path, renderingContext);
 
         if (isRoot(path))
           this.element = newElement;
@@ -398,7 +398,7 @@ class Renderer {
       const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false));
       element.replaceWith(newElement);
       if (renderingContext.isUpdating())
-        this.attachElementNode(element, next, path, renderingContext);
+        this.attachElementNode(newElement, next, path, renderingContext);
 
       if (isRoot(path))
         this.element = newElement;
@@ -452,7 +452,7 @@ class Renderer {
     const newElement = this.createElementNode(next, path, renderingContext.setUpdating(false));
     element.replaceWith(newElement);
     if (renderingContext.isUpdating())
-      this.attachElementNode(element, next, path, renderingContext);
+      this.attachElementNode(newElement, next, path, renderingContext);
 
     if (isRoot(path))
       this.element = newElement;
@@ -466,6 +466,9 @@ class Renderer {
     if (isSameViewNode(prev, next) && prev.attrs.key === next.attrs.key) {
       const view = this.view.getInstantiatedInnerView(path);
       view.update(next.attrs, next.children);
+
+      if (isRoot(path))
+        this.element = view.element;
     } else {
       const parent = element.parentNode;
 

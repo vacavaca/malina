@@ -28,9 +28,6 @@ else
 	cp $(build_node) $(node_release)
 endif
 
-.PHONY: check
-check: lint
-
 .PHONY: test
 test:
 	NODE_ENV=testing nyc --reporter=html mocha --require @babel/register test
@@ -42,6 +39,9 @@ coverage:
 .PHONY: benchmark
 benchmark:
 	echo "Nothing to benchmark yet"
+
+.PHONY: check
+check: lint test
 
 .PHONY: build
 build:  						 \
