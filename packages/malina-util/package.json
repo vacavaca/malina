@@ -1,6 +1,6 @@
 {
   "name": "malina-util",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Utilities for the malina library",
   "main": "dist/index.js",
   "files": [
@@ -37,10 +37,10 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
-    "rollup": "^0.66.6",
     "jsdoc": "^3.6.3",
     "mocha": "^5.2.0",
     "nyc": "^14.1.1",
+    "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^3.4.0",

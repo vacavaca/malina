@@ -1,6 +1,6 @@
 {
   "name": "malina-styled",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "CSS in JS for the malina library",
   "main": "dist/index.js",
   "files": [
@@ -39,8 +39,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "malina": "0.0.19",
-    "malina-util": "0.0.19",
+    "malina": "^0.0.20",
+    "malina-util": "^0.0.20",
     "stylis": "^3.5.4"
   },
   "devDependencies": {
@@ -53,8 +53,8 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
-    "jsdom": "^13.2.0",
     "jsdoc": "^3.6.3",
+    "jsdom": "^13.2.0",
     "mocha": "^5.2.0",
     "nyc": "^14.1.1",
     "rollup": "^0.66.6",
