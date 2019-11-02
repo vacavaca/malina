@@ -1,5 +1,11 @@
 import { h, view, withActions, withTemplate } from 'malina'
 
+/**
+ * Creates new todo, calling app actions
+ * 
+ * @param {*} e input change event 
+ * @returns {function} action
+ */
 const onCreate = e => ({ state }) => {
   const title = e.currentTarget.value.trim()
   if (title.length > 0) {

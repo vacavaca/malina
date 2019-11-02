@@ -129,7 +129,6 @@ export class Declaration {
     return this === declaration || this.id === declaration.id || this.originalId === declaration.originalId;
   }
 
-  /** @private */
   decorateWith(decoratorKey) {
     const next = this.copy();
     next.decorators = { ...this.decorators, [decoratorKey]: true };

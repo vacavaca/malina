@@ -2,9 +2,21 @@ import { h, view, List, withActions, withTemplate } from 'malina'
 
 import Todo from './todo'
 
+/**
+ * Check if all todos are completed
+ * 
+ * @param {Object} state view state 
+ * @returns {boolean} true if all todos are completed
+ */
 const isAllCompleted = ({ todos }) =>
   todos.every(({ completed }) => completed)
 
+/**
+ * Set all todos completed
+ * 
+ * @param {*} e event
+ * @returns {function} action
+ */
 const onAllComplete = e => ({ state }) => {
   state.actions.onAllComplete(e.currentTarget.checked, state.filter)
 }

@@ -3,6 +3,12 @@ import { h, template, branch } from 'malina'
 import { default as Filter } from './filter'
 import * as filter from './filter'
 
+/**
+ * Count active todos
+ * 
+ * @param {Array.<Object>} todos todos 
+ * @returns {number} number of active todos
+ */
 const countActive = todos =>
   todos.filter(({ completed }) => !completed).length
 

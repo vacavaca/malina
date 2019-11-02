@@ -16,35 +16,75 @@ const state = () => ({
   todos: loadTodosFromStorage()
 })
 
-const actions = {}
-
-actions.onAllComplete = (completed, filter) => ({ state: { todos } }) => ({
+/**
+ * Set all todos in the current filter completed (or not)
+ * 
+ * @param {boolean} completed set todos as completed or not 
+ * @param {function} filter filter function 
+ * @returns {function} action
+ */
+const onAllComplete = (completed, filter) => ({ state: { todos } }) => ({
   todos: todos.map(todo => filter(todo) ? ({ ...todo, completed }) : todo)
 })
 
-actions.onComplete = (requestedTodo, completed) => ({ state: { todos } }) => ({
+/**
+ * Set todo completed or incompleted
+ * 
+ * @param {Object} requestedTodo todo to set completed 
+ * @param {boolean} completed set completed or not 
+ * @returns {function} action
+ */
+const onComplete = (requestedTodo, completed) => ({ state: { todos } }) => ({
   todos: todos.map(todo => todo === requestedTodo ? ({ ...todo, completed }) : todo)
 })
 
-actions.onEdit = (requestedTodo, title) => ({ state: { todos } }) => ({
+/**
+ * Change todo title
+ * 
+ * @param {object} requestedTodo todo to chang*
+ * @param {string} title new title 
+ * @returns {function} action
+ */
+const onEdit = (requestedTodo, title) => ({ state: { todos } }) => ({
   todos: todos.map(todo => todo === requestedTodo ? ({ ...todo, title }) : todo)
 })
 
-actions.onDestroy = (requestedTodo, title) => ({ state: { todos } }) => ({
+/**
+ * Destroy todo
+ *  
+ * @param {todo} requestedTodo todo to destroy 
+ * @returns {function} action
+ */
+const onDestroy = requestedTodo => ({ state: { todos } }) => ({
   todos: todos.filter(todo => todo !== requestedTodo)
 })
 
-actions.onCreate = title => ({ state: { todos } }) => ({
+/**
+ * Create todo
+ * 
+ * @param {string} title todo title 
+ * @returns {function} action
+ */
+const onCreate = title => ({ state: { todos } }) => ({
   todos: todos.concat([{ title, completed: false, key: todos.length, id: uuid() }])
 })
 
-actions.onDestroyCompleted = () => ({ state: { todos } }) => ({
+/**
+ * Destroy completed todos
+ * 
+ * @returns {function} action
+ */
+const onDestroyCompleted = () => ({ state: { todos } }) => ({
   todos: todos.filter(({ completed }) => !completed)
 })
 
-const behavior = view => {
-
-  view.onUpdate(({ state: { todos } }) => persistTodos(todos))
+const actions = {
+  onAllComplete,
+  onComplete,
+  onEdit,
+  onDestroy,
+  onCreate,
+  onDestroyCompleted
 }
 
 const Section = styled.section`

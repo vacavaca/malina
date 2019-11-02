@@ -24,6 +24,7 @@ const createInitializer = value => state => {
  *       console.log('view updated')
  *     }
  *
+ *     await view.unmount()
  *     console.log('view unmounted')
  *  })
  * )
@@ -180,7 +181,7 @@ export const withTemplate = template => decorator(Inner =>
 
 /**
  * Create new template based on the original using mapper function
- *
+ *feature/HT-4156
  * @example
  * view(
  *   mapTemplate(original => view =>
