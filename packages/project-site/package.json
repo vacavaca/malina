@@ -13,7 +13,7 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.6",
-    "highlight.js": "^9.13.1",
+    "highlight.js": "^10.1.2",
     "history": "^4.7.2",
     "malina": "^0.0.20",
     "malina-decorator": "^0.0.20",
